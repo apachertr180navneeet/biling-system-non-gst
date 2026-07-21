@@ -1,0 +1,7 @@
+div:where(.swal2-container) {
+    z-index: 1080 !important;
+}
+
+.swal2-container .select2-container {
+    display: none !important;
+}
