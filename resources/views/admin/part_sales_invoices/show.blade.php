@@ -464,8 +464,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                     <div class="company-details">
                         <h2>SHREE KRISHNA AUTO GREEN</h2>
                         <p>NH 65 NEAR ROADWAYS BUS STAND JODHPUR, JODHPUR, Rajasthan, 342001</p>
-                        <p style="margin-top: 4px; font-weight: 600; color: #047857;">GSTIN : 08ANQPD4555N1ZE</p>
-                        <p>PAN Number : ANQPD4555N</p>
                         <p>Email: vijay.deora429@gmail.com | Mobile: 7568899148</p>
                     </div>
                     <div class="logo-block">
@@ -500,8 +498,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                         <h4>{{ $partSalesInvoice->customer_name }}</h4>
                         <p>{{ $partSalesInvoice->customer_address ?? '-' }}</p>
                         <p style="margin-top: 6px;"><b>Mobile:</b> {{ $partSalesInvoice->customer_mobile ?? '-' }}</p>
-                        <p><b>GSTIN:</b> {{ $partSalesInvoice->customer_gstin ?? '-' }}</p>
-                        <p><b>PAN Number:</b> {{ $partSalesInvoice->customer_pan ?? '-' }}</p>
                         <p><b>Place of Supply:</b> {{ $partSalesInvoice->place_of_supply }}</p>
                     </div>
                     <div class="billing-card" style="border-left-color: #059669;">
@@ -509,8 +505,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                         <h4>{{ $partSalesInvoice->customer_name }}</h4>
                         <p>{{ $partSalesInvoice->customer_address ?? '-' }}</p>
                         <p style="margin-top: 6px;"><b>Mobile:</b> {{ $partSalesInvoice->customer_mobile ?? '-' }}</p>
-                        <p><b>GSTIN:</b> {{ $partSalesInvoice->customer_gstin ?? '-' }}</p>
-                        <p><b>PAN Number:</b> {{ $partSalesInvoice->customer_pan ?? '-' }}</p>
                         <p><b>Place of Supply:</b> {{ $partSalesInvoice->place_of_supply }}</p>
                     </div>
                 </div>
@@ -520,10 +514,9 @@ if (!function_exists('getIndianRupeesInWords')) {
                     <thead>
                         <tr>
                             <th style="width: 6%; text-align: center;">#</th>
-                            <th style="width: 54%;">Items & Description</th>
+                            <th style="width: 58%;">Items & Description</th>
                             <th style="width: 10%; text-align: center;">Qty</th>
                             <th style="width: 14%; text-align: right;">Rate</th>
-                            <th style="width: 16%; text-align: right;">Tax (GST)</th>
                             <th style="width: 14%; text-align: right;">Amount</th>
                         </tr>
                     </thead>
@@ -539,10 +532,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                             </td>
                             <td class="text-center" style="font-weight: 600;">{{ $item->quantity }} {{ strtoupper($item->sparePart->unit) }}</td>
                             <td class="text-right">{{ number_format($item->rate, 2) }}</td>
-                            <td class="text-right">
-                                {{ number_format($item->tax_amount, 2) }}
-                                <br><small class="text-muted">({{ floatval($item->tax_percentage) }}%)</small>
-                            </td>
                             <td class="text-right" style="font-weight: 600;">{{ number_format($item->amount, 2) }}</td>
                         </tr>
                         @endforeach
@@ -583,25 +572,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                     <div class="right-panel">
                         <div class="summary-card">
                             <table class="summary-table">
-                                <tr>
-                                    <td class="summary-label">Taxable Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->taxable_amount, 2) }}</td>
-                                </tr>
-                                @if(($partSalesInvoice->tax_regime ?? 'cgst_sgst') === 'igst')
-                                <tr>
-                                    <td class="summary-label">IGST Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->igst_amount ?? 0, 2) }}</td>
-                                </tr>
-                                @else
-                                <tr>
-                                    <td class="summary-label">CGST Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->cgst_amount, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="summary-label">SGST Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->sgst_amount, 2) }}</td>
-                                </tr>
-                                @endif
                                 <tr>
                                     <td class="summary-label">Round Off</td>
                                     <td class="summary-value">₹ {{ number_format($partSalesInvoice->round_off, 2) }}</td>

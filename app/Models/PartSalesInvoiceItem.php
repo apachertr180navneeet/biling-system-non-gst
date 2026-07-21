@@ -14,8 +14,6 @@ class PartSalesInvoiceItem extends Model
         'spare_part_id',
         'quantity',
         'rate',
-        'tax_percentage',
-        'tax_amount',
         'amount',
         'serial_no_warranty_notes',
     ];

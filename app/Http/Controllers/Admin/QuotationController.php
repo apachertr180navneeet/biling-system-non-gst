@@ -74,15 +74,10 @@ class QuotationController extends Controller
                 'customer_name' => 'required|string|max:255',
                 'customer_mobile' => 'nullable|string|max:20',
                 'customer_address' => 'nullable|string',
-                'customer_gstin' => 'nullable|string|max:15',
                 'customer_pan' => 'nullable|string|max:10',
                 'place_of_supply' => 'required|string|max:255',
-                'tax_regime' => 'required|string|in:cgst_sgst,igst',
                 'vehicle_master_id' => 'required|exists:vehicle_masters,id',
                 'rate' => 'required|numeric|min:0',
-                'cgst_rate' => 'nullable|numeric|min:0',
-                'sgst_rate' => 'nullable|numeric|min:0',
-                'igst_rate' => 'nullable|numeric|min:0',
                 'discount' => 'nullable|numeric|min:0',
                 'nemmp_incentive' => 'nullable|numeric|min:0',
             ]);
@@ -93,16 +88,12 @@ class QuotationController extends Controller
                 'customer_name' => 'required|string|max:255',
                 'customer_mobile' => 'nullable|string|max:20',
                 'customer_address' => 'nullable|string',
-                'customer_gstin' => 'nullable|string|max:15',
                 'customer_pan' => 'nullable|string|max:10',
                 'place_of_supply' => 'required|string|max:255',
-                'tax_regime' => 'required|string|in:cgst_sgst,igst',
                 'items' => 'required|array|min:1',
                 'items.*.spare_part_id' => 'required|exists:spare_parts,id',
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.rate' => 'required|numeric|min:0',
-                'items.*.tax_percentage' => 'required|numeric|min:0',
-                'items.*.gst_type' => 'required|string|in:inclusive,exclusive',
             ]);
         }
 
@@ -111,8 +102,8 @@ class QuotationController extends Controller
 
             $data = $request->only([
                 'type', 'quotation_date', 'customer_id', 'customer_name',
-                'customer_mobile', 'customer_address', 'customer_gstin',
-                'customer_pan', 'place_of_supply', 'tax_regime', 'remarks',
+                'customer_mobile', 'customer_address',
+                'customer_pan', 'place_of_supply', 'remarks',
                 'model_maker_name', 'gross_weight', 'charging_time', 'performance',
                 'charger_output', 'motor_output', 'seating_capacity', 'type_of_break',
                 'roof_top_abs', 'front_fiber_wind_shield', 'meter_type'
@@ -126,43 +117,14 @@ class QuotationController extends Controller
                 $incentive = (float) $request->input('nemmp_incentive', 0);
                 
                 $sub_total = $rate;
-                $taxable = $sub_total - $discount - $incentive;
-                if ($taxable < 0) $taxable = 0;
+                $total = $sub_total - $discount - $incentive;
+                if ($total < 0) $total = 0;
 
                 $data['rate'] = $rate;
                 $data['sub_total'] = $sub_total;
                 $data['discount'] = $discount;
                 $data['nemmp_incentive'] = $incentive;
-                $data['taxable_amount'] = $taxable;
-
-                $taxRegime = $request->input('tax_regime');
-                if ($taxRegime === 'cgst_sgst') {
-                    $cgstRate = (float) $request->input('cgst_rate', config('app.cgst_rate', 2.5));
-                    $sgstRate = (float) $request->input('sgst_rate', config('app.sgst_rate', 2.5));
-                    $cgstAmount = ($taxable * $cgstRate) / 100;
-                    $sgstAmount = ($taxable * $sgstRate) / 100;
-
-                    $data['cgst_rate'] = $cgstRate;
-                    $data['sgst_rate'] = $sgstRate;
-                    $data['cgst_amount'] = $cgstAmount;
-                    $data['sgst_amount'] = $sgstAmount;
-                    $data['igst_rate'] = 0;
-                    $data['igst_amount'] = 0;
-
-                    $total = $taxable + $cgstAmount + $sgstAmount;
-                } else {
-                    $igstRate = (float) $request->input('igst_rate', config('app.igst_rate', 5));
-                    $igstAmount = ($taxable * $igstRate) / 100;
-
-                    $data['cgst_rate'] = 0;
-                    $data['sgst_rate'] = 0;
-                    $data['cgst_amount'] = 0;
-                    $data['sgst_amount'] = 0;
-                    $data['igst_rate'] = $igstRate;
-                    $data['igst_amount'] = $igstAmount;
-
-                    $total = $taxable + $igstAmount;
-                }
+                $data['taxable_amount'] = $total;
 
                 $grandTotal = round($total);
                 $data['round_off'] = $grandTotal - $total;
@@ -170,63 +132,22 @@ class QuotationController extends Controller
 
                 $quotation = Quotation::create($data);
             } else {
-                // Parts quotation
                 $items = $request->input('items');
-                $taxable_amount = 0;
-                $cgst_total = 0;
-                $sgst_total = 0;
-                $igst_total = 0;
                 $total_sum = 0;
 
                 $quotationItemsData = [];
-                $taxRegime = $request->input('tax_regime');
 
                 foreach ($items as $item) {
                     $qty = (int) $item['quantity'];
                     $rate = (float) $item['rate'];
-                    $taxPercentage = (float) $item['tax_percentage'];
-                    $gstType = $item['gst_type'];
+                    $item_amount = $qty * $rate;
 
-                    $raw_total = $qty * $rate;
-                    
-                    if ($gstType === 'inclusive') {
-                        // Rate includes tax
-                        $item_taxable = $raw_total / (1 + ($taxPercentage / 100));
-                        $item_tax = $raw_total - $item_taxable;
-                        $item_amount = $raw_total;
-                    } else {
-                        // Rate excludes tax
-                        $item_taxable = $raw_total;
-                        $item_tax = ($raw_total * $taxPercentage) / 100;
-                        $item_amount = $raw_total + $item_tax;
-                    }
-
-                    $cgst_amount = 0;
-                    $sgst_amount = 0;
-                    $igst_amount = 0;
-
-                    if ($taxRegime === 'cgst_sgst') {
-                        $cgst_amount = $item_tax / 2;
-                        $sgst_amount = $item_tax / 2;
-                        $cgst_total += $cgst_amount;
-                        $sgst_total += $sgst_amount;
-                    } else {
-                        $igst_amount = $item_tax;
-                        $igst_total += $igst_amount;
-                    }
-
-                    $taxable_amount += $item_taxable;
                     $total_sum += $item_amount;
 
                     $quotationItemsData[] = [
                         'spare_part_id' => $item['spare_part_id'],
                         'quantity' => $qty,
                         'rate' => $rate,
-                        'tax_percentage' => $taxPercentage,
-                        'tax_amount' => $item_tax,
-                        'cgst_amount' => $cgst_amount,
-                        'sgst_amount' => $sgst_amount,
-                        'igst_amount' => $igst_amount,
                         'amount' => $item_amount,
                         'serial_no_warranty_notes' => $item['serial_no_warranty_notes'] ?? null,
                     ];
@@ -235,10 +156,7 @@ class QuotationController extends Controller
                 $grandTotal = round($total_sum);
                 $round_off = $grandTotal - $total_sum;
 
-                $data['taxable_amount'] = $taxable_amount;
-                $data['cgst_amount'] = $cgst_total;
-                $data['sgst_amount'] = $sgst_total;
-                $data['igst_amount'] = $igst_total;
+                $data['taxable_amount'] = $total_sum;
                 $data['round_off'] = $round_off;
                 $data['total_amount'] = $grandTotal;
 
@@ -269,15 +187,10 @@ class QuotationController extends Controller
                 'customer_name' => 'required|string|max:255',
                 'customer_mobile' => 'nullable|string|max:20',
                 'customer_address' => 'nullable|string',
-                'customer_gstin' => 'nullable|string|max:15',
                 'customer_pan' => 'nullable|string|max:10',
                 'place_of_supply' => 'required|string|max:255',
-                'tax_regime' => 'required|string|in:cgst_sgst,igst',
                 'vehicle_master_id' => 'required|exists:vehicle_masters,id',
                 'rate' => 'required|numeric|min:0',
-                'cgst_rate' => 'nullable|numeric|min:0',
-                'sgst_rate' => 'nullable|numeric|min:0',
-                'igst_rate' => 'nullable|numeric|min:0',
                 'discount' => 'nullable|numeric|min:0',
                 'nemmp_incentive' => 'nullable|numeric|min:0',
             ]);
@@ -287,8 +200,8 @@ class QuotationController extends Controller
 
                 $data = $request->only([
                     'quotation_date', 'customer_id', 'customer_name',
-                    'customer_mobile', 'customer_address', 'customer_gstin',
-                    'customer_pan', 'place_of_supply', 'tax_regime', 'remarks',
+                    'customer_mobile', 'customer_address',
+                    'customer_pan', 'place_of_supply', 'remarks',
                     'model_maker_name', 'gross_weight', 'charging_time', 'performance',
                     'charger_output', 'motor_output', 'seating_capacity', 'type_of_break',
                     'roof_top_abs', 'front_fiber_wind_shield', 'meter_type'
@@ -300,43 +213,14 @@ class QuotationController extends Controller
                 $incentive = (float) $request->input('nemmp_incentive', 0);
                 
                 $sub_total = $rate;
-                $taxable = $sub_total - $discount - $incentive;
-                if ($taxable < 0) $taxable = 0;
+                $total = $sub_total - $discount - $incentive;
+                if ($total < 0) $total = 0;
 
                 $data['rate'] = $rate;
                 $data['sub_total'] = $sub_total;
                 $data['discount'] = $discount;
                 $data['nemmp_incentive'] = $incentive;
-                $data['taxable_amount'] = $taxable;
-
-                $taxRegime = $request->input('tax_regime');
-                if ($taxRegime === 'cgst_sgst') {
-                    $cgstRate = (float) $request->input('cgst_rate', config('app.cgst_rate', 2.5));
-                    $sgstRate = (float) $request->input('sgst_rate', config('app.sgst_rate', 2.5));
-                    $cgstAmount = ($taxable * $cgstRate) / 100;
-                    $sgstAmount = ($taxable * $sgstRate) / 100;
-
-                    $data['cgst_rate'] = $cgstRate;
-                    $data['sgst_rate'] = $sgstRate;
-                    $data['cgst_amount'] = $cgstAmount;
-                    $data['sgst_amount'] = $sgstAmount;
-                    $data['igst_rate'] = 0;
-                    $data['igst_amount'] = 0;
-
-                    $total = $taxable + $cgstAmount + $sgstAmount;
-                } else {
-                    $igstRate = (float) $request->input('igst_rate', config('app.igst_rate', 5));
-                    $igstAmount = ($taxable * $igstRate) / 100;
-
-                    $data['cgst_rate'] = 0;
-                    $data['sgst_rate'] = 0;
-                    $data['cgst_amount'] = 0;
-                    $data['sgst_amount'] = 0;
-                    $data['igst_rate'] = $igstRate;
-                    $data['igst_amount'] = $igstAmount;
-
-                    $total = $taxable + $igstAmount;
-                }
+                $data['taxable_amount'] = $total;
 
                 $grandTotal = round($total);
                 $data['round_off'] = $grandTotal - $total;

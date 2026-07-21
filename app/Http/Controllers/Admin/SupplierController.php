@@ -22,8 +22,7 @@ class SupplierController extends Controller
                 $q->where('name', 'like', $escapedSearch)
                   ->orWhere('contact_person', 'like', $escapedSearch)
                   ->orWhere('phone', 'like', $escapedSearch)
-                  ->orWhere('email', 'like', $escapedSearch)
-                  ->orWhere('gstin', 'like', $escapedSearch);
+                  ->orWhere('email', 'like', $escapedSearch);
             });
         }
 
@@ -42,8 +41,7 @@ class SupplierController extends Controller
                 $q->where('name', 'like', $escapedSearch)
                   ->orWhere('contact_person', 'like', $escapedSearch)
                   ->orWhere('phone', 'like', $escapedSearch)
-                  ->orWhere('email', 'like', $escapedSearch)
-                  ->orWhere('gstin', 'like', $escapedSearch);
+                  ->orWhere('email', 'like', $escapedSearch);
             });
         }
 
@@ -52,22 +50,20 @@ class SupplierController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setCellValue('A1', 'Name');
-        $sheet->setCellValue('B1', 'GSTIN');
-        $sheet->setCellValue('C1', 'Address');
-        $sheet->setCellValue('D1', 'Contact Person');
-        $sheet->setCellValue('E1', 'Phone');
-        $sheet->setCellValue('F1', 'Email');
-        $sheet->setCellValue('G1', 'Status');
+        $sheet->setCellValue('B1', 'Address');
+        $sheet->setCellValue('C1', 'Contact Person');
+        $sheet->setCellValue('D1', 'Phone');
+        $sheet->setCellValue('E1', 'Email');
+        $sheet->setCellValue('F1', 'Status');
 
         $row = 2;
         foreach ($suppliers as $s) {
             $sheet->setCellValue('A' . $row, $s->name);
-            $sheet->setCellValue('B' . $row, $s->gstin);
-            $sheet->setCellValue('C' . $row, $s->address);
-            $sheet->setCellValue('D' . $row, $s->contact_person);
-            $sheet->setCellValue('E' . $row, $s->phone);
-            $sheet->setCellValue('F' . $row, $s->email);
-            $sheet->setCellValue('G' . $row, $s->is_active ? 'Active' : 'Inactive');
+            $sheet->setCellValue('B' . $row, $s->address);
+            $sheet->setCellValue('C' . $row, $s->contact_person);
+            $sheet->setCellValue('D' . $row, $s->phone);
+            $sheet->setCellValue('E' . $row, $s->email);
+            $sheet->setCellValue('F' . $row, $s->is_active ? 'Active' : 'Inactive');
             $row++;
         }
 
@@ -87,7 +83,6 @@ class SupplierController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'gstin' => 'nullable|string|max:15',
             'address' => 'nullable|string',
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|digits:10',
@@ -110,7 +105,6 @@ class SupplierController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'gstin' => 'nullable|string|max:15',
             'address' => 'nullable|string',
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|digits:10',
@@ -141,19 +135,17 @@ class SupplierController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setCellValue('A1', 'name');
-        $sheet->setCellValue('B1', 'gstin');
-        $sheet->setCellValue('C1', 'address');
-        $sheet->setCellValue('D1', 'contact_person');
-        $sheet->setCellValue('E1', 'phone');
-        $sheet->setCellValue('F1', 'email');
+        $sheet->setCellValue('B1', 'address');
+        $sheet->setCellValue('C1', 'contact_person');
+        $sheet->setCellValue('D1', 'phone');
+        $sheet->setCellValue('E1', 'email');
         
         // Example row
         $sheet->setCellValue('A2', 'Supplier Inc');
-        $sheet->setCellValue('B2', '27AAAAA1111A1Z1');
-        $sheet->setCellValue('C2', '123 Main Street');
-        $sheet->setCellValue('D2', 'John Doe');
-        $sheet->setCellValue('E2', '9876543210');
-        $sheet->setCellValue('F2', 'supplier@example.com');
+        $sheet->setCellValue('B2', '123 Main Street');
+        $sheet->setCellValue('C2', 'John Doe');
+        $sheet->setCellValue('D2', '9876543210');
+        $sheet->setCellValue('E2', 'supplier@example.com');
 
         $writer = new Xls($spreadsheet);
         $path = storage_path('app/supplier_template.xls');
@@ -229,7 +221,6 @@ class SupplierController extends Controller
             $data = array_combine($header, $row);
             
             $name = isset($data['name']) ? trim($data['name']) : '';
-            $gstin = isset($data['gstin']) ? trim($data['gstin']) : '';
             $address = isset($data['address']) ? trim($data['address']) : '';
             $contactPerson = isset($data['contact_person']) ? trim($data['contact_person']) : '';
             $phone = isset($data['phone']) ? trim($data['phone']) : '';
@@ -273,7 +264,6 @@ class SupplierController extends Controller
 
             Supplier::create([
                 'name' => $name,
-                'gstin' => $gstin ?: null,
                 'address' => $address ?: null,
                 'contact_person' => $contactPerson ?: null,
                 'phone' => $phone ?: null,

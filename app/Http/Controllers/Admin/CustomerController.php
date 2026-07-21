@@ -23,7 +23,6 @@ class CustomerController extends Controller
                   ->orWhere('last_name', 'like', $escapedSearch)
                   ->orWhere('phone', 'like', $escapedSearch)
                   ->orWhere('email', 'like', $escapedSearch)
-                  ->orWhere('gstin', 'like', $escapedSearch)
                   ->orWhere('company_name', 'like', $escapedSearch);
             });
         }
@@ -44,7 +43,6 @@ class CustomerController extends Controller
                   ->orWhere('last_name', 'like', $escapedSearch)
                   ->orWhere('phone', 'like', $escapedSearch)
                   ->orWhere('email', 'like', $escapedSearch)
-                  ->orWhere('gstin', 'like', $escapedSearch)
                   ->orWhere('company_name', 'like', $escapedSearch);
             });
         }
@@ -61,10 +59,9 @@ class CustomerController extends Controller
         $sheet->setCellValue('F1', 'Email');
         $sheet->setCellValue('G1', 'Address');
         $sheet->setCellValue('H1', 'State');
-        $sheet->setCellValue('I1', 'GSTIN');
-        $sheet->setCellValue('J1', 'PAN No');
-        $sheet->setCellValue('K1', 'Aadhaar No');
-        $sheet->setCellValue('L1', 'Status');
+        $sheet->setCellValue('I1', 'PAN No');
+        $sheet->setCellValue('J1', 'Aadhaar No');
+        $sheet->setCellValue('K1', 'Status');
 
         $row = 2;
         foreach ($customers as $c) {
@@ -76,10 +73,9 @@ class CustomerController extends Controller
             $sheet->setCellValue('F' . $row, $c->email);
             $sheet->setCellValue('G' . $row, $c->address);
             $sheet->setCellValue('H' . $row, $c->state);
-            $sheet->setCellValue('I' . $row, $c->gstin);
-            $sheet->setCellValue('J' . $row, $c->pan_no);
-            $sheet->setCellValue('K' . $row, $c->aadhaar_no);
-            $sheet->setCellValue('L' . $row, $c->is_active ? 'Active' : 'Inactive');
+            $sheet->setCellValue('I' . $row, $c->pan_no);
+            $sheet->setCellValue('J' . $row, $c->aadhaar_no);
+            $sheet->setCellValue('K' . $row, $c->is_active ? 'Active' : 'Inactive');
             $row++;
         }
 
@@ -106,7 +102,6 @@ class CustomerController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'state' => 'nullable|string|max:100',
-            'gstin' => 'nullable|string|max:15',
             'pan_no' => 'nullable|string|max:10',
             'aadhaar_no' => 'nullable|string|max:12',
         ]);
@@ -145,7 +140,6 @@ class CustomerController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'state' => 'nullable|string|max:100',
-            'gstin' => 'nullable|string|max:15',
             'pan_no' => 'nullable|string|max:10',
             'aadhaar_no' => 'nullable|string|max:12',
         ]);
@@ -181,9 +175,8 @@ class CustomerController extends Controller
         $sheet->setCellValue('F1', 'email');
         $sheet->setCellValue('G1', 'address');
         $sheet->setCellValue('H1', 'state');
-        $sheet->setCellValue('I1', 'gstin');
-        $sheet->setCellValue('J1', 'pan_no');
-        $sheet->setCellValue('K1', 'aadhaar_no');
+        $sheet->setCellValue('I1', 'pan_no');
+        $sheet->setCellValue('J1', 'aadhaar_no');
         
         // Example row
         $sheet->setCellValue('A2', 'individual');
@@ -194,9 +187,8 @@ class CustomerController extends Controller
         $sheet->setCellValue('F2', 'john@example.com');
         $sheet->setCellValue('G2', '456 Elm Street');
         $sheet->setCellValue('H2', 'Maharashtra');
-        $sheet->setCellValue('I2', '');
-        $sheet->setCellValue('J2', 'ABCDE1234F');
-        $sheet->setCellValue('K2', '123456789012');
+        $sheet->setCellValue('I2', 'ABCDE1234F');
+        $sheet->setCellValue('J2', '123456789012');
 
         $writer = new Xls($spreadsheet);
         $path = storage_path('app/customer_template.xls');
@@ -279,7 +271,6 @@ class CustomerController extends Controller
             $email = isset($data['email']) ? trim($data['email']) : '';
             $address = isset($data['address']) ? trim($data['address']) : '';
             $state = isset($data['state']) ? trim($data['state']) : '';
-            $gstin = isset($data['gstin']) ? trim($data['gstin']) : '';
             $panNo = isset($data['pan_no']) ? trim($data['pan_no']) : '';
             $aadhaarNo = isset($data['aadhaar_no']) ? trim($data['aadhaar_no']) : '';
 
@@ -334,7 +325,6 @@ class CustomerController extends Controller
                 'email' => $email ?: null,
                 'address' => $address ?: null,
                 'state' => $state ?: null,
-                'gstin' => $gstin ?: null,
                 'pan_no' => $panNo ?: null,
                 'aadhaar_no' => $aadhaarNo ?: null,
                 'is_active' => true,

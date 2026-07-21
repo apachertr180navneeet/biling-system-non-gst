@@ -58,11 +58,6 @@
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">GSTIN</label>
-                        <input type="text" name="gstin" class="form-control @error('gstin') is-invalid @enderror" value="{{ old('gstin', $customer->gstin) }}">
-                        @error('gstin') <div class="text-danger small">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-4 mb-3">
                         <label class="form-label">PAN No</label>
                         <input type="text" name="pan_no" class="form-control @error('pan_no') is-invalid @enderror" value="{{ old('pan_no', $customer->pan_no) }}">
                         @error('pan_no') <div class="text-danger small">{{ $message }}</div> @enderror

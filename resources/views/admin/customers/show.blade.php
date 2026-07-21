@@ -25,7 +25,6 @@
                 <tr><th>Email</th><td>{{ $customer->email ?? '-' }}</td></tr>
                 <tr><th>Address</th><td>{{ $customer->address ?? '-' }}</td></tr>
                 <tr><th>State</th><td>{{ $customer->state ?? '-' }}</td></tr>
-                <tr><th>GSTIN</th><td>{{ $customer->gstin ?? '-' }}</td></tr>
                 <tr><th>PAN No</th><td>{{ $customer->pan_no ?? '-' }}</td></tr>
                 <tr><th>Aadhaar No</th><td>{{ $customer->aadhaar_no ?? '-' }}</td></tr>
             </table>

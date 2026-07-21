@@ -31,7 +31,7 @@
             <form method="GET" action="{{ route('admin.suppliers.index') }}">
                 <div class="row g-3">
                     <div class="col-md-9">
-                        <input type="text" name="search" class="form-control" placeholder="Search by Name, Contact Person, Phone, Email or GSTIN" value="{{ $search ?? '' }}">
+                        <input type="text" name="search" class="form-control" placeholder="Search by Name, Contact Person, Phone or Email" value="{{ $search ?? '' }}">
                     </div>
                     <div class="col-md-3">
                         <div class="d-flex gap-2">
@@ -106,7 +106,7 @@
                         <input type="file" name="csv_file" class="form-control" accept=".csv,.txt,.xls,.xlsx" required>
                         <div class="form-text text-muted mt-2">
                             Please upload a valid CSV/Excel file using the template headers:<br>
-                            <code>name, gstin, address, contact_person, phone, email</code>
+                            <code>name, address, contact_person, phone, email</code>
                         </div>
                     </div>
                 </div>

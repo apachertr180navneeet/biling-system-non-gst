@@ -547,7 +547,6 @@
                         <h2>SHREE KRISHNA AUTO GREEN</h2>
                         <p>NEAR MAHAMANDIR CIRCLE, MANDORE ROAD</p>
                         <p>JODHPUR (RAJASTHAN)</p>
-                        <p style="margin-top: 4px; font-weight: 600; color: #047857;">GSTIN : 08ANQPD4555N1ZE</p>
                         <p>Contact : 7586899148, 9829028792</p>
                     </div>
                     <div class="logo-block">
@@ -683,25 +682,6 @@
                                 <td class="summary-label">Sub Total</td>
                                 <td class="summary-value">{{ number_format($vehicleSalesInvoice->sub_total, 2) }}</td>
                             </tr>
-                            <tr>
-                                <td class="summary-label">Others</td>
-                                <td class="summary-value">0.00</td>
-                            </tr>
-                            @if(($vehicleSalesInvoice->tax_regime ?? 'cgst_sgst') === 'igst')
-                            <tr>
-                                <td class="summary-label">IGST @ 5%</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->igst_amount ?? 0, 2) }}</td>
-                            </tr>
-                            @else
-                            <tr>
-                                <td class="summary-label">SGST @ 2.5%</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->sgst_amount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="summary-label">CGST @ 2.5%</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->cgst_amount, 2) }}</td>
-                            </tr>
-                            @endif
                             <tr>
                                 <td class="summary-label">Total</td>
                                 <td class="summary-value">{{ number_format($vehicleSalesInvoice->total, 2) }}</td>

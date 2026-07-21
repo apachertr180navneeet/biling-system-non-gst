@@ -20,7 +20,6 @@
                                         data-name="{{ $c->first_name }} {{ $c->last_name }}"
                                         data-mobile="{{ $c->phone }}"
                                         data-address="{{ $c->address }}"
-                                        data-gstin="{{ $c->gstin }}"
                                         data-pan="{{ $c->pan_no }}">
                                     {{ $c->first_name }} {{ $c->last_name }} ({{ $c->phone }})
                                 </option>
@@ -38,10 +37,6 @@
                     <div class="col-md-4">
                         <label class="form-label">Mobile Number</label>
                         <input type="text" id="customer_mobile" name="customer_mobile" class="form-control" value="{{ old('customer_mobile') }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">GSTIN (Optional)</label>
-                        <input type="text" id="customer_gstin" name="customer_gstin" class="form-control" value="{{ old('customer_gstin') }}" placeholder="15-digit GSTIN" maxlength="15">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">PAN Number (Optional)</label>
@@ -62,13 +57,6 @@
                     <div class="col-md-4">
                         <label class="form-label">Quotation Date <span class="text-danger">*</span></label>
                         <input type="date" name="quotation_date" class="form-control" value="{{ old('quotation_date', date('Y-m-d')) }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Tax Regime <span class="text-danger">*</span></label>
-                        <select name="tax_regime" id="tax_regime" class="form-select no-select2" required>
-                            <option value="cgst_sgst" {{ old('tax_regime') === 'cgst_sgst' ? 'selected' : '' }}>CGST + SGST</option>
-                            <option value="igst" {{ old('tax_regime') === 'igst' ? 'selected' : '' }}>IGST</option>
-                        </select>
                     </div>
                 </div>
 
@@ -98,19 +86,6 @@
                         <label class="form-label">NEMMP/Incentive (₹)</label>
                         <input type="number" step="0.01" id="nemmp_incentive" name="nemmp_incentive" class="form-control" value="{{ old('nemmp_incentive', 0) }}">
                     </div>
-                    
-                    <div class="col-md-3 cgst-group">
-                        <label class="form-label">CGST Rate (%)</label>
-                        <input type="number" step="0.01" id="cgst_rate" name="cgst_rate" class="form-control" value="{{ old('cgst_rate', 2.5) }}">
-                    </div>
-                    <div class="col-md-3 sgst-group">
-                        <label class="form-label">SGST Rate (%)</label>
-                        <input type="number" step="0.01" id="sgst_rate" name="sgst_rate" class="form-control" value="{{ old('sgst_rate', 2.5) }}">
-                    </div>
-                    <div class="col-md-3 igst-group d-none">
-                        <label class="form-label">IGST Rate (%)</label>
-                        <input type="number" step="0.01" id="igst_rate" name="igst_rate" class="form-control" value="{{ old('igst_rate', 5) }}">
-                    </div>
                 </div>
 
                 <div class="row mb-4">
@@ -132,20 +107,8 @@
                                         <td class="text-end text-danger fw-bold">-₹<span id="summary_incentive">0.00</span></td>
                                     </tr>
                                     <tr>
-                                        <td>Taxable Amount:</td>
-                                        <td class="text-end fw-bold">₹<span id="summary_taxable">0.00</span></td>
-                                    </tr>
-                                    <tr class="cgst-summary">
-                                        <td>CGST Amount:</td>
-                                        <td class="text-end fw-bold">₹<span id="summary_cgst">0.00</span></td>
-                                    </tr>
-                                    <tr class="sgst-summary">
-                                        <td>SGST Amount:</td>
-                                        <td class="text-end fw-bold">₹<span id="summary_sgst">0.00</span></td>
-                                    </tr>
-                                    <tr class="igst-summary d-none">
-                                        <td>IGST Amount:</td>
-                                        <td class="text-end fw-bold">₹<span id="summary_igst">0.00</span></td>
+                                        <td>Total:</td>
+                                        <td class="text-end fw-bold">₹<span id="summary_total">0.00</span></td>
                                     </tr>
                                     <tr>
                                         <td>Round Off:</td>
@@ -229,14 +192,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const customerSelect = document.getElementById('customer_select');
     const vehicleSelect = document.getElementById('vehicle_select');
-    const taxRegimeSelect = document.getElementById('tax_regime');
     
     const rateInput = document.getElementById('rate');
     const discountInput = document.getElementById('discount');
     const incentiveInput = document.getElementById('nemmp_incentive');
-    const cgstRateInput = document.getElementById('cgst_rate');
-    const sgstRateInput = document.getElementById('sgst_rate');
-    const igstRateInput = document.getElementById('igst_rate');
 
     // Customer Selection Change
     $(customerSelect).on('change', function() {
@@ -245,13 +204,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('customer_name').value = option.getAttribute('data-name') || '';
             document.getElementById('customer_mobile').value = option.getAttribute('data-mobile') || '';
             document.getElementById('customer_address').value = option.getAttribute('data-address') || '';
-            document.getElementById('customer_gstin').value = option.getAttribute('data-gstin') || '';
             document.getElementById('customer_pan').value = option.getAttribute('data-pan') || '';
         } else {
             document.getElementById('customer_name').value = '';
             document.getElementById('customer_mobile').value = '';
             document.getElementById('customer_address').value = '';
-            document.getElementById('customer_gstin').value = '';
             document.getElementById('customer_pan').value = '';
         }
     });
@@ -267,21 +224,8 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateTotals();
     });
 
-    // Tax Regime Change
-    taxRegimeSelect.addEventListener('change', function() {
-        const regime = this.value;
-        if (regime === 'cgst_sgst') {
-            document.querySelectorAll('.cgst-group, .sgst-group, .cgst-summary, .sgst-summary').forEach(el => el.classList.remove('d-none'));
-            document.querySelectorAll('.igst-group, .igst-summary').forEach(el => el.classList.add('d-none'));
-        } else {
-            document.querySelectorAll('.cgst-group, .sgst-group, .cgst-summary, .sgst-summary').forEach(el => el.classList.add('d-none'));
-            document.querySelectorAll('.igst-group, .igst-summary').forEach(el => el.classList.remove('d-none'));
-        }
-        calculateTotals();
-    });
-
     // Inputs Input change
-    [rateInput, discountInput, incentiveInput, cgstRateInput, sgstRateInput, igstRateInput].forEach(input => {
+    [rateInput, discountInput, incentiveInput].forEach(input => {
         input.addEventListener('input', calculateTotals);
     });
 
@@ -291,39 +235,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const incentive = parseFloat(incentiveInput.value) || 0;
         
         const sub_total = rate;
-        let taxable = sub_total - discount - incentive;
-        if (taxable < 0) taxable = 0;
+        let total = sub_total - discount - incentive;
+        if (total < 0) total = 0;
 
-        const regime = taxRegimeSelect.value;
-        let taxTotal = 0;
-        
-        let cgstAmount = 0;
-        let sgstAmount = 0;
-        let igstAmount = 0;
-
-        if (regime === 'cgst_sgst') {
-            const cgstRate = parseFloat(cgstRateInput.value) || 0;
-            const sgstRate = parseFloat(sgstRateInput.value) || 0;
-            cgstAmount = (taxable * cgstRate) / 100;
-            sgstAmount = (taxable * sgstRate) / 100;
-            taxTotal = cgstAmount + sgstAmount;
-        } else {
-            const igstRate = parseFloat(igstRateInput.value) || 0;
-            igstAmount = (taxable * igstRate) / 100;
-            taxTotal = igstAmount;
-        }
-
-        const total = taxable + taxTotal;
         const grandTotal = Math.round(total);
         const roundOff = grandTotal - total;
 
         document.getElementById('summary_sub_total').innerText = sub_total.toFixed(2);
         document.getElementById('summary_discount').innerText = discount.toFixed(2);
         document.getElementById('summary_incentive').innerText = incentive.toFixed(2);
-        document.getElementById('summary_taxable').innerText = taxable.toFixed(2);
-        document.getElementById('summary_cgst').innerText = cgstAmount.toFixed(2);
-        document.getElementById('summary_sgst').innerText = sgstAmount.toFixed(2);
-        document.getElementById('summary_igst').innerText = igstAmount.toFixed(2);
+        document.getElementById('summary_total').innerText = total.toFixed(2);
         document.getElementById('summary_round_off').innerText = roundOff.toFixed(2);
         document.getElementById('summary_grand_total').innerText = grandTotal.toFixed(2);
     }
@@ -366,7 +287,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.setAttribute('data-name', fullName);
                 option.setAttribute('data-mobile', customer.phone);
                 option.setAttribute('data-address', customer.address || '');
-                option.setAttribute('data-gstin', customer.gstin || '');
                 option.setAttribute('data-pan', customer.pan_no || '');
                 
                 customerSelect.appendChild(option);
@@ -439,10 +359,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <option value="individual">Individual</option>
                                 <option value="corporate">Corporate</option>
                             </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">GSTIN (Optional)</label>
-                            <input type="text" name="gstin" id="modal_gstin" class="form-control" maxlength="15">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">PAN No (Optional)</label>

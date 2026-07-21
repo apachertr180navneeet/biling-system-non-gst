@@ -37,10 +37,7 @@
                         <th>Invoice No</th>
                         <th>Date</th>
                         <th>Customer</th>
-                        <th>GSTIN</th>
                         <th>Items Count</th>
-                        <th>Taxable Amount</th>
-                        <th>GST (CGST+SGST)</th>
                         <th>Grand Total</th>
                         <th>Payment Mode</th>
                         <th>Actions</th>
@@ -55,10 +52,7 @@
                             {{ $inv->customer_name }}
                             @if($inv->customer_mobile) <br><small class="text-muted">{{ $inv->customer_mobile }}</small> @endif
                         </td>
-                        <td>{{ $inv->customer_gstin ?? '-' }}</td>
                         <td>{{ $inv->items->count() }}</td>
-                        <td>{{ number_format($inv->taxable_amount, 2) }}</td>
-                        <td>{{ number_format($inv->cgst_amount + $inv->sgst_amount, 2) }}</td>
                         <td><strong>{{ number_format($inv->total_amount, 2) }}</strong></td>
                         <td>{{ $inv->payment_mode }}</td>
                         <td>
@@ -67,7 +61,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="10" class="text-center text-muted">No parts sales invoices recorded.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted">No parts sales invoices recorded.</td></tr>
                     @endforelse
                 </tbody>
             </table>
