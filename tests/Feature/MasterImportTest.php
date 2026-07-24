@@ -97,9 +97,9 @@ class MasterImportTest extends TestCase
 
     public function test_can_import_valid_suppliers(): void
     {
-        $csvContent = "name,gstin,address,contact_person,phone,email\n"
-            . "Bosch,,Germany,,9876543210,bosch@example.com\n"
-            . "Tata Motors,,,Tata Person,8888888888,\n";
+        $csvContent = "name,address,contact_person,phone,email\n"
+            . "Bosch,Germany,,9876543210,bosch@example.com\n"
+            . "Tata Motors,,,8888888888,\n";
 
         $file = UploadedFile::fake()->createWithContent('suppliers.csv', $csvContent);
 
@@ -129,10 +129,10 @@ class MasterImportTest extends TestCase
 
     public function test_can_import_valid_customers(): void
     {
-        $csvContent = "type,name,company_name,phone,email,address,state,gstin,pan_no,aadhaar_no\n"
-            . "individual,Jane Smith,,9876543210,jane@example.com,,State,,,\n"
-            . "corporate,ACME Inc,,8888888888,acme@example.com,,,,,\n"
-            . "individual,12 ARTY BDE,,,,,,,,,\n";
+        $csvContent = "type,name,company_name,phone,email,address,state,pan_no,aadhaar_no\n"
+            . "individual,Jane Smith,,9876543210,jane@example.com,,State,,\n"
+            . "corporate,ACME Inc,,8888888888,acme@example.com,,,,\n"
+            . "individual,12 ARTY BDE,,,,,,,,\n";
 
         $file = UploadedFile::fake()->createWithContent('customers.csv', $csvContent);
 

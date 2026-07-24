@@ -683,7 +683,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                     <div class="company-details">
                         <h2>SHREE KRISHNA AUTO GREEN</h2>
                         <p>NH 65 NEAR ROADWAYS BUS STAND JODHPUR, JODHPUR, Rajasthan, 342001</p>
-                        <p style="margin-top: 4px; font-weight: 600; color: #047857;">GSTIN : 08ANQPD4555N1ZE</p>
                         <p>PAN Number : ANQPD4555N</p>
                         <p>Email: vijay.deora429@gmail.com | Mobile: 7568899148</p>
                     </div>
@@ -719,7 +718,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                         <h4>{{ $partSalesInvoice->customer_name }}</h4>
                         <p>{{ $partSalesInvoice->customer_address ?? '-' }}</p>
                         <p style="margin-top: 6px;"><b>Mobile:</b> {{ $partSalesInvoice->customer_mobile ?? '-' }}</p>
-                        <p><b>GSTIN:</b> {{ $partSalesInvoice->customer_gstin ?? '-' }}</p>
                         <p><b>PAN Number:</b> {{ $partSalesInvoice->customer_pan ?? '-' }}</p>
                         <p><b>Place of Supply:</b> {{ $partSalesInvoice->place_of_supply }}</p>
                     </div>
@@ -728,7 +726,6 @@ if (!function_exists('getIndianRupeesInWords')) {
                         <h4>{{ $partSalesInvoice->customer_name }}</h4>
                         <p>{{ $partSalesInvoice->customer_address ?? '-' }}</p>
                         <p style="margin-top: 6px;"><b>Mobile:</b> {{ $partSalesInvoice->customer_mobile ?? '-' }}</p>
-                        <p><b>GSTIN:</b> {{ $partSalesInvoice->customer_gstin ?? '-' }}</p>
                         <p><b>PAN Number:</b> {{ $partSalesInvoice->customer_pan ?? '-' }}</p>
                         <p><b>Place of Supply:</b> {{ $partSalesInvoice->place_of_supply }}</p>
                     </div>
@@ -803,24 +800,9 @@ if (!function_exists('getIndianRupeesInWords')) {
                         <div class="summary-card">
                             <table class="summary-table">
                                 <tr>
-                                    <td class="summary-label">Taxable Amount</td>
+                                    <td class="summary-label">Subtotal Amount</td>
                                     <td class="summary-value">₹ {{ number_format($partSalesInvoice->taxable_amount, 2) }}</td>
                                 </tr>
-                                @if(($partSalesInvoice->tax_regime ?? 'cgst_sgst') === 'igst')
-                                <tr>
-                                    <td class="summary-label">IGST Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->igst_amount ?? 0, 2) }}</td>
-                                </tr>
-                                @else
-                                <tr>
-                                    <td class="summary-label">CGST Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->cgst_amount, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="summary-label">SGST Amount</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->sgst_amount, 2) }}</td>
-                                </tr>
-                                @endif
                                 <tr>
                                     <td class="summary-label">Round Off</td>
                                     <td class="summary-value">₹ {{ number_format($partSalesInvoice->round_off, 2) }}</td>

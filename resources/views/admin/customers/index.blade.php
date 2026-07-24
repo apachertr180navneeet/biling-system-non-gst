@@ -31,7 +31,7 @@
             <form method="GET" action="{{ route('admin.customers.index') }}">
                 <div class="row g-3">
                     <div class="col-md-9">
-                        <input type="text" name="search" class="form-control" placeholder="Search by Name, Phone, Email, GSTIN or Company" value="{{ $search ?? '' }}">
+                        <input type="text" name="search" class="form-control" placeholder="Search by Name, Phone, Email or Company" value="{{ $search ?? '' }}">
                     </div>
                     <div class="col-md-3">
                         <div class="d-flex gap-2">
@@ -57,7 +57,6 @@
                         <th>Type</th>
                         <th>Phone</th>
                         <th>Email</th>
-                        <th>GSTIN</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -70,7 +69,6 @@
                         <td>{{ ucfirst($customer->type) }}</td>
                         <td>{{ $customer->phone }}</td>
                         <td>{{ $customer->email ?? '-' }}</td>
-                        <td>{{ $customer->gstin ?? '-' }}</td>
                         <td>
                             <label class="switch switch-success">
                                 <input type="checkbox" class="toggle-status" data-url="{{ route('admin.customers.toggle-status', $customer) }}" {{ $customer->is_active ? 'checked' : '' }}>
@@ -84,7 +82,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="8" class="text-center">No customers found.</td></tr>
+                    <tr><td colspan="7" class="text-center">No customers found.</td></tr>
                     @endforelse
                 </tbody>
             </table>

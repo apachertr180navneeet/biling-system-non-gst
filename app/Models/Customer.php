@@ -11,7 +11,7 @@ class Customer extends Model
 
     protected $fillable = [
         'type', 'name', 'company_name', 'phone', 'email',
-        'address', 'state', 'gstin', 'pan_no', 'aadhaar_no', 'is_active',
+        'address', 'state', 'pan_no', 'aadhaar_no', 'is_active',
     ];
 
     public function getFullNameAttribute()

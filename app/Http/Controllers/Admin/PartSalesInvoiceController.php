@@ -134,13 +134,10 @@ class PartSalesInvoiceController extends Controller
         $sheet->setCellValue('B1', 'Date');
         $sheet->setCellValue('C1', 'Customer Name');
         $sheet->setCellValue('D1', 'Customer Mobile');
-        $sheet->setCellValue('E1', 'GSTIN');
-        $sheet->setCellValue('F1', 'Items');
-        $sheet->setCellValue('G1', 'Taxable Amount');
-        $sheet->setCellValue('H1', 'CGST');
-        $sheet->setCellValue('I1', 'SGST');
-        $sheet->setCellValue('J1', 'Total');
-        $sheet->setCellValue('K1', 'Payment Mode');
+        $sheet->setCellValue('E1', 'Items');
+        $sheet->setCellValue('F1', 'Amount');
+        $sheet->setCellValue('G1', 'Total');
+        $sheet->setCellValue('H1', 'Payment Mode');
 
         $row = 2;
         foreach ($invoices as $inv) {
@@ -148,13 +145,10 @@ class PartSalesInvoiceController extends Controller
             $sheet->setCellValue('B' . $row, $inv->invoice_date->format('d-m-Y'));
             $sheet->setCellValue('C' . $row, $inv->customer_name);
             $sheet->setCellValue('D' . $row, $inv->customer_mobile);
-            $sheet->setCellValue('E' . $row, $inv->customer_gstin);
-            $sheet->setCellValue('F' . $row, $inv->items->count());
-            $sheet->setCellValue('G' . $row, $inv->taxable_amount);
-            $sheet->setCellValue('H' . $row, $inv->cgst_amount);
-            $sheet->setCellValue('I' . $row, $inv->sgst_amount);
-            $sheet->setCellValue('J' . $row, $inv->total_amount);
-            $sheet->setCellValue('K' . $row, $inv->payment_mode);
+            $sheet->setCellValue('E' . $row, $inv->items->count());
+            $sheet->setCellValue('F' . $row, $inv->taxable_amount);
+            $sheet->setCellValue('G' . $row, $inv->total_amount);
+            $sheet->setCellValue('H' . $row, $inv->payment_mode);
             $row++;
         }
 
@@ -241,19 +235,15 @@ class PartSalesInvoiceController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_mobile' => 'nullable|string|max:20',
             'customer_address' => 'nullable|string',
-            'customer_gstin' => 'nullable|string|max:15',
             'customer_pan' => 'nullable|string|max:10',
             'place_of_supply' => 'required|string|max:255',
             'payment_mode' => 'required|string|max:255',
-            'tax_regime' => 'required|string|in:cgst_sgst,igst',
             'previous_balance' => 'nullable|numeric|min:0',
             'received_amount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.spare_part_id' => 'required|exists:spare_parts,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.rate' => 'required|numeric|min:0',
-            'items.*.tax_percentage' => 'required|numeric|min:0|max:100',
-            'items.*.gst_type' => 'required|string|in:exclusive,inclusive',
             'items.*.serial_no_warranty_notes' => 'nullable|string|max:255',
         ]);
 
@@ -277,35 +267,16 @@ class PartSalesInvoiceController extends Controller
 
         // Calculations
         $taxable_amount = 0;
-        $cgst_amount = 0;
-        $sgst_amount = 0;
-        $igst_amount = 0;
         $subtotal = 0;
-        $tax_regime = $request->input('tax_regime', 'cgst_sgst');
 
         foreach ($request->items as $itemData) {
             $qty = intval($itemData['quantity']);
             $rate = floatval($itemData['rate']);
-            $tax_pct = floatval($itemData['tax_percentage']);
-            $gst_type = $itemData['gst_type'] ?? 'exclusive';
-
-            if ($gst_type === 'inclusive') {
-                $rate_excl_tax = $rate / (1 + ($tax_pct / 100));
-                $line_taxable = $qty * $rate_excl_tax;
-            } else {
-                $line_taxable = $qty * $rate;
-            }
-            $line_tax = ($line_taxable * $tax_pct) / 100;
-            
-            $taxable_amount += $line_taxable;
-            if ($tax_regime === 'igst') {
-                $igst_amount += round($line_tax, 2);
-            } else {
-                $cgst_amount += round($line_tax / 2, 2);
-                $sgst_amount += round($line_tax / 2, 2);
-            }
-            $subtotal += ($line_taxable + $line_tax);
+            $line_amount = $qty * $rate;
+            $subtotal += $line_amount;
         }
+
+        $taxable_amount = $subtotal;
 
         $prev_bal = floatval($request->input('previous_balance', 0));
         $received = floatval($request->input('received_amount', 0));
@@ -318,7 +289,7 @@ class PartSalesInvoiceController extends Controller
         $balance = $grand_total - $received;
         $curr_bal = $prev_bal + $balance;
 
-        $invoice = DB::transaction(function () use ($request, $taxable_amount, $cgst_amount, $sgst_amount, $igst_amount, $tax_regime, $round_off, $total_rounded, $received, $balance, $prev_bal, $curr_bal) {
+        $invoice = DB::transaction(function () use ($request, $taxable_amount, $round_off, $total_rounded, $received, $balance, $prev_bal, $curr_bal) {
             // Generate or use provided invoice number
             $invoiceNumber = $request->filled('invoice_number')
                 ? trim($request->input('invoice_number'))
@@ -331,14 +302,9 @@ class PartSalesInvoiceController extends Controller
                 'customer_name' => $request->customer_name,
                 'customer_mobile' => $request->customer_mobile,
                 'customer_address' => $request->customer_address,
-                'customer_gstin' => $request->customer_gstin,
                 'customer_pan' => $request->customer_pan,
                 'place_of_supply' => $request->place_of_supply,
-                'tax_regime' => $tax_regime,
                 'taxable_amount' => $taxable_amount,
-                'cgst_amount' => $cgst_amount,
-                'sgst_amount' => $sgst_amount,
-                'igst_amount' => $igst_amount,
                 'round_off' => $round_off,
                 'total_amount' => $total_rounded,
                 'received_amount' => $received,
@@ -352,16 +318,7 @@ class PartSalesInvoiceController extends Controller
             foreach ($request->items as $itemData) {
                 $qty = intval($itemData['quantity']);
                 $rate = floatval($itemData['rate']);
-                $tax_pct = floatval($itemData['tax_percentage']);
-                $gst_type = $itemData['gst_type'] ?? 'exclusive';
-
-                if ($gst_type === 'inclusive') {
-                    $rate = $rate / (1 + ($tax_pct / 100));
-                }
-
-                $line_taxable = $qty * $rate;
-                $line_tax = ($line_taxable * $tax_pct) / 100;
-                $line_amount = $line_taxable + $line_tax;
+                $line_amount = $qty * $rate;
 
                 // Decrement stock
                 $stock = SparePartStock::where('spare_part_id', $itemData['spare_part_id'])->lockForUpdate()->first();
@@ -381,8 +338,6 @@ class PartSalesInvoiceController extends Controller
                     'spare_part_id' => $itemData['spare_part_id'],
                     'quantity' => $qty,
                     'rate' => $rate,
-                    'tax_percentage' => $tax_pct,
-                    'tax_amount' => $line_tax,
                     'amount' => $line_amount,
                     'serial_no_warranty_notes' => $itemData['serial_no_warranty_notes'],
                 ]);

@@ -82,7 +82,7 @@
                         <input type="date" name="invoice_date" class="form-control @error('invoice_date') is-invalid @enderror" value="{{ old('invoice_date', date('Y-m-d')) }}" required>
                         @error('invoice_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                         <select name="payment_mode" class="form-select no-select2 @error('payment_mode') is-invalid @enderror" required>
                             <option value="Cash" {{ old('payment_mode') === 'Cash' ? 'selected' : '' }}>Cash</option>
@@ -91,13 +91,6 @@
                         </select>
                         @error('payment_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Tax Regime <span class="text-danger">*</span></label>
-                        <select name="tax_regime" id="tax_regime" class="form-select no-select2" required>
-                            <option value="cgst_sgst" {{ old('tax_regime', 'cgst_sgst') === 'cgst_sgst' ? 'selected' : '' }}>CGST + SGST</option>
-                            <option value="igst" {{ old('tax_regime') === 'igst' ? 'selected' : '' }}>IGST</option>
-                        </select>
-                    </div>
                 </div>
 
                 <h5 class="card-title text-primary mb-3">Invoice Items (Parts)</h5>
@@ -105,13 +98,11 @@
                     <table class="table table-bordered align-middle" id="itemsTable">
                         <thead>
                             <tr class="table-dark">
-                                <th style="width: 30%;">Part Name / Number <span class="text-danger">*</span></th>
-                                <th style="width: 10%; text-align: center;">Stock Available</th>
-                                <th style="width: 8%; text-align: center;">Qty <span class="text-danger">*</span></th>
-                                <th style="width: 12%;">Rate <span class="text-danger">*</span></th>
-                                <th style="width: 12%;">GST Type <span class="text-danger">*</span></th>
-                                <th style="width: 10%;">GST %</th>
-                                <th style="width: 13%;">Total Amount</th>
+                                <th style="width: 45%;">Part Name / Number <span class="text-danger">*</span></th>
+                                <th style="width: 15%; text-align: center;">Stock Available</th>
+                                <th style="width: 10%; text-align: center;">Qty <span class="text-danger">*</span></th>
+                                <th style="width: 15%;">Rate <span class="text-danger">*</span></th>
+                                <th style="width: 10%;">Total Amount</th>
                                 <th style="width: 5%; text-align: center;">Action</th>
                             </tr>
                         </thead>
@@ -139,22 +130,7 @@
                                     <input type="number" name="items[0][quantity]" class="form-control qty-input text-center" min="1" value="1" required>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input" min="0" value="0.00" data-entered-rate="0.00" required>
-                                </td>
-                                <td>
-                                    <select name="items[0][gst_type]" class="form-select gst-type-select no-select2" required>
-                                        <option value="exclusive">Exclusive</option>
-                                        <option value="inclusive">Inclusive</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select name="items[0][tax_percentage]" class="form-select tax-select no-select2" required>
-                                        <option value="0.00">0%</option>
-                                        <option value="5.00">5%</option>
-                                        <option value="12.00">12%</option>
-                                        <option value="18.00" selected>18%</option>
-                                        <option value="28.00">28%</option>
-                                    </select>
+                                    <input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input" min="0" value="0.00" required>
                                 </td>
                                 <td class="bg-light">
                                     <input type="text" class="form-control line-total bg-transparent border-0 fw-bold" readonly value="0.00">
@@ -174,20 +150,8 @@
                 <h5 class="card-title text-primary mb-3">Payment Summary</h5>
                 <div class="row g-3 mb-4 bg-light p-3 rounded border border-light-subtle">
                     <div class="col-md-3">
-                        <label class="form-label">Taxable Amount (INR)</label>
+                        <label class="form-label">Subtotal Amount (INR)</label>
                         <input type="text" id="summary_taxable" class="form-control bg-white" readonly value="0.00">
-                    </div>
-                    <div class="col-md-3" id="summary_cgst_sgst_fields">
-                        <label class="form-label">CGST Amount (INR)</label>
-                        <input type="text" id="summary_cgst" class="form-control bg-white" readonly value="0.00">
-                    </div>
-                    <div class="col-md-3" id="summary_cgst_sgst_fields2">
-                        <label class="form-label">SGST Amount (INR)</label>
-                        <input type="text" id="summary_sgst" class="form-control bg-white" readonly value="0.00">
-                    </div>
-                    <div class="col-md-3 d-none" id="summary_igst_field">
-                        <label class="form-label">IGST Amount (INR)</label>
-                        <input type="text" id="summary_igst" class="form-control bg-white" readonly value="0.00">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Round Off (INR)</label>
@@ -330,22 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="number" name="items[\${itemIndex}][quantity]" class="form-control qty-input text-center" min="1" value="1" required>
             </td>
             <td>
-                <input type="number" step="0.01" name="items[\${itemIndex}][rate]" class="form-control rate-input" min="0" value="0.00" data-entered-rate="0.00" required>
-            </td>
-            <td>
-                <select name="items[\${itemIndex}][gst_type]" class="form-select gst-type-select no-select2" required>
-                    <option value="exclusive">Exclusive</option>
-                    <option value="inclusive">Inclusive</option>
-                </select>
-            </td>
-            <td>
-                <select name="items[\${itemIndex}][tax_percentage]" class="form-select tax-select no-select2" required>
-                    <option value="0.00">0%</option>
-                    <option value="5.00">5%</option>
-                    <option value="12.00">12%</option>
-                    <option value="18.00" selected>18%</option>
-                    <option value="28.00">28%</option>
-                </select>
+                <input type="number" step="0.01" name="items[\${itemIndex}][rate]" class="form-control rate-input" min="0" value="0.00" required>
             </td>
             <td class="bg-light">
                 <input type="text" class="form-control line-total bg-transparent border-0 fw-bold" readonly value="0.00">
@@ -374,30 +323,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function convertRowInclusiveToExclusive(row) {
-        var rateInput = row.querySelector('.rate-input');
-        var gstTypeSelect = row.querySelector('.gst-type-select');
-        var taxSelect = row.querySelector('.tax-select');
-
-        var gstType = gstTypeSelect.value;
-        var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
-
-        if (gstType === 'inclusive') {
-            var taxPct = parseFloat(taxSelect.value) || 0;
-            var baseRate = enteredRate / (1 + (taxPct / 100));
-            rateInput.value = baseRate.toFixed(2);
-        } else {
-            rateInput.value = enteredRate.toFixed(2);
-        }
-        calculateRow(row);
-    }
-
     function bindRowEvents(row) {
         var partSelect = row.querySelector('.part-select');
         var qtyInput = row.querySelector('.qty-input');
         var rateInput = row.querySelector('.rate-input');
-        var gstTypeSelect = row.querySelector('.gst-type-select');
-        var taxSelect = row.querySelector('.tax-select');
         var stockBadge = row.querySelector('.stock-badge');
 
         $(partSelect).on('change', function() {
@@ -406,12 +335,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 var price = parseFloat(opt.getAttribute('data-price')) || 0;
                 var stock = parseInt(opt.getAttribute('data-stock')) || 0;
                 rateInput.value = price.toFixed(2);
-                rateInput.dataset.enteredRate = price.toFixed(2);
                 stockBadge.textContent = stock;
                 qtyInput.setAttribute('max', stock);
             } else {
                 rateInput.value = '0.00';
-                rateInput.dataset.enteredRate = '0.00';
                 stockBadge.textContent = '0';
                 qtyInput.removeAttribute('max');
             }
@@ -432,57 +359,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         rateInput.addEventListener('input', function() {
-            rateInput.dataset.enteredRate = rateInput.value;
             calculateRow(row);
-        });
-
-        rateInput.addEventListener('focus', function() {
-            if (gstTypeSelect.value === 'inclusive') {
-                var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
-                rateInput.value = enteredRate.toFixed(2);
-            }
-        });
-
-        rateInput.addEventListener('blur', function() {
-            convertRowInclusiveToExclusive(row);
-        });
-
-        gstTypeSelect.addEventListener('change', function() {
-            convertRowInclusiveToExclusive(row);
-        });
-
-        taxSelect.addEventListener('change', function() {
-            convertRowInclusiveToExclusive(row);
         });
     }
 
     function calculateRow(row) {
         var qtyInput = row.querySelector('.qty-input');
         var rateInput = row.querySelector('.rate-input');
-        var gstTypeSelect = row.querySelector('.gst-type-select');
-        var taxSelect = row.querySelector('.tax-select');
         var lineTotal = row.querySelector('.line-total');
 
         var qty = parseInt(qtyInput.value) || 0;
-        var gstType = gstTypeSelect.value;
-        var taxPct = parseFloat(taxSelect.value) || 0;
-
-        var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
-
-        var taxable = 0;
-        var tax = 0;
-        var net = 0;
-
-        if (gstType === 'inclusive') {
-            var rateExclTax = enteredRate / (1 + (taxPct / 100));
-            taxable = qty * rateExclTax;
-            tax = (taxable * taxPct) / 100;
-            net = qty * enteredRate;
-        } else {
-            taxable = qty * enteredRate;
-            tax = (taxable * taxPct) / 100;
-            net = taxable + tax;
-        }
+        var rate = parseFloat(rateInput.value) || 0;
+        var net = qty * rate;
 
         lineTotal.value = net.toFixed(2);
         calculateSummary();
@@ -494,92 +382,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Summary calculations
     var summaryTaxable = document.getElementById('summary_taxable');
-    var summaryCgst = document.getElementById('summary_cgst');
-    var summarySgst = document.getElementById('summary_sgst');
-    var summaryIgst = document.getElementById('summary_igst');
-    var taxRegimeSelect = document.getElementById('tax_regime');
     var summaryRound = document.getElementById('summary_round');
     var summaryGrand = document.getElementById('summary_grand');
     var prevBalanceInput = document.getElementById('previous_balance');
     var receivedAmountInput = document.getElementById('received_amount');
     var summaryCurrentBalance = document.getElementById('summary_current_balance');
 
-    function toggleRegimeFields() {
-        var isIgst = taxRegimeSelect.value === 'igst';
-        document.getElementById('summary_cgst_sgst_fields').classList.toggle('d-none', isIgst);
-        document.getElementById('summary_cgst_sgst_fields2').classList.toggle('d-none', isIgst);
-        document.getElementById('summary_igst_field').classList.toggle('d-none', !isIgst);
-    }
-
-    taxRegimeSelect.addEventListener('change', function() {
-        toggleRegimeFields();
-        calculateSummary();
-    });
-
     function calculateSummary() {
         var taxableTotal = 0;
-        var cgstTotal = 0;
-        var sgstTotal = 0;
-        var igstTotal = 0;
-        var taxRegime = taxRegimeSelect.value;
 
         var rows = itemsContainer.querySelectorAll('.item-row');
         rows.forEach(function(row) {
             var qtyInput = row.querySelector('.qty-input');
             var rateInput = row.querySelector('.rate-input');
-            var gstTypeSelect = row.querySelector('.gst-type-select');
-            var taxSelect = row.querySelector('.tax-select');
 
             var qty = parseInt(qtyInput.value) || 0;
-            var gstType = gstTypeSelect.value;
-            var taxPct = parseFloat(taxSelect.value) || 0;
-            
-            var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
-
-            var taxable = 0;
-            var tax = 0;
-
-            if (gstType === 'inclusive') {
-                var rateExclTax = enteredRate / (1 + (taxPct / 100));
-                taxable = qty * rateExclTax;
-                tax = (taxable * taxPct) / 100;
-            } else {
-                taxable = qty * enteredRate;
-                tax = (taxable * taxPct) / 100;
-            }
-
-            taxableTotal += taxable;
-            if (taxRegime === 'igst') {
-                igstTotal += tax;
-            } else {
-                cgstTotal += tax / 2;
-                sgstTotal += tax / 2;
-            }
+            var rate = parseFloat(rateInput.value) || 0;
+            taxableTotal += (qty * rate);
         });
 
-        var netTotalBeforeRound = taxableTotal + cgstTotal + sgstTotal + igstTotal;
-        var netTotalRounded = Math.round(netTotalBeforeRound);
-        var roundOff = netTotalRounded - netTotalBeforeRound;
+        var netTotalBeforeRound = taxableTotal;
+        var grandTotalRounded = Math.round(netTotalBeforeRound);
+        var roundOff = grandTotalRounded - netTotalBeforeRound;
 
         summaryTaxable.value = taxableTotal.toFixed(2);
-        summaryCgst.value = cgstTotal.toFixed(2);
-        summarySgst.value = sgstTotal.toFixed(2);
-        summaryIgst.value = igstTotal.toFixed(2);
         summaryRound.value = roundOff.toFixed(2);
-        summaryGrand.value = netTotalRounded.toFixed(2);
+        summaryGrand.value = grandTotalRounded.toFixed(2);
 
-        var prev = parseFloat(prevBalanceInput.value) || 0;
-        var rec = parseFloat(receivedAmountInput.value) || 0;
-        var invoiceBal = netTotalRounded - rec;
-        var curBal = prev + invoiceBal;
+        var prevBal = parseFloat(prevBalanceInput.value) || 0;
+        var received = parseFloat(receivedAmountInput.value) || 0;
+        var currentBal = prevBal + (grandTotalRounded - received);
 
-        summaryCurrentBalance.value = curBal.toFixed(2);
+        summaryCurrentBalance.value = currentBal.toFixed(2);
     }
 
     prevBalanceInput.addEventListener('input', calculateSummary);
     receivedAmountInput.addEventListener('input', calculateSummary);
 
-    document.getElementById('invoiceForm').addEventListener('submit', function(e) {
         if (document.activeElement) {
             document.activeElement.blur();
         }

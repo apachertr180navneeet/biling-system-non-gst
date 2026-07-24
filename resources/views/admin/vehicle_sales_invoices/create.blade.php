@@ -142,33 +142,7 @@
                         @error('rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">GST Type <span class="text-danger">*</span></label>
-                        <select name="gst_type" id="gst_type" class="form-select no-select2" required>
-                            <option value="exclusive" {{ old('gst_type') === 'exclusive' ? 'selected' : '' }}>GST Extra (Exclusive)</option>
-                            <option value="inclusive" {{ old('gst_type') === 'inclusive' ? 'selected' : '' }}>GST Included (Inclusive)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Tax Regime <span class="text-danger">*</span></label>
-                        <select name="tax_regime" id="tax_regime" class="form-select no-select2" required>
-                            <option value="cgst_sgst" {{ old('tax_regime', 'cgst_sgst') === 'cgst_sgst' ? 'selected' : '' }}>CGST + SGST</option>
-                            <option value="igst" {{ old('tax_regime') === 'igst' ? 'selected' : '' }}>IGST</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3" id="cgst_sgst_fields">
-                        <label class="form-label">SGST @ 2.5% (Calculated)</label>
-                        <input type="text" id="sgst" class="form-control bg-light" readonly value="0.00">
-                    </div>
-                    <div class="col-md-3" id="cgst_sgst_fields2">
-                        <label class="form-label">CGST @ 2.5% (Calculated)</label>
-                        <input type="text" id="cgst" class="form-control bg-light" readonly value="0.00">
-                    </div>
-                    <div class="col-md-3 d-none" id="igst_field">
-                        <label class="form-label">IGST @ 5% (Calculated)</label>
-                        <input type="text" id="igst" class="form-control bg-light" readonly value="0.00">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Subtotal Incl. GST</label>
+                        <label class="form-label">Subtotal</label>
                         <input type="text" id="subtotal_incl_gst" class="form-control bg-light" readonly value="0.00">
                     </div>
                     <div class="col-md-3">
@@ -351,104 +325,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     var rateInp = document.getElementById('rate');
-    var gstTypeSelect = document.getElementById('gst_type');
-    var taxRegimeSelect = document.getElementById('tax_regime');
     var nemmpInp = document.getElementById('nemmp_incentive');
     var discountInp = document.getElementById('discount');
     
-    var sgstOut = document.getElementById('sgst');
-    var cgstOut = document.getElementById('cgst');
-    var igstOut = document.getElementById('igst');
     var subtotalOut = document.getElementById('subtotal_incl_gst');
     var grandTotalOut = document.getElementById('grand_total');
 
-    function toggleRegimeFields() {
-        var isIgst = taxRegimeSelect.value === 'igst';
-        document.getElementById('cgst_sgst_fields').classList.toggle('d-none', isIgst);
-        document.getElementById('cgst_sgst_fields2').classList.toggle('d-none', isIgst);
-        document.getElementById('igst_field').classList.toggle('d-none', !isIgst);
-    }
-
-    taxRegimeSelect.addEventListener('change', function() {
-        toggleRegimeFields();
-        calculateInvoice();
-    });
-
     function calculateInvoice() {
-        var gstType = gstTypeSelect.value;
-        var taxRegime = taxRegimeSelect.value;
-        var enteredRate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
-        var subtotal = 0;
-        var cgst = 0;
-        var sgst = 0;
-        var igst = 0;
-
-        if (gstType === 'inclusive') {
-            var baseRate = enteredRate / 1.05;
-            if (taxRegime === 'igst') {
-                igst = Math.round(baseRate * 5) / 100;
-            } else {
-                cgst = Math.round(baseRate * 2.5) / 100;
-                sgst = Math.round(baseRate * 2.5) / 100;
-            }
-            subtotal = enteredRate;
-        } else {
-            if (taxRegime === 'igst') {
-                igst = Math.round(enteredRate * 5) / 100;
-            } else {
-                cgst = Math.round(enteredRate * 2.5) / 100;
-                sgst = Math.round(enteredRate * 2.5) / 100;
-            }
-            subtotal = enteredRate + cgst + sgst + igst;
-        }
-        
+        var subtotal = parseFloat(rateInp.value) || 0;
         var nemmp = parseFloat(nemmpInp.value) || 0;
         var discount = parseFloat(discountInp.value) || 0;
         var grand = subtotal - nemmp - discount;
 
-        sgstOut.value = sgst.toFixed(2);
-        cgstOut.value = cgst.toFixed(2);
-        igstOut.value = igst.toFixed(2);
         subtotalOut.value = subtotal.toFixed(2);
         grandTotalOut.value = grand.toFixed(2);
     }
 
-    function convertInclusiveToExclusive() {
-        var gstType = gstTypeSelect.value;
-        var enteredRate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
-
-        if (gstType === 'inclusive') {
-            var baseRate = enteredRate / 1.05;
-            rateInp.value = baseRate.toFixed(2);
-        } else {
-            rateInp.value = enteredRate.toFixed(2);
-        }
-        calculateInvoice();
-    }
-
-    rateInp.addEventListener('input', function() {
-        rateInp.dataset.enteredRate = rateInp.value;
-        calculateInvoice();
-    });
-
-    rateInp.addEventListener('focus', function() {
-        if (gstTypeSelect.value === 'inclusive') {
-            var enteredRate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
-            rateInp.value = enteredRate.toFixed(2);
-        }
-    });
-
-    gstTypeSelect.addEventListener('change', function() {
-        convertInclusiveToExclusive();
-    });
-
-    document.getElementById('invoiceForm').addEventListener('submit', function(e) {
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
-        gstTypeSelect.value = 'exclusive';
-    });
-
+    rateInp.addEventListener('input', calculateInvoice);
     nemmpInp.addEventListener('input', calculateInvoice);
     discountInp.addEventListener('input', calculateInvoice);
 

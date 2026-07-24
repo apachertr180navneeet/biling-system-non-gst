@@ -9,69 +9,69 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->dropColumn('gstin');
+            if (Schema::hasColumn('customers', 'gstin')) {
+                $table->dropColumn('gstin');
+            }
         });
 
         Schema::table('suppliers', function (Blueprint $table) {
-            $table->dropColumn('gstin');
+            if (Schema::hasColumn('suppliers', 'gstin')) {
+                $table->dropColumn('gstin');
+            }
         });
 
         Schema::table('quotations', function (Blueprint $table) {
-            $table->dropColumn([
-                'customer_gstin',
-                'tax_regime',
-                'cgst_rate',
-                'sgst_rate',
-                'igst_rate',
-                'cgst_amount',
-                'sgst_amount',
-                'igst_amount',
-            ]);
+            $cols = ['customer_gstin', 'tax_regime', 'cgst_rate', 'sgst_rate', 'igst_rate', 'cgst_amount', 'sgst_amount', 'igst_amount'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('quotations', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
 
         Schema::table('quotation_items', function (Blueprint $table) {
-            $table->dropColumn([
-                'tax_percentage',
-                'tax_amount',
-                'cgst_amount',
-                'sgst_amount',
-                'igst_amount',
-            ]);
+            $cols = ['tax_percentage', 'tax_amount', 'cgst_amount', 'sgst_amount', 'igst_amount'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('quotation_items', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
 
         Schema::table('vehicle_sales_invoices', function (Blueprint $table) {
-            $table->dropColumn([
-                'tax_regime',
-                'cgst_rate',
-                'cgst_amount',
-                'sgst_rate',
-                'sgst_amount',
-                'igst_amount',
-            ]);
+            $cols = ['tax_regime', 'cgst_rate', 'cgst_amount', 'sgst_rate', 'sgst_amount', 'igst_amount'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('vehicle_sales_invoices', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
 
         Schema::table('part_sales_invoices', function (Blueprint $table) {
-            $table->dropColumn([
-                'customer_gstin',
-                'tax_regime',
-                'cgst_amount',
-                'sgst_amount',
-                'igst_amount',
-            ]);
+            $cols = ['customer_gstin', 'tax_regime', 'cgst_amount', 'sgst_amount', 'igst_amount'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('part_sales_invoices', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
 
         Schema::table('part_sales_invoice_items', function (Blueprint $table) {
-            $table->dropColumn([
-                'tax_percentage',
-                'tax_amount',
-            ]);
+            $cols = ['tax_percentage', 'tax_amount'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('part_sales_invoice_items', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
 
         Schema::table('hsn_sac_master', function (Blueprint $table) {
-            $table->dropColumn([
-                'gst_rate',
-                'cess_rate',
-            ]);
+            $cols = ['gst_rate', 'cess_rate'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('hsn_sac_master', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
     }
 

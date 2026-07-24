@@ -172,7 +172,6 @@
                     <strong>Name:</strong> {{ $quotation->customer_name }}<br>
                     @if($quotation->customer_mobile)<strong>Mobile:</strong> {{ $quotation->customer_mobile }}<br>@endif
                     @if($quotation->customer_address)<strong>Address:</strong> {{ $quotation->customer_address }}<br>@endif
-                    @if($quotation->customer_gstin)<strong>GSTIN:</strong> {{ $quotation->customer_gstin }}<br>@endif
                     @if($quotation->customer_pan)<strong>PAN:</strong> {{ $quotation->customer_pan }}<br>@endif
                     <strong>Place of Supply:</strong> {{ $quotation->place_of_supply }}
                 </div>
@@ -197,7 +196,7 @@
                         <strong>{{ $quotation->vehicleMaster->variant_name ?? '-' }}</strong><br>
                         Color: {{ $quotation->vehicleMaster->color_name ?? '-' }} | Fuel: {{ $quotation->vehicleMaster->fuel_type ?? '-' }}<br>
                         Battery Make: {{ $quotation->vehicleMaster->battery_make ?? '-' }}<br>
-                        <strong style="color: #000;">ON ROAD PRICE INCLUDING GST, RTO, INSURANCE</strong>
+                        <strong style="color: #000;">ON ROAD PRICE INCLUDING RTO, INSURANCE</strong>
                     </td>
                     <td class="text-right">₹{{ number_format($quotation->rate, 2) }}</td>
                     <td class="text-right">-₹{{ number_format($quotation->discount, 2) }}</td>
@@ -211,10 +210,9 @@
             <thead>
                 <tr>
                     <th style="width: 5%;">#</th>
-                    <th style="width: 40%;">Part Details</th>
+                    <th style="width: 45%;">Part Details</th>
                     <th class="text-right" style="width: 15%;">Rate</th>
-                    <th style="width: 10%;">GST %</th>
-                    <th class="text-right" style="width: 10%;">Qty</th>
+                    <th class="text-right" style="width: 15%;">Qty</th>
                     <th class="text-right" style="width: 20%;">Total</th>
                 </tr>
             </thead>
@@ -227,7 +225,6 @@
                         <small style="color: #666;">Part No: {{ $item->sparePart->part_no ?? '-' }}</small>
                     </td>
                     <td class="text-right">₹{{ number_format($item->rate, 2) }}</td>
-                    <td>{{ $item->tax_percentage }}%</td>
                     <td class="text-right">{{ $item->quantity }}</td>
                     <td class="text-right">₹{{ number_format($item->amount, 2) }}</td>
                 </tr>
@@ -254,7 +251,7 @@
                             <tr><td style="padding: 1px 0;"><strong>ROOT TOP ABS HARD ROOF:</strong></td><td>;- {{ $quotation->roof_top_abs ?? 'YES' }}</td></tr>
                             <tr><td style="padding: 1px 0;"><strong>FRONT FIBER WIND SHIELD:</strong></td><td>;- {{ $quotation->front_fiber_wind_shield ?? 'YES' }}</td></tr>
                             <tr><td style="padding: 1px 0;"><strong>METER:</strong></td><td>:- {{ $quotation->meter_type ?? 'DIGITAL' }}</td></tr>
-                            <tr><td style="padding: 1px 0;"><strong>ON ROAD PRICE:</strong></td><td>:- {{ number_format($quotation->total_amount, 0, '', '') }}/- INCLUDING GST, RTO, INSURANCE</td></tr>
+                            <tr><td style="padding: 1px 0;"><strong>ON ROAD PRICE:</strong></td><td>:- {{ number_format($quotation->total_amount, 0, '', '') }}/- INCLUDING RTO, INSURANCE</td></tr>
                             <tr><td style="padding: 1px 0;"><strong>ACCESSORIES:</strong></td><td>:- STEPNY, JACK, TOOL KIT,STERIO, SIDE MIRROR</td></tr>
                         </table>
                     </div>
@@ -283,24 +280,9 @@
             <td style="width: 45%; vertical-align: top;">
                 <table class="totals-table">
                     <tr>
-                        <td>Taxable Amount:</td>
+                        <td>Subtotal Amount:</td>
                         <td class="text-right">₹{{ number_format($quotation->taxable_amount, 2) }}</td>
                     </tr>
-                    @if($quotation->tax_regime === 'cgst_sgst')
-                        <tr>
-                            <td>CGST Amount:</td>
-                            <td class="text-right">₹{{ number_format($quotation->cgst_amount, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td>SGST Amount:</td>
-                            <td class="text-right">₹{{ number_format($quotation->sgst_amount, 2) }}</td>
-                        </tr>
-                    @else
-                        <tr>
-                            <td>IGST Amount:</td>
-                            <td class="text-right">₹{{ number_format($quotation->igst_amount, 2) }}</td>
-                        </tr>
-                    @endif
                     <tr>
                         <td>Round Off:</td>
                         <td class="text-right">₹{{ number_format($quotation->round_off, 2) }}</td>

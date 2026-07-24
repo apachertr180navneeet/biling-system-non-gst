@@ -56,8 +56,7 @@
                         <th>Type</th>
                         <th>Customer</th>
                         <th>Items/Vehicle</th>
-                        <th>Taxable Amount</th>
-                        <th>GST Amount</th>
+                        <th>Subtotal Amount</th>
                         <th>Grand Total</th>
                         <th>Actions</th>
                     </tr>
@@ -90,13 +89,6 @@
                             @endif
                         </td>
                         <td>{{ number_format($q->taxable_amount, 2) }}</td>
-                        <td>
-                            @if($q->tax_regime === 'cgst_sgst')
-                                {{ number_format($q->cgst_amount + $q->sgst_amount, 2) }} (CGST+SGST)
-                            @else
-                                {{ number_format($q->igst_amount, 2) }} (IGST)
-                            @endif
-                        </td>
                         <td class="fw-bold">{{ number_format($q->total_amount, 2) }}</td>
                         <td>
                             <div class="d-flex gap-1">

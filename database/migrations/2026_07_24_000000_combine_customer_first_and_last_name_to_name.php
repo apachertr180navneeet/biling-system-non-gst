@@ -16,15 +16,22 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement("ALTER TABLE customers MODIFY phone VARCHAR(255) NULL");
-            DB::statement("ALTER TABLE customers MODIFY name VARCHAR(255) NULL");
-            DB::statement("ALTER TABLE customers MODIFY company_name VARCHAR(255) NULL");
-            DB::statement("ALTER TABLE customers MODIFY email VARCHAR(255) NULL");
-            DB::statement("ALTER TABLE customers MODIFY address TEXT NULL");
-            DB::statement("ALTER TABLE customers MODIFY state VARCHAR(255) NULL");
-            DB::statement("ALTER TABLE customers MODIFY gstin VARCHAR(15) NULL");
-            DB::statement("ALTER TABLE customers MODIFY pan_no VARCHAR(10) NULL");
-            DB::statement("ALTER TABLE customers MODIFY aadhaar_no VARCHAR(12) NULL");
+            $columnsToModify = [
+                'phone' => 'VARCHAR(255) NULL',
+                'name' => 'VARCHAR(255) NULL',
+                'company_name' => 'VARCHAR(255) NULL',
+                'email' => 'VARCHAR(255) NULL',
+                'address' => 'TEXT NULL',
+                'state' => 'VARCHAR(255) NULL',
+                'gstin' => 'VARCHAR(15) NULL',
+                'pan_no' => 'VARCHAR(10) NULL',
+                'aadhaar_no' => 'VARCHAR(12) NULL',
+            ];
+            foreach ($columnsToModify as $col => $definition) {
+                if (Schema::hasColumn('customers', $col)) {
+                    DB::statement("ALTER TABLE customers MODIFY {$col} {$definition}");
+                }
+            }
         }
 
         // Combine first_name and last_name into name for existing rows

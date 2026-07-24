@@ -46,13 +46,6 @@
                         <span class="badge bg-success">Parts</span>
                     @endif
                     <br>
-                    <strong>Tax Regime:</strong> 
-                    @if($quotation->tax_regime === 'cgst_sgst')
-                        CGST + SGST (9% + 9% typical)
-                    @else
-                        IGST (18% typical)
-                    @endif
-                    <br>
                     <strong>Created By:</strong> {{ $quotation->creator->full_name ?? 'System' }}<br>
                     <strong>Remarks/Notes:</strong> {{ $quotation->remarks ?? '-' }}
                 </div>
@@ -61,7 +54,6 @@
                     <strong>Name:</strong> {{ $quotation->customer_name }}<br>
                     <strong>Mobile:</strong> {{ $quotation->customer_mobile ?? '-' }}<br>
                     <strong>Address:</strong> {{ $quotation->customer_address ?? '-' }}<br>
-                    <strong>GSTIN:</strong> {{ $quotation->customer_gstin ?? '-' }}<br>
                     <strong>PAN:</strong> {{ $quotation->customer_pan ?? '-' }}<br>
                     <strong>Place of Supply:</strong> {{ $quotation->place_of_supply }}
                 </div>
@@ -78,8 +70,6 @@
                                 <th>Discount</th>
                                 <th>Incentive</th>
                                 <th>Taxable Value</th>
-                                <th>GST Rate</th>
-                                <th>GST Amount</th>
                                 <th>Grand Total</th>
                             </tr>
                         </thead>
@@ -87,26 +77,12 @@
                             <tr>
                                 <td>
                                     {{ $quotation->vehicleMaster->variant_name ?? '-' }} ({{ $quotation->vehicleMaster->color_name ?? '' }} - {{ $quotation->vehicleMaster->fuel_type ?? '' }})
-                                    <div class="small text-muted fw-bold">ON ROAD PRICE INCLUDING GST, RTO, INSURANCE</div>
+                                    <div class="small text-muted fw-bold">ON ROAD PRICE INCLUDING RTO, INSURANCE</div>
                                 </td>
                                 <td>₹{{ number_format($quotation->rate, 2) }}</td>
                                 <td class="text-danger">-₹{{ number_format($quotation->discount, 2) }}</td>
                                 <td class="text-danger">-₹{{ number_format($quotation->nemmp_incentive, 2) }}</td>
                                 <td>₹{{ number_format($quotation->taxable_amount, 2) }}</td>
-                                <td>
-                                    @if($quotation->tax_regime === 'cgst_sgst')
-                                        CGST: {{ $quotation->cgst_rate }}% <br> SGST: {{ $quotation->sgst_rate }}%
-                                    @else
-                                        IGST: {{ $quotation->igst_rate }}%
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($quotation->tax_regime === 'cgst_sgst')
-                                        ₹{{ number_format($quotation->cgst_amount + $quotation->sgst_amount, 2) }}
-                                    @else
-                                        ₹{{ number_format($quotation->igst_amount, 2) }}
-                                    @endif
-                                </td>
                                 <td class="fw-bold">₹{{ number_format($quotation->total_amount, 2) }}</td>
                             </tr>
                         </tbody>
@@ -137,9 +113,7 @@
                                     <small class="text-muted">Part No: {{ $item->sparePart->part_no ?? '-' }}</small>
                                 </td>
                                 <td>₹{{ number_format($item->rate, 2) }}</td>
-                                <td>{{ $item->tax_percentage }}%</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td>₹{{ number_format($item->tax_amount, 2) }}</td>
                                 <td>₹{{ number_format($item->amount, 2) }}</td>
                                 <td>{{ $item->serial_no_warranty_notes ?? '-' }}</td>
                             </tr>
@@ -169,7 +143,7 @@
                                     <tr><td><strong>ROOF TOP ABS HARD ROOF:</strong></td><td>{{ $quotation->roof_top_abs ?? 'YES' }}</td></tr>
                                     <tr><td><strong>FRONT FIBER WIND SHIELD:</strong></td><td>{{ $quotation->front_fiber_wind_shield ?? 'YES' }}</td></tr>
                                     <tr><td><strong>METER:</strong></td><td>{{ $quotation->meter_type ?? 'DIGITAL' }}</td></tr>
-                                    <tr><td><strong>ON ROAD PRICE:</strong></td><td>₹{{ number_format($quotation->total_amount, 2) }}/- INCLUDING GST, RTO, INSURANCE</td></tr>
+                                    <tr><td><strong>ON ROAD PRICE:</strong></td><td>₹{{ number_format($quotation->total_amount, 2) }}/- INCLUDING RTO, INSURANCE</td></tr>
                                     <tr><td><strong>ACCESSORIES:</strong></td><td>STEPNY, JACK, TOOL KIT,STERIO, SIDE MIRROR</td></tr>
                                 </table>
                             </div>
@@ -204,24 +178,9 @@
                 <div class="col-md-6">
                     <table class="table table-sm table-borderless">
                         <tr>
-                            <td><strong>Taxable Amount:</strong></td>
+                            <td><strong>Subtotal Amount:</strong></td>
                             <td class="text-end">₹{{ number_format($quotation->taxable_amount, 2) }}</td>
                         </tr>
-                        @if($quotation->tax_regime === 'cgst_sgst')
-                            <tr>
-                                <td>CGST Amount:</td>
-                                <td class="text-end">₹{{ number_format($quotation->cgst_amount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>SGST Amount:</td>
-                                <td class="text-end">₹{{ number_format($quotation->sgst_amount, 2) }}</td>
-                            </tr>
-                        @else
-                            <tr>
-                                <td>IGST Amount:</td>
-                                <td class="text-end">₹{{ number_format($quotation->igst_amount, 2) }}</td>
-                            </tr>
-                        @endif
                         <tr>
                             <td>Round Off:</td>
                             <td class="text-end">₹{{ number_format($quotation->round_off, 2) }}</td>

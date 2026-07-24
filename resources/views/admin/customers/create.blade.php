@@ -50,17 +50,12 @@
                     @error('state') <div class="text-danger small">{{ $message }}</div> @enderror
                 </div>
                 <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">GSTIN</label>
-                        <input type="text" name="gstin" class="form-control @error('gstin') is-invalid @enderror" value="{{ old('gstin') }}">
-                        @error('gstin') <div class="text-danger small">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">PAN No</label>
                         <input type="text" name="pan_no" class="form-control @error('pan_no') is-invalid @enderror" value="{{ old('pan_no') }}">
                         @error('pan_no') <div class="text-danger small">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Aadhaar No</label>
                         <input type="text" name="aadhaar_no" class="form-control @error('aadhaar_no') is-invalid @enderror" value="{{ old('aadhaar_no') }}">
                         @error('aadhaar_no') <div class="text-danger small">{{ $message }}</div> @enderror
