@@ -61,6 +61,7 @@
                     <tr>
                         <th>#</th>
                         <th>Vehicle</th>
+                        <th>Color</th>
                         <th>Chassis No</th>
                         <th>Motor No</th>
                         <th>Battery No</th>
@@ -87,6 +88,7 @@
                             <br><span class="badge bg-danger">Low Stock ({{ $variantInfo['available'] }}/{{ $variantInfo['min_stock'] }})</span>
                             @endif
                         </td>
+                        <td>{{ $i->color_name ?? '-' }}</td>
                         <td>{{ $i->chassis_number ?? '-' }}</td>
                         <td>{{ $i->motor_number ?? '-' }}</td>
                         <td>{{ $i->battery_number ?? '-' }}</td>
@@ -121,7 +123,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="13" class="text-center">No vehicles in inventory.</td></tr>
+                    <tr><td colspan="14" class="text-center">No vehicles in inventory.</td></tr>
                     @endforelse
                 </tbody>
             </table>

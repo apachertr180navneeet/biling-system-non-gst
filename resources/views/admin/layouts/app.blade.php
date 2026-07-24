@@ -86,6 +86,13 @@
                         theme: 'bootstrap-5'
                     });
                 }
+                function directPrintPdf(url) {
+                    var printUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'print=1';
+                    var printWindow = window.open(printUrl, '_blank');
+                    if (printWindow) {
+                        printWindow.focus();
+                    }
+                }
                 </script>
                 @yield('script')
                 @include('admin.layouts.elements.sweet_alerts')

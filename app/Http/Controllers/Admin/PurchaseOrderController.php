@@ -371,7 +371,7 @@ class PurchaseOrderController extends Controller
         return redirect()->route('admin.purchase-orders.show', $purchaseOrder)->withSuccess('Items received successfully.');
     }
 
-    public function generatePdf(PurchaseOrder $purchaseOrder)
+    public function generatePdf(Request $request, PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load('supplier', 'items.sparePart', 'createdBy');
 
@@ -381,6 +381,12 @@ class PurchaseOrderController extends Controller
         ]);
         $pdf->setPaper('a4');
         $pdf->setOption('isRemoteEnabled', true);
+
+        if ($request->has('print')) {
+            $pdf->render();
+            $canvas = $pdf->getCanvas();
+            $canvas->javascript("this.print();");
+        }
 
         return $pdf->stream('PO-' . $purchaseOrder->order_number . '.pdf');
     }

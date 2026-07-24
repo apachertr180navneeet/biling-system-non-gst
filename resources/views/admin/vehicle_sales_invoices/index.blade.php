@@ -58,7 +58,9 @@
                         <td><strong>{{ number_format($inv->grand_total, 2) }}</strong></td>
                         <td>{{ $inv->payment_mode ?? '-' }}</td>
                         <td>
-                            <a href="{{ route('admin.vehicle-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info" title="View / Print"><i class="bx bx-printer"></i></a>
+                            <a href="{{ route('admin.vehicle-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info me-1" title="View / Print"><i class="bx bx-printer"></i></a>
+                            <a href="{{ route('admin.vehicle-sales-invoices.edit', $inv) }}" class="btn btn-sm btn-primary me-1" title="Edit Full Invoice"><i class="bx bx-edit"></i></a>
+                            <button class="btn btn-sm btn-warning quick-date-btn me-1" data-id="{{ $inv->id }}" data-url="{{ route('admin.vehicle-sales-invoices.quick-update-date', $inv) }}" data-number="{{ $inv->invoice_number }}" data-date="{{ $inv->invoice_date->format('Y-m-d') }}" title="Edit Date & Invoice No"><i class="bx bx-calendar-edit"></i></button>
                             <button class="btn btn-sm btn-danger delete-btn" data-id="{{ $inv->id }}" data-url="{{ route('admin.vehicle-sales-invoices.destroy', $inv) }}" title="Delete"><i class="bx bx-trash"></i></button>
                         </td>
                     </tr>
@@ -72,12 +74,81 @@
     </div>
 </div>
 
+<!-- Modal Quick Edit Invoice Date & Number -->
+<div class="modal fade" id="quickDateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bx bx-calendar-edit me-1"></i> Edit Invoice Date & Number</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="quickDateForm" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div id="quickDateAlert" class="alert alert-danger d-none"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
+                        <input type="text" id="quick_invoice_number" name="invoice_number" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
+                        <input type="date" id="quick_invoice_date" name="invoice_date" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveQuickDate"><i class="bx bx-save me-1"></i> Update Date & Number</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <form id="deleteForm" method="POST">@csrf</form>
 @endsection
 
 @section('script')
 <script>
 $(function(){
+    var quickModal = new bootstrap.Modal(document.getElementById('quickDateModal'));
+    var quickForm = $('#quickDateForm');
+
+    $('.quick-date-btn').click(function(){
+        var btn = $(this);
+        quickForm.attr('action', btn.data('url'));
+        $('#quick_invoice_number').val(btn.data('number'));
+        $('#quick_invoice_date').val(btn.data('date'));
+        $('#quickDateAlert').addClass('d-none');
+        quickModal.show();
+    });
+
+    quickForm.submit(function(e){
+        e.preventDefault();
+        var btn = $('#btnSaveQuickDate');
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+        $('#quickDateAlert').addClass('d-none');
+
+        $.post(quickForm.attr('action'), quickForm.serialize())
+        .done(function(res){
+            if (res.success) {
+                location.reload();
+            } else {
+                $('#quickDateAlert').text(res.message || 'Error updating date').removeClass('d-none');
+                btn.prop('disabled', false).html('<i class="bx bx-save me-1"></i> Update Date & Number');
+            }
+        })
+        .fail(function(xhr){
+            btn.prop('disabled', false).html('<i class="bx bx-save me-1"></i> Update Date & Number');
+            var msg = 'Validation error occurred.';
+            if (xhr.responseJSON && xhr.responseJSON.errors) {
+                msg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+            $('#quickDateAlert').html(msg).removeClass('d-none');
+        });
+    });
+
     $('.delete-btn').click(function(){
         var form=$('#deleteForm'), url=$(this).data('url');
         Swal.fire({

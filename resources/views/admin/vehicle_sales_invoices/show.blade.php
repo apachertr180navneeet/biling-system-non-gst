@@ -410,9 +410,21 @@
 }
 
 @media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
     @page {
         size: A4 portrait;
-        margin: 5mm;
+        margin: 3mm 4mm;
+    }
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     body * {
         visibility: hidden;
@@ -424,99 +436,281 @@
         position: absolute;
         left: 0;
         top: 0;
-        width: 100%;
-        background: #fff;
+        width: 100% !important;
+        background: #fff !important;
         padding: 0 !important;
         margin: 0 !important;
+        display: block !important;
     }
     .invoice-card {
-        box-shadow: none;
-        border: none;
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
-        padding: 0 !important;
-        transform: none !important;
-        transform-origin: top left;
+        position: relative !important;
+        overflow: hidden !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        background: #fff !important;
     }
     .invoice-card::before {
-        display: none;
+        content: "" !important;
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 5px !important;
+        background: linear-gradient(90deg, #10b981, #059669, #15803d) !important;
     }
     .invoice-padding {
-        padding: 5px !important;
+        padding: 10px 14px !important;
     }
     .company-section {
-        margin-bottom: 8px !important;
-        padding-bottom: 6px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        margin-bottom: 5px !important;
+        padding-bottom: 5px !important;
+        border-bottom: 2px solid #f1f5f9 !important;
+    }
+    .company-details {
+        width: 68% !important;
+    }
+    .company-details h2 {
+        font-size: 19px !important;
+        font-weight: 800 !important;
+        color: #14532d !important;
+        margin: 0 0 2px 0 !important;
+    }
+    .company-details p {
+        font-size: 10.5px !important;
+        line-height: 1.25 !important;
+        color: #475569 !important;
+        margin: 0 !important;
+    }
+    .logo-block {
+        width: 30% !important;
+        text-align: right !important;
+    }
+    .logo-block img {
+        max-height: 65px !important;
+        width: auto !important;
     }
     .invoice-meta-grid {
-        margin-bottom: 8px !important;
-        gap: 8px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        margin-bottom: 5px !important;
+        gap: 6px !important;
     }
     .meta-box {
-        padding: 6px 12px !important;
-    }
-    .billing-section {
-        margin-bottom: 8px !important;
-        gap: 8px !important;
-    }
-    .billing-card, .info-card {
-        padding: 8px 12px !important;
-    }
-    .items-table {
-        margin-bottom: 8px !important;
-    }
-    .items-table th, .items-table td {
-        padding: 6px 10px !important;
-    }
-    .warranty-box {
-        margin-top: 4px !important;
+        width: 49% !important;
         padding: 4px 8px !important;
+        border-radius: 6px !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .meta-table td {
+        padding: 1px 0 !important;
         font-size: 10.5px !important;
     }
+    .meta-label {
+        color: #64748b !important;
+    }
+    .meta-value {
+        color: #0f172a !important;
+    }
+    .billing-section {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        margin-bottom: 5px !important;
+        gap: 6px !important;
+    }
+    .billing-card {
+        width: 59% !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-left: 4px solid #10b981 !important;
+    }
+    .info-card {
+        width: 39% !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .billing-card h3, .info-card h3 {
+        font-size: 8.5px !important;
+        margin-bottom: 2px !important;
+        color: #64748b !important;
+    }
+    .billing-card h4 {
+        font-size: 11.5px !important;
+        margin-bottom: 2px !important;
+        color: #0f172a !important;
+    }
+    .billing-card p, .info-table td {
+        font-size: 10px !important;
+        line-height: 1.2 !important;
+        padding: 0.5px 0 !important;
+        color: #475569 !important;
+    }
+    .items-table {
+        margin-bottom: 5px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
+    }
+    .items-table th {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+    }
+    .items-table td {
+        padding: 5px 8px !important;
+        font-size: 10.5px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .item-name {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+    }
+    .item-badge {
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border: 1px solid #a7f3d0 !important;
+        font-size: 9px !important;
+        padding: 1px 5px !important;
+        border-radius: 4px !important;
+    }
+    .warranty-box {
+        background-color: #f0fdf4 !important;
+        border-left: 3px solid #10b981 !important;
+        margin-top: 3px !important;
+        padding: 3px 6px !important;
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+        border-radius: 4px !important;
+    }
+    .warranty-box strong {
+        color: #14532d !important;
+        margin-bottom: 1px !important;
+    }
+    .warranty-box div {
+        color: #15803d !important;
+    }
     .specs-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
         margin-top: 4px !important;
         padding: 4px 8px !important;
-        gap: 3px 8px !important;
+        gap: 2px 6px !important;
+        border-radius: 4px !important;
+    }
+    .specs-cell {
+        font-size: 9.5px !important;
+        color: #475569 !important;
     }
     .bottom-section {
-        margin-top: 8px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        margin-top: 5px !important;
+        gap: 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    .terms-box {
+        width: 56% !important;
+    }
+    .terms-box h4 {
+        font-size: 10px !important;
+        margin-bottom: 2px !important;
+        color: #0f172a !important;
+    }
+    .terms-box ol {
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+        padding-left: 12px !important;
+        color: #64748b !important;
+        margin: 0 !important;
+    }
+    .terms-box ol li {
+        margin-bottom: 1px !important;
+    }
+    .terms-box p {
+        font-size: 9.5px !important;
+        margin-top: 4px !important;
     }
     .summary-card {
-        padding: 6px 10px !important;
+        width: 41% !important;
+        background-color: #ecfdf5 !important;
+        border: 1px solid #a7f3d0 !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
     .summary-table td {
-        padding: 2px 0 !important;
-        font-size: 12px !important;
+        padding: 1px 0 !important;
+        font-size: 10px !important;
+    }
+    .summary-label {
+        color: #065f46 !important;
+    }
+    .summary-value {
+        color: #065f46 !important;
+    }
+    .summary-total-row td {
+        border-top: 1.5px solid #059669 !important;
+        padding-top: 2px !important;
+        margin-top: 1px !important;
+    }
+    .summary-total-label, .summary-total-value {
+        font-size: 12.5px !important;
+        color: #047857 !important;
+        font-weight: 800 !important;
     }
     .signature-row {
-        margin-top: 10px !important;
-        padding-top: 8px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        margin-top: 8px !important;
+        padding-top: 4px !important;
+        border-top: 1px solid #e2e8f0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
-    .btn-print-group {
-        display: none !important;
+    .sig-box {
+        width: 45% !important;
+        text-align: center !important;
     }
-    .layout-navbar, .layout-menu-toggle, .menu-vertical, .footer {
+    .sig-text {
+        font-size: 9.5px !important;
+        color: #64748b !important;
+    }
+    .watermark {
+        opacity: 0.08 !important;
+        display: flex !important;
+    }
+    .btn-print-group, .layout-navbar, .layout-menu-toggle, .menu-vertical, .footer {
         display: none !important;
     }
     .content-wrapper {
         padding: 0 !important;
         margin: 0 !important;
-    }
-    .specs-grid {
-        background-color: #f8fafc !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    .summary-card {
-        background-color: #ecfdf5 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    .warranty-box {
-        background-color: #f0fdf4 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
     }
 }
 </style>
@@ -527,7 +721,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4 btn-print-group">
         <h4 class="fw-bold mb-0">Invoice Detail</h4>
         <div>
-            <button onclick="window.print();" class="btn btn-primary"><i class="bx bx-printer"></i> Print Invoice</button>
+            <a href="{{ route('admin.vehicle-sales-invoices.edit', $vehicleSalesInvoice) }}" class="btn btn-warning me-1"><i class="bx bx-edit"></i> Edit Invoice</a>
+            <button onclick="window.print();" class="btn btn-primary me-1"><i class="bx bx-printer"></i> Print Invoice</button>
             <a href="{{ route('admin.vehicle-sales-invoices.index') }}" class="btn btn-secondary">Back to List</a>
         </div>
     </div>
@@ -547,6 +742,7 @@
                         <h2>SHREE KRISHNA AUTO GREEN</h2>
                         <p>NEAR MAHAMANDIR CIRCLE, MANDORE ROAD</p>
                         <p>JODHPUR (RAJASTHAN)</p>
+                        <p style="margin-top: 4px; font-weight: 600; color: #047857;">GSTIN : 08ANQPD4555N1ZE</p>
                         <p>Contact : 7586899148, 9829028792</p>
                     </div>
                     <div class="logo-block">
@@ -560,7 +756,7 @@
                         <table class="meta-table">
                             <tr>
                                 <td class="meta-label">Invoice#</td>
-                                <td class="meta-value">INV-{{ str_pad($vehicleSalesInvoice->id, 6, '0', STR_PAD_LEFT) }}</td>
+                                <td class="meta-value">{{ $vehicleSalesInvoice->invoice_number }}</td>
                             </tr>
                             <tr>
                                 <td class="meta-label">Invoice Date</td>
@@ -682,6 +878,25 @@
                                 <td class="summary-label">Sub Total</td>
                                 <td class="summary-value">{{ number_format($vehicleSalesInvoice->sub_total, 2) }}</td>
                             </tr>
+                            <tr>
+                                <td class="summary-label">Others</td>
+                                <td class="summary-value">0.00</td>
+                            </tr>
+                            @if(($vehicleSalesInvoice->tax_regime ?? 'cgst_sgst') === 'igst')
+                            <tr>
+                                <td class="summary-label">IGST @ 5%</td>
+                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->igst_amount ?? 0, 2) }}</td>
+                            </tr>
+                            @else
+                            <tr>
+                                <td class="summary-label">SGST @ 2.5%</td>
+                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->sgst_amount, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="summary-label">CGST @ 2.5%</td>
+                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->cgst_amount, 2) }}</td>
+                            </tr>
+                            @endif
                             <tr>
                                 <td class="summary-label">Total</td>
                                 <td class="summary-value">{{ number_format($vehicleSalesInvoice->total, 2) }}</td>

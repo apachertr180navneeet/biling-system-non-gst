@@ -172,6 +172,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default GST Rates
+    |--------------------------------------------------------------------------
+    |
+    | Default CGST, SGST, and IGST rates used for vehicle sales invoices
+    | and quotations. These can be overridden per-invoice via the request.
+    |
+    */
+
+    'cgst_rate' => (float) env('CGST_RATE', 2.50),
+    'sgst_rate' => (float) env('SGST_RATE', 2.50),
+    'igst_rate' => (float) env('IGST_RATE', 5.00),
+
+    /*
+    |--------------------------------------------------------------------------
     | Class Aliases
     |--------------------------------------------------------------------------
     |

@@ -126,17 +126,19 @@ Route::name('admin.')->prefix('admin')->group(function () {
 
             Route::post('vehicle-inventories/{vehicle_inventory}/toggle-status-sold', [VehiclePurchaseOrderController::class, 'toggleInventoryStatus'])->name('vehicle-inventories.toggle-status-sold');
 
-            Route::resource('vehicle-sales-invoices', VehicleSalesInvoiceController::class)->except(['edit', 'update']);
+            Route::resource('vehicle-sales-invoices', VehicleSalesInvoiceController::class);
             Route::get('vehicle-sales-invoices/export', [VehicleSalesInvoiceController::class, 'export'])->name('vehicle-sales-invoices.export');
             Route::get('vehicle-sales-invoices/outstanding/list', [VehicleSalesInvoiceController::class, 'outstanding'])->name('vehicle-sales-invoices.outstanding');
             Route::get('vehicle-sales-invoices/outstanding/export', [VehicleSalesInvoiceController::class, 'exportOutstanding'])->name('vehicle-sales-invoices.outstanding.export');
             Route::post('vehicle-sales-invoices/{vehicle_sales_invoice}/receive-payment', [VehicleSalesInvoiceController::class, 'receivePayment'])->name('vehicle-sales-invoices.receive-payment');
+            Route::post('vehicle-sales-invoices/{vehicle_sales_invoice}/quick-update-date', [VehicleSalesInvoiceController::class, 'quickUpdateDate'])->name('vehicle-sales-invoices.quick-update-date');
 
             Route::resource('part-sales-invoices', PartSalesInvoiceController::class)->except(['edit', 'update']);
             Route::get('part-sales-invoices/export', [PartSalesInvoiceController::class, 'export'])->name('part-sales-invoices.export');
             Route::get('part-sales-invoices/outstanding/list', [PartSalesInvoiceController::class, 'outstanding'])->name('part-sales-invoices.outstanding');
             Route::get('part-sales-invoices/outstanding/export', [PartSalesInvoiceController::class, 'exportOutstanding'])->name('part-sales-invoices.outstanding.export');
             Route::post('part-sales-invoices/{part_sales_invoice}/receive-payment', [PartSalesInvoiceController::class, 'receivePayment'])->name('part-sales-invoices.receive-payment');
+            Route::post('part-sales-invoices/{part_sales_invoice}/quick-update-date', [PartSalesInvoiceController::class, 'quickUpdateDate'])->name('part-sales-invoices.quick-update-date');
 
             Route::get('quotations/create/vehicle', [QuotationController::class, 'createVehicle'])->name('quotations.create-vehicle');
             Route::get('quotations/create/parts', [QuotationController::class, 'createParts'])->name('quotations.create-parts');

@@ -19,17 +19,10 @@
                     </select>
                     @error('type') <div class="text-danger small">{{ $message }}</div> @enderror
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">First Name</label>
-                        <input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror" value="{{ old('first_name', $customer->first_name) }}">
-                        @error('first_name') <div class="text-danger small">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('last_name', $customer->last_name) }}">
-                        @error('last_name') <div class="text-danger small">{{ $message }}</div> @enderror
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $customer->name) }}">
+                    @error('name') <div class="text-danger small">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Company Name</label>
@@ -57,6 +50,11 @@
                     @error('state') <div class="text-danger small">{{ $message }}</div> @enderror
                 </div>
                 <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">GSTIN</label>
+                        <input type="text" name="gstin" class="form-control @error('gstin') is-invalid @enderror" value="{{ old('gstin', $customer->gstin) }}">
+                        @error('gstin') <div class="text-danger small">{{ $message }}</div> @enderror
+                    </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label">PAN No</label>
                         <input type="text" name="pan_no" class="form-control @error('pan_no') is-invalid @enderror" value="{{ old('pan_no', $customer->pan_no) }}">

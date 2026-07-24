@@ -10,7 +10,7 @@ class Supplier extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name', 'address',
+        'name', 'gstin', 'address',
         'contact_person', 'phone', 'email', 'is_active',
     ];
 }

@@ -84,7 +84,9 @@
                                     @if($order->balance > 0)
                                     <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.vehicle-purchase-orders.receive-payment', $order) }}" data-balance="{{ $order->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>
                                     @endif
-                                    <a href="{{ route('admin.vehicle-purchase-orders.show', $order) }}" class="btn btn-sm btn-info">View</a>
+                                    <a href="{{ route('admin.vehicle-purchase-orders.show', $order) }}" class="btn btn-sm btn-info" title="View"><i class="bx bx-show"></i></a>
+                                    <a href="{{ route('admin.vehicle-purchase-orders.pdf', $order) }}" class="btn btn-sm btn-danger me-1" target="_blank" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
+                                    <button type="button" class="btn btn-sm btn-dark" onclick="directPrintPdf('{{ route('admin.vehicle-purchase-orders.pdf', $order) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
                                 </td>
                             </tr>
                             @endforeach
@@ -105,7 +107,9 @@
                                     @if($order->balance > 0)
                                     <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.vehicle-purchase-orders.receive-payment', $order) }}" data-balance="{{ $order->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>
                                     @endif
-                                    <a href="{{ route('admin.vehicle-purchase-orders.show', $order) }}" class="btn btn-sm btn-info">View</a>
+                                    <a href="{{ route('admin.vehicle-purchase-orders.show', $order) }}" class="btn btn-sm btn-info" title="View"><i class="bx bx-show"></i></a>
+                                    <a href="{{ route('admin.vehicle-purchase-orders.pdf', $order) }}" class="btn btn-sm btn-danger me-1" target="_blank" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
+                                    <button type="button" class="btn btn-sm btn-dark" onclick="directPrintPdf('{{ route('admin.vehicle-purchase-orders.pdf', $order) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
                                 </td>
                             </tr>
                         @endif

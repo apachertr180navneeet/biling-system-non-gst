@@ -56,6 +56,8 @@
                         <th>Type</th>
                         <th>Customer</th>
                         <th>Items/Vehicle</th>
+                        <th>Taxable Amount</th>
+                        <th>GST Amount</th>
                         <th>Grand Total</th>
                         <th>Actions</th>
                     </tr>
@@ -87,9 +89,17 @@
                                 {{ $q->items->count() }} Parts
                             @endif
                         </td>
+                        <td>{{ number_format($q->taxable_amount, 2) }}</td>
+                        <td>
+                            @if($q->tax_regime === 'cgst_sgst')
+                                {{ number_format($q->cgst_amount + $q->sgst_amount, 2) }} (CGST+SGST)
+                            @else
+                                {{ number_format($q->igst_amount, 2) }} (IGST)
+                            @endif
+                        </td>
                         <td class="fw-bold">{{ number_format($q->total_amount, 2) }}</td>
                         <td>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-1">
                                 <a href="{{ route('admin.quotations.show', $q) }}" class="btn btn-sm btn-outline-secondary" title="View">
                                     <i class="bx bx-show-alt"></i>
                                 </a>
@@ -101,6 +111,9 @@
                                 <a href="{{ route('admin.quotations.pdf', $q) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Download PDF">
                                     <i class="bx bxs-file-pdf"></i>
                                 </a>
+                                <button type="button" class="btn btn-sm btn-outline-dark" onclick="directPrintPdf('{{ route('admin.quotations.pdf', $q) }}')" title="Direct Print PDF">
+                                    <i class="bx bx-printer"></i>
+                                </button>
                                 <a href="{{ route('admin.quotations.whatsapp', $q) }}" class="btn btn-sm btn-outline-success" target="_blank" title="Send WhatsApp">
                                     <i class="bx bxl-whatsapp"></i>
                                 </a>
@@ -116,7 +129,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center">No quotations found.</td>
+                        <td colspan="9" class="text-center">No quotations found.</td>
                     </tr>
                     @endforelse
                 </tbody>

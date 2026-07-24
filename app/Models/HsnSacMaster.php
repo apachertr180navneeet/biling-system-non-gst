@@ -11,5 +11,5 @@ class HsnSacMaster extends Model
 
     protected $table = 'hsn_sac_master';
 
-    protected $fillable = ['code', 'description', 'is_active'];
+    protected $fillable = ['code', 'description', 'gst_rate', 'cess_rate', 'is_active'];
 }

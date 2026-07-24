@@ -365,9 +365,9 @@ class ReportController extends Controller
                     ];
 
                     // Fetch Sales
-                    $salesQuery = VehicleSalesInvoice::where(function($q) use ($vMaster, $variantDesc) {
+                    $salesQuery = VehicleSalesInvoice::whereHas('vehicleInventory', function($q) use ($vMaster) {
                             $q->where('vehicle_master_id', $vMaster->id)
-                              ->orWhere('vehicle_model', 'like', '%' . addcslashes($vMaster->variant_name, '%_') . '%');
+                              ->orWhere('vehicle_description', 'like', '%' . addcslashes($vMaster->variant_name, '%_') . '%');
                         });
                     if ($fromDate) $salesQuery->whereDate('invoice_date', '>=', $fromDate);
                     if ($toDate) $salesQuery->whereDate('invoice_date', '<=', $toDate);

@@ -21,10 +21,13 @@
                         <i class="bx bx-edit-alt"></i> Edit Quotation
                     </a>
                 @endif
-                <a href="{{ route('admin.quotations.pdf', $quotation) }}" class="btn btn-sm btn-danger" target="_blank">
+                <button type="button" onclick="directPrintPdf('{{ route('admin.quotations.pdf', $quotation) }}')" class="btn btn-sm btn-dark me-1">
+                    <i class="bx bx-printer"></i> Print PDF
+                </button>
+                <a href="{{ route('admin.quotations.pdf', $quotation) }}" class="btn btn-sm btn-danger me-1" target="_blank">
                     <i class="bx bxs-file-pdf"></i> Download PDF
                 </a>
-                <a href="{{ route('admin.quotations.whatsapp', $quotation) }}" class="btn btn-sm btn-success" target="_blank">
+                <a href="{{ route('admin.quotations.whatsapp', $quotation) }}" class="btn btn-sm btn-success me-1" target="_blank">
                     <i class="bx bxl-whatsapp"></i> Send to WhatsApp
                 </a>
                 <a href="{{ route('admin.quotations.index') }}" class="btn btn-secondary btn-sm">Back</a>
@@ -43,6 +46,13 @@
                         <span class="badge bg-success">Parts</span>
                     @endif
                     <br>
+                    <strong>Tax Regime:</strong> 
+                    @if($quotation->tax_regime === 'cgst_sgst')
+                        CGST + SGST (9% + 9% typical)
+                    @else
+                        IGST (18% typical)
+                    @endif
+                    <br>
                     <strong>Created By:</strong> {{ $quotation->creator->full_name ?? 'System' }}<br>
                     <strong>Remarks/Notes:</strong> {{ $quotation->remarks ?? '-' }}
                 </div>
@@ -51,6 +61,7 @@
                     <strong>Name:</strong> {{ $quotation->customer_name }}<br>
                     <strong>Mobile:</strong> {{ $quotation->customer_mobile ?? '-' }}<br>
                     <strong>Address:</strong> {{ $quotation->customer_address ?? '-' }}<br>
+                    <strong>GSTIN:</strong> {{ $quotation->customer_gstin ?? '-' }}<br>
                     <strong>PAN:</strong> {{ $quotation->customer_pan ?? '-' }}<br>
                     <strong>Place of Supply:</strong> {{ $quotation->place_of_supply }}
                 </div>
@@ -66,7 +77,9 @@
                                 <th>Ex-Showroom Price</th>
                                 <th>Discount</th>
                                 <th>Incentive</th>
-                                <th>Total</th>
+                                <th>Taxable Value</th>
+                                <th>GST Rate</th>
+                                <th>GST Amount</th>
                                 <th>Grand Total</th>
                             </tr>
                         </thead>
@@ -74,11 +87,26 @@
                             <tr>
                                 <td>
                                     {{ $quotation->vehicleMaster->variant_name ?? '-' }} ({{ $quotation->vehicleMaster->color_name ?? '' }} - {{ $quotation->vehicleMaster->fuel_type ?? '' }})
+                                    <div class="small text-muted fw-bold">ON ROAD PRICE INCLUDING GST, RTO, INSURANCE</div>
                                 </td>
                                 <td>₹{{ number_format($quotation->rate, 2) }}</td>
                                 <td class="text-danger">-₹{{ number_format($quotation->discount, 2) }}</td>
                                 <td class="text-danger">-₹{{ number_format($quotation->nemmp_incentive, 2) }}</td>
                                 <td>₹{{ number_format($quotation->taxable_amount, 2) }}</td>
+                                <td>
+                                    @if($quotation->tax_regime === 'cgst_sgst')
+                                        CGST: {{ $quotation->cgst_rate }}% <br> SGST: {{ $quotation->sgst_rate }}%
+                                    @else
+                                        IGST: {{ $quotation->igst_rate }}%
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($quotation->tax_regime === 'cgst_sgst')
+                                        ₹{{ number_format($quotation->cgst_amount + $quotation->sgst_amount, 2) }}
+                                    @else
+                                        ₹{{ number_format($quotation->igst_amount, 2) }}
+                                    @endif
+                                </td>
                                 <td class="fw-bold">₹{{ number_format($quotation->total_amount, 2) }}</td>
                             </tr>
                         </tbody>
@@ -93,7 +121,9 @@
                                 <th>#</th>
                                 <th>Part Details</th>
                                 <th>Rate</th>
+                                <th>GST (%)</th>
                                 <th>Qty</th>
+                                <th>GST Amount</th>
                                 <th>Total</th>
                                 <th>Warranty/Serial No</th>
                             </tr>
@@ -107,7 +137,9 @@
                                     <small class="text-muted">Part No: {{ $item->sparePart->part_no ?? '-' }}</small>
                                 </td>
                                 <td>₹{{ number_format($item->rate, 2) }}</td>
+                                <td>{{ $item->tax_percentage }}%</td>
                                 <td>{{ $item->quantity }}</td>
+                                <td>₹{{ number_format($item->tax_amount, 2) }}</td>
                                 <td>₹{{ number_format($item->amount, 2) }}</td>
                                 <td>{{ $item->serial_no_warranty_notes ?? '-' }}</td>
                             </tr>
@@ -172,9 +204,24 @@
                 <div class="col-md-6">
                     <table class="table table-sm table-borderless">
                         <tr>
-                            <td><strong>Total:</strong></td>
+                            <td><strong>Taxable Amount:</strong></td>
                             <td class="text-end">₹{{ number_format($quotation->taxable_amount, 2) }}</td>
                         </tr>
+                        @if($quotation->tax_regime === 'cgst_sgst')
+                            <tr>
+                                <td>CGST Amount:</td>
+                                <td class="text-end">₹{{ number_format($quotation->cgst_amount, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>SGST Amount:</td>
+                                <td class="text-end">₹{{ number_format($quotation->sgst_amount, 2) }}</td>
+                            </tr>
+                        @else
+                            <tr>
+                                <td>IGST Amount:</td>
+                                <td class="text-end">₹{{ number_format($quotation->igst_amount, 2) }}</td>
+                            </tr>
+                        @endif
                         <tr>
                             <td>Round Off:</td>
                             <td class="text-end">₹{{ number_format($quotation->round_off, 2) }}</td>

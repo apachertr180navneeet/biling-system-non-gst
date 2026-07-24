@@ -18,6 +18,11 @@
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">GSTIN</label>
+                    <input type="text" name="gstin" class="form-control @error('gstin') is-invalid @enderror" value="{{ old('gstin', $supplier->gstin) }}">
+                    @error('gstin') <div class="text-danger small">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Address</label>
                     <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="2">{{ old('address', $supplier->address) }}</textarea>
                     @error('address') <div class="text-danger small">{{ $message }}</div> @enderror

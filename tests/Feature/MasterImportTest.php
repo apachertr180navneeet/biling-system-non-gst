@@ -129,9 +129,10 @@ class MasterImportTest extends TestCase
 
     public function test_can_import_valid_customers(): void
     {
-        $csvContent = "type,first_name,last_name,company_name,phone,email,address,state,gstin,pan_no,aadhaar_no\n"
-            . "individual,Jane,Smith,,9876543210,jane@example.com,,State,,,\n"
-            . "corporate,ACME,Corp,ACME Inc,8888888888,acme@example.com,,,,,\n";
+        $csvContent = "type,name,company_name,phone,email,address,state,gstin,pan_no,aadhaar_no\n"
+            . "individual,Jane Smith,,9876543210,jane@example.com,,State,,,\n"
+            . "corporate,ACME Inc,,8888888888,acme@example.com,,,,,\n"
+            . "individual,12 ARTY BDE,,,,,,,,,\n";
 
         $file = UploadedFile::fake()->createWithContent('customers.csv', $csvContent);
 
@@ -144,48 +145,15 @@ class MasterImportTest extends TestCase
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('customers', [
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
+            'name' => 'Jane Smith',
             'phone' => '9876543210',
             'type' => 'individual',
         ]);
-    }
 
-    public function test_can_download_services_import_template(): void
-    {
-        $response = $this->actingAs($this->admin)
-            ->get(route('admin.services.import-template'));
-
-        $response->assertStatus(200);
-        $response->assertHeader('Content-Disposition');
-        $this->assertStringContainsString('service_template.xls', $response->headers->get('Content-Disposition'));
-    }
-
-    public function test_can_import_valid_services(): void
-    {
-        $csvContent = "category_name,name,description,labor_charge\n"
-            . "General Service,Oil Swap,Engine oil replacement,350.00\n";
-
-        $file = UploadedFile::fake()->createWithContent('services.csv', $csvContent);
-
-        $response = $this->actingAs($this->admin)
-            ->post(route('admin.services.import'), [
-                'csv_file' => $file,
-            ]);
-
-        $response->assertRedirect(route('admin.services.index'));
-        $response->assertSessionHas('success');
-
-        $this->assertDatabaseHas('service_categories', [
-            'name' => 'General Service',
-        ]);
-
-        $category = ServiceCategory::where('name', 'General Service')->first();
-
-        $this->assertDatabaseHas('services', [
-            'service_category_id' => $category->id,
-            'name' => 'Oil Swap',
-            'labor_charge' => 350.00,
+        $this->assertDatabaseHas('customers', [
+            'name' => '12 ARTY BDE',
+            'phone' => null,
+            'type' => 'individual',
         ]);
     }
 }

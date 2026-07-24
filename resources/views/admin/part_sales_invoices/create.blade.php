@@ -24,11 +24,12 @@
                                 <option value="">-- New Customer / Walk-in --</option>
                                 @foreach($customers as $c)
                                 <option value="{{ $c->id }}" 
-                                        data-name="{{ $c->first_name }} {{ $c->last_name }}"
+                                        data-name="{{ $c->name }}"
                                         data-mobile="{{ $c->phone }}"
                                         data-address="{{ $c->address }}"
+                                        data-gstin="{{ $c->gstin }}"
                                         data-pan="{{ $c->pan_no }}">
-                                    {{ $c->first_name }} {{ $c->last_name }} ({{ $c->phone }})
+                                    {{ $c->name }} ({{ $c->phone }})
                                 </option>
                                 @endforeach
                             </select>
@@ -46,6 +47,11 @@
                         <label class="form-label">Mobile Number</label>
                         <input type="text" id="customer_mobile" name="customer_mobile" class="form-control @error('customer_mobile') is-invalid @enderror" value="{{ old('customer_mobile') }}">
                         @error('customer_mobile')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">GSTIN (Optional)</label>
+                        <input type="text" id="customer_gstin" name="customer_gstin" class="form-control @error('customer_gstin') is-invalid @enderror" value="{{ old('customer_gstin') }}" placeholder="15-digit GSTIN" maxlength="15">
+                        @error('customer_gstin')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">PAN Number (Optional)</label>
@@ -67,6 +73,11 @@
                 <h5 class="card-title text-primary mb-3">Invoice Details</h5>
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
+                        <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
+                        <input type="text" name="invoice_number" class="form-control @error('invoice_number') is-invalid @enderror" value="{{ old('invoice_number', $nextInvoiceNumber ?? '') }}" required>
+                        @error('invoice_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
                         <input type="date" name="invoice_date" class="form-control @error('invoice_date') is-invalid @enderror" value="{{ old('invoice_date', date('Y-m-d')) }}" required>
                         @error('invoice_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -80,9 +91,13 @@
                         </select>
                         @error('payment_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3"></div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tax Regime <span class="text-danger">*</span></label>
+                        <select name="tax_regime" id="tax_regime" class="form-select no-select2" required>
+                            <option value="cgst_sgst" {{ old('tax_regime', 'cgst_sgst') === 'cgst_sgst' ? 'selected' : '' }}>CGST + SGST</option>
+                            <option value="igst" {{ old('tax_regime') === 'igst' ? 'selected' : '' }}>IGST</option>
+                        </select>
+                    </div>
                 </div>
 
                 <h5 class="card-title text-primary mb-3">Invoice Items (Parts)</h5>
@@ -90,11 +105,13 @@
                     <table class="table table-bordered align-middle" id="itemsTable">
                         <thead>
                             <tr class="table-dark">
-                                <th style="width: 35%;">Part Name / Number <span class="text-danger">*</span></th>
+                                <th style="width: 30%;">Part Name / Number <span class="text-danger">*</span></th>
                                 <th style="width: 10%; text-align: center;">Stock Available</th>
-                                <th style="width: 10%; text-align: center;">Qty <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">Rate <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">Total Amount</th>
+                                <th style="width: 8%; text-align: center;">Qty <span class="text-danger">*</span></th>
+                                <th style="width: 12%;">Rate <span class="text-danger">*</span></th>
+                                <th style="width: 12%;">GST Type <span class="text-danger">*</span></th>
+                                <th style="width: 10%;">GST %</th>
+                                <th style="width: 13%;">Total Amount</th>
                                 <th style="width: 5%; text-align: center;">Action</th>
                             </tr>
                         </thead>
@@ -122,7 +139,22 @@
                                     <input type="number" name="items[0][quantity]" class="form-control qty-input text-center" min="1" value="1" required>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input" min="0" value="0.00" required>
+                                    <input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input" min="0" value="0.00" data-entered-rate="0.00" required>
+                                </td>
+                                <td>
+                                    <select name="items[0][gst_type]" class="form-select gst-type-select no-select2" required>
+                                        <option value="exclusive">Exclusive</option>
+                                        <option value="inclusive">Inclusive</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="items[0][tax_percentage]" class="form-select tax-select no-select2" required>
+                                        <option value="0.00">0%</option>
+                                        <option value="5.00">5%</option>
+                                        <option value="12.00">12%</option>
+                                        <option value="18.00" selected>18%</option>
+                                        <option value="28.00">28%</option>
+                                    </select>
                                 </td>
                                 <td class="bg-light">
                                     <input type="text" class="form-control line-total bg-transparent border-0 fw-bold" readonly value="0.00">
@@ -141,6 +173,22 @@
 
                 <h5 class="card-title text-primary mb-3">Payment Summary</h5>
                 <div class="row g-3 mb-4 bg-light p-3 rounded border border-light-subtle">
+                    <div class="col-md-3">
+                        <label class="form-label">Taxable Amount (INR)</label>
+                        <input type="text" id="summary_taxable" class="form-control bg-white" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3" id="summary_cgst_sgst_fields">
+                        <label class="form-label">CGST Amount (INR)</label>
+                        <input type="text" id="summary_cgst" class="form-control bg-white" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3" id="summary_cgst_sgst_fields2">
+                        <label class="form-label">SGST Amount (INR)</label>
+                        <input type="text" id="summary_sgst" class="form-control bg-white" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3 d-none" id="summary_igst_field">
+                        <label class="form-label">IGST Amount (INR)</label>
+                        <input type="text" id="summary_igst" class="form-control bg-white" readonly value="0.00">
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label">Round Off (INR)</label>
                         <input type="text" id="summary_round" class="form-control bg-white" readonly value="0.00">
@@ -185,24 +233,24 @@
                 <div class="modal-body">
                     <div class="alert alert-danger d-none" id="modalErrorAlert"></div>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">First Name <span class="text-danger">*</span></label>
-                            <input type="text" name="first_name" id="modal_first_name" class="form-control" required>
+                        <div class="col-md-12">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" id="modal_name" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                            <input type="text" name="last_name" id="modal_last_name" class="form-control" required>
+                            <label class="form-label">Mobile Number</label>
+                            <input type="text" name="phone" id="modal_phone" class="form-control" maxlength="10" placeholder="10 digits">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                            <input type="text" name="phone" id="modal_phone" class="form-control" maxlength="10" placeholder="10 digits" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Type <span class="text-danger">*</span></label>
-                            <select name="type" id="modal_type" class="form-select no-select2" required>
+                            <label class="form-label">Type</label>
+                            <select name="type" id="modal_type" class="form-select no-select2">
                                 <option value="individual">Individual</option>
                                 <option value="corporate">Corporate</option>
                             </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">GSTIN (Optional)</label>
+                            <input type="text" name="gstin" id="modal_gstin" class="form-control" maxlength="15">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">PAN No (Optional)</label>
@@ -231,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var customerNameInput = document.getElementById('customer_name');
     var customerMobileInput = document.getElementById('customer_mobile');
     var customerAddressInput = document.getElementById('customer_address');
+    var customerGstInput = document.getElementById('customer_gstin');
     var customerPanInput = document.getElementById('customer_pan');
     
     $(customerSelect).on('change', function() {
@@ -239,11 +288,13 @@ document.addEventListener('DOMContentLoaded', function() {
             customerNameInput.value = opt.getAttribute('data-name') || '';
             customerMobileInput.value = opt.getAttribute('data-mobile') || '';
             customerAddressInput.value = opt.getAttribute('data-address') || '';
+            customerGstInput.value = opt.getAttribute('data-gstin') || '';
             customerPanInput.value = opt.getAttribute('data-pan') || '';
         } else {
             customerNameInput.value = '';
             customerMobileInput.value = '';
             customerAddressInput.value = '';
+            customerGstInput.value = '';
             customerPanInput.value = '';
         }
     });
@@ -256,17 +307,53 @@ document.addEventListener('DOMContentLoaded', function() {
     btnAddRow.addEventListener('click', function() {
         var row = document.createElement('tr');
         row.className = 'item-row';
-        var tpl = '<td><select name="items[' + itemIndex + '][spare_part_id]" class="form-select part-select" required><option value="">-- Choose Spare Part --</option>';
-        @foreach($spareParts as $p)
-        tpl += '<option value="{{ $p->id }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">{{ $p->part_no }} - {{ $p->name }} (Available: {{ $p->qty_available }})</option>';
-        @endforeach
-        tpl += '</select><div class="mt-2"><input type="text" name="items[' + itemIndex + '][serial_no_warranty_notes]" class="form-control form-control-sm" placeholder="Serial No. / Warranty Notes (Optional)"></div></td>';
-        tpl += '<td class="text-center bg-light"><span class="stock-badge fw-bold text-secondary">0</span></td>';
-        tpl += '<td><input type="number" name="items[' + itemIndex + '][quantity]" class="form-control qty-input text-center" min="1" value="1" required></td>';
-        tpl += '<td><input type="number" step="0.01" name="items[' + itemIndex + '][rate]" class="form-control rate-input" min="0" value="0.00" required></td>';
-        tpl += '<td class="bg-light"><input type="text" class="form-control line-total bg-transparent border-0 fw-bold" readonly value="0.00"></td>';
-        tpl += '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-row"><i class="bx bx-trash"></i></button></td>';
-        row.innerHTML = tpl;
+        row.innerHTML = `
+            <td>
+                <select name="items[\${itemIndex}][spare_part_id]" class="form-select part-select" required>
+                    <option value="">-- Choose Spare Part --</option>
+                    @foreach($spareParts as $p)
+                    <option value="{{ $p->id }}" 
+                            data-price="{{ $p->selling_price }}"
+                            data-stock="{{ $p->qty_available }}">
+                        {{ $p->part_no }} - {{ $p->name }} (Available: {{ $p->qty_available }})
+                    </option>
+                    @endforeach
+                </select>
+                <div class="mt-2">
+                    <input type="text" name="items[\${itemIndex}][serial_no_warranty_notes]" class="form-control form-control-sm" placeholder="Serial No. / Warranty Notes (Optional)">
+                </div>
+            </td>
+            <td class="text-center bg-light">
+                <span class="stock-badge fw-bold text-secondary">0</span>
+            </td>
+            <td>
+                <input type="number" name="items[\${itemIndex}][quantity]" class="form-control qty-input text-center" min="1" value="1" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" name="items[\${itemIndex}][rate]" class="form-control rate-input" min="0" value="0.00" data-entered-rate="0.00" required>
+            </td>
+            <td>
+                <select name="items[\${itemIndex}][gst_type]" class="form-select gst-type-select no-select2" required>
+                    <option value="exclusive">Exclusive</option>
+                    <option value="inclusive">Inclusive</option>
+                </select>
+            </td>
+            <td>
+                <select name="items[\${itemIndex}][tax_percentage]" class="form-select tax-select no-select2" required>
+                    <option value="0.00">0%</option>
+                    <option value="5.00">5%</option>
+                    <option value="12.00">12%</option>
+                    <option value="18.00" selected>18%</option>
+                    <option value="28.00">28%</option>
+                </select>
+            </td>
+            <td class="bg-light">
+                <input type="text" class="form-control line-total bg-transparent border-0 fw-bold" readonly value="0.00">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row"><i class="bx bx-trash"></i></button>
+            </td>
+        `;
         itemsContainer.appendChild(row);
         itemIndex++;
         initSelect2(row.querySelector('.part-select'));
@@ -287,10 +374,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    function convertRowInclusiveToExclusive(row) {
+        var rateInput = row.querySelector('.rate-input');
+        var gstTypeSelect = row.querySelector('.gst-type-select');
+        var taxSelect = row.querySelector('.tax-select');
+
+        var gstType = gstTypeSelect.value;
+        var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
+
+        if (gstType === 'inclusive') {
+            var taxPct = parseFloat(taxSelect.value) || 0;
+            var baseRate = enteredRate / (1 + (taxPct / 100));
+            rateInput.value = baseRate.toFixed(2);
+        } else {
+            rateInput.value = enteredRate.toFixed(2);
+        }
+        calculateRow(row);
+    }
+
     function bindRowEvents(row) {
         var partSelect = row.querySelector('.part-select');
         var qtyInput = row.querySelector('.qty-input');
         var rateInput = row.querySelector('.rate-input');
+        var gstTypeSelect = row.querySelector('.gst-type-select');
+        var taxSelect = row.querySelector('.tax-select');
         var stockBadge = row.querySelector('.stock-badge');
 
         $(partSelect).on('change', function() {
@@ -299,10 +406,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 var price = parseFloat(opt.getAttribute('data-price')) || 0;
                 var stock = parseInt(opt.getAttribute('data-stock')) || 0;
                 rateInput.value = price.toFixed(2);
+                rateInput.dataset.enteredRate = price.toFixed(2);
                 stockBadge.textContent = stock;
                 qtyInput.setAttribute('max', stock);
             } else {
                 rateInput.value = '0.00';
+                rateInput.dataset.enteredRate = '0.00';
                 stockBadge.textContent = '0';
                 qtyInput.removeAttribute('max');
             }
@@ -323,46 +432,139 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         rateInput.addEventListener('input', function() {
+            rateInput.dataset.enteredRate = rateInput.value;
             calculateRow(row);
+        });
+
+        rateInput.addEventListener('focus', function() {
+            if (gstTypeSelect.value === 'inclusive') {
+                var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
+                rateInput.value = enteredRate.toFixed(2);
+            }
+        });
+
+        rateInput.addEventListener('blur', function() {
+            convertRowInclusiveToExclusive(row);
+        });
+
+        gstTypeSelect.addEventListener('change', function() {
+            convertRowInclusiveToExclusive(row);
+        });
+
+        taxSelect.addEventListener('change', function() {
+            convertRowInclusiveToExclusive(row);
         });
     }
 
     function calculateRow(row) {
         var qtyInput = row.querySelector('.qty-input');
         var rateInput = row.querySelector('.rate-input');
+        var gstTypeSelect = row.querySelector('.gst-type-select');
+        var taxSelect = row.querySelector('.tax-select');
         var lineTotal = row.querySelector('.line-total');
 
         var qty = parseInt(qtyInput.value) || 0;
-        var rate = parseFloat(rateInput.value) || 0;
-        var total = qty * rate;
+        var gstType = gstTypeSelect.value;
+        var taxPct = parseFloat(taxSelect.value) || 0;
 
-        lineTotal.value = total.toFixed(2);
+        var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
+
+        var taxable = 0;
+        var tax = 0;
+        var net = 0;
+
+        if (gstType === 'inclusive') {
+            var rateExclTax = enteredRate / (1 + (taxPct / 100));
+            taxable = qty * rateExclTax;
+            tax = (taxable * taxPct) / 100;
+            net = qty * enteredRate;
+        } else {
+            taxable = qty * enteredRate;
+            tax = (taxable * taxPct) / 100;
+            net = taxable + tax;
+        }
+
+        lineTotal.value = net.toFixed(2);
         calculateSummary();
     }
 
+    // Initialize first row
     var firstRow = itemsContainer.querySelector('.item-row');
     bindRowEvents(firstRow);
 
+    // Summary calculations
+    var summaryTaxable = document.getElementById('summary_taxable');
+    var summaryCgst = document.getElementById('summary_cgst');
+    var summarySgst = document.getElementById('summary_sgst');
+    var summaryIgst = document.getElementById('summary_igst');
+    var taxRegimeSelect = document.getElementById('tax_regime');
     var summaryRound = document.getElementById('summary_round');
     var summaryGrand = document.getElementById('summary_grand');
     var prevBalanceInput = document.getElementById('previous_balance');
     var receivedAmountInput = document.getElementById('received_amount');
     var summaryCurrentBalance = document.getElementById('summary_current_balance');
 
+    function toggleRegimeFields() {
+        var isIgst = taxRegimeSelect.value === 'igst';
+        document.getElementById('summary_cgst_sgst_fields').classList.toggle('d-none', isIgst);
+        document.getElementById('summary_cgst_sgst_fields2').classList.toggle('d-none', isIgst);
+        document.getElementById('summary_igst_field').classList.toggle('d-none', !isIgst);
+    }
+
+    taxRegimeSelect.addEventListener('change', function() {
+        toggleRegimeFields();
+        calculateSummary();
+    });
+
     function calculateSummary() {
-        var netTotal = 0;
+        var taxableTotal = 0;
+        var cgstTotal = 0;
+        var sgstTotal = 0;
+        var igstTotal = 0;
+        var taxRegime = taxRegimeSelect.value;
+
         var rows = itemsContainer.querySelectorAll('.item-row');
         rows.forEach(function(row) {
             var qtyInput = row.querySelector('.qty-input');
             var rateInput = row.querySelector('.rate-input');
+            var gstTypeSelect = row.querySelector('.gst-type-select');
+            var taxSelect = row.querySelector('.tax-select');
+
             var qty = parseInt(qtyInput.value) || 0;
-            var rate = parseFloat(rateInput.value) || 0;
-            netTotal += qty * rate;
+            var gstType = gstTypeSelect.value;
+            var taxPct = parseFloat(taxSelect.value) || 0;
+            
+            var enteredRate = parseFloat(rateInput.dataset.enteredRate) || parseFloat(rateInput.value) || 0;
+
+            var taxable = 0;
+            var tax = 0;
+
+            if (gstType === 'inclusive') {
+                var rateExclTax = enteredRate / (1 + (taxPct / 100));
+                taxable = qty * rateExclTax;
+                tax = (taxable * taxPct) / 100;
+            } else {
+                taxable = qty * enteredRate;
+                tax = (taxable * taxPct) / 100;
+            }
+
+            taxableTotal += taxable;
+            if (taxRegime === 'igst') {
+                igstTotal += tax;
+            } else {
+                cgstTotal += tax / 2;
+                sgstTotal += tax / 2;
+            }
         });
 
-        var netTotalRounded = Math.round(netTotal);
-        var roundOff = netTotalRounded - netTotal;
+        var netTotalBeforeRound = taxableTotal + cgstTotal + sgstTotal + igstTotal;
+        var netTotalRounded = Math.round(netTotalBeforeRound);
+        var roundOff = netTotalRounded - netTotalBeforeRound;
 
+        summaryTaxable.value = taxableTotal.toFixed(2);
+        summaryCgst.value = cgstTotal.toFixed(2);
+        summarySgst.value = sgstTotal.toFixed(2);
+        summaryIgst.value = igstTotal.toFixed(2);
         summaryRound.value = roundOff.toFixed(2);
         summaryGrand.value = netTotalRounded.toFixed(2);
 
@@ -376,6 +578,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     prevBalanceInput.addEventListener('input', calculateSummary);
     receivedAmountInput.addEventListener('input', calculateSummary);
+
+    document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
+        var gstSelects = document.querySelectorAll('.gst-type-select');
+        gstSelects.forEach(function(select) {
+            select.value = 'exclusive';
+        });
+    });
 
     // AJAX Quick Add Customer Form Handler
     var quickAddForm = document.getElementById('quickAddCustomerForm');
@@ -406,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (res.status === 200 || res.status === 201) {
                 var customer = res.body.customer;
-                var fullName = customer.first_name + ' ' + (customer.last_name || '');
+                var fullName = customer.name;
                 
                 // Add new customer to select dropdown list
                 var option = document.createElement('option');
@@ -415,6 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.setAttribute('data-name', fullName);
                 option.setAttribute('data-mobile', customer.phone);
                 option.setAttribute('data-address', customer.address || '');
+                option.setAttribute('data-gstin', customer.gstin || '');
                 option.setAttribute('data-pan', customer.pan_no || '');
                 
                 customerSelect.appendChild(option);

@@ -11,9 +11,10 @@
                 @if($vehiclePurchaseOrder->status != 'received')
                 <a href="{{ route('admin.vehicle-purchase-orders.receive', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-primary"><i class="bx bx-import"></i> Receive Items</a>
                 @endif
-                <a href="{{ route('admin.vehicle-purchase-orders.pdf', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-secondary" target="_blank"><i class="bx bx-file"></i> PDF</a>
-                <a href="{{ route('admin.vehicle-purchase-orders.whatsapp', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-success" target="_blank"><i class="bx bxl-whatsapp"></i> Send to WhatsApp</a>
-                <a href="{{ route('admin.vehicle-purchase-orders.index') }}" class="btn btn-secondary">Back</a>
+                <button type="button" onclick="directPrintPdf('{{ route('admin.vehicle-purchase-orders.pdf', $vehiclePurchaseOrder) }}')" class="btn btn-sm btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
+                <a href="{{ route('admin.vehicle-purchase-orders.pdf', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-danger me-1" target="_blank"><i class="bx bxs-file-pdf"></i> Download PDF</a>
+                <a href="{{ route('admin.vehicle-purchase-orders.whatsapp', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-success me-1" target="_blank"><i class="bx bxl-whatsapp"></i> Send to WhatsApp</a>
+                <a href="{{ route('admin.vehicle-purchase-orders.index') }}" class="btn btn-secondary btn-sm">Back</a>
             </div>
         </div>
         <div class="card-body">
@@ -47,7 +48,10 @@
                     @foreach($vehiclePurchaseOrder->items as $i => $item)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td>{{ $item->vehicle_description }}</td>
+                        <td>
+                            {{ $item->vehicle_description }}
+                            @if($item->color_name) <span class="badge bg-secondary ms-1">{{ $item->color_name }}</span> @endif
+                        </td>
                         <td>{{ $item->quantity }}</td>
                         <td>{{ number_format($item->unit_price, 2) }}</td>
                         <td>{{ number_format($item->total_price, 2) }}</td>

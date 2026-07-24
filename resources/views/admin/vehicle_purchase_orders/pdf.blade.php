@@ -209,6 +209,7 @@
                 <td>{{ $i + 1 }}</td>
                 <td>
                     <strong>{{ $item->vehicle_description }}</strong>
+                    @if($item->color_name) <br><small style="color: #666;">Color: {{ $item->color_name }}</small> @endif
                 </td>
                 <td class="text-right">{{ $item->quantity }}</td>
                 <td class="text-right">{{ number_format($item->unit_price, 2) }}</td>

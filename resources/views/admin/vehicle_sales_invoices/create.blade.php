@@ -16,10 +16,10 @@
                                 <option value="">-- New Customer / Walk-in --</option>
                                 @foreach($customers as $c)
                                 <option value="{{ $c->id }}" 
-                                        data-name="{{ $c->first_name }} {{ $c->last_name }}"
+                                        data-name="{{ $c->name }}"
                                         data-mobile="{{ $c->phone }}"
                                         data-address="{{ $c->address }}">
-                                    {{ $c->first_name }} {{ $c->last_name }} ({{ $c->phone }})
+                                    {{ $c->name }} ({{ $c->phone }})
                                 </option>
                                 @endforeach
                             </select>
@@ -127,6 +127,11 @@
                 <h5 class="card-title text-primary mb-3">Invoice & Pricing Details</h5>
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
+                        <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
+                        <input type="text" name="invoice_number" class="form-control @error('invoice_number') is-invalid @enderror" value="{{ old('invoice_number', $nextInvoiceNumber ?? '') }}" required>
+                        @error('invoice_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
                         <input type="date" name="invoice_date" class="form-control @error('invoice_date') is-invalid @enderror" value="{{ old('invoice_date', date('Y-m-d')) }}" required>
                         @error('invoice_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -137,7 +142,33 @@
                         @error('rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Subtotal</label>
+                        <label class="form-label">GST Type <span class="text-danger">*</span></label>
+                        <select name="gst_type" id="gst_type" class="form-select no-select2" required>
+                            <option value="exclusive" {{ old('gst_type') === 'exclusive' ? 'selected' : '' }}>GST Extra (Exclusive)</option>
+                            <option value="inclusive" {{ old('gst_type') === 'inclusive' ? 'selected' : '' }}>GST Included (Inclusive)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tax Regime <span class="text-danger">*</span></label>
+                        <select name="tax_regime" id="tax_regime" class="form-select no-select2" required>
+                            <option value="cgst_sgst" {{ old('tax_regime', 'cgst_sgst') === 'cgst_sgst' ? 'selected' : '' }}>CGST + SGST</option>
+                            <option value="igst" {{ old('tax_regime') === 'igst' ? 'selected' : '' }}>IGST</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="cgst_sgst_fields">
+                        <label class="form-label">SGST @ 2.5% (Calculated)</label>
+                        <input type="text" id="sgst" class="form-control bg-light" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3" id="cgst_sgst_fields2">
+                        <label class="form-label">CGST @ 2.5% (Calculated)</label>
+                        <input type="text" id="cgst" class="form-control bg-light" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3 d-none" id="igst_field">
+                        <label class="form-label">IGST @ 5% (Calculated)</label>
+                        <input type="text" id="igst" class="form-control bg-light" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Subtotal Incl. GST</label>
                         <input type="text" id="subtotal_incl_gst" class="form-control bg-light" readonly value="0.00">
                     </div>
                     <div class="col-md-3">
@@ -203,21 +234,17 @@ CHARGER WARRANTY - 2 YEAR</textarea>
                 <div class="modal-body">
                     <div class="alert alert-danger d-none" id="modalErrorAlert"></div>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">First Name <span class="text-danger">*</span></label>
-                            <input type="text" name="first_name" id="modal_first_name" class="form-control" required>
+                        <div class="col-md-12">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" id="modal_name" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                            <input type="text" name="last_name" id="modal_last_name" class="form-control" required>
+                            <label class="form-label">Mobile Number</label>
+                            <input type="text" name="phone" id="modal_phone" class="form-control" maxlength="10" placeholder="10 digits">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                            <input type="text" name="phone" id="modal_phone" class="form-control" maxlength="10" placeholder="10 digits" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Type <span class="text-danger">*</span></label>
-                            <select name="type" id="modal_type" class="form-select no-select2" required>
+                            <label class="form-label">Type</label>
+                            <select name="type" id="modal_type" class="form-select no-select2">
                                 <option value="individual">Individual</option>
                                 <option value="corporate">Corporate</option>
                             </select>
@@ -324,27 +351,102 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     var rateInp = document.getElementById('rate');
+    var gstTypeSelect = document.getElementById('gst_type');
+    var taxRegimeSelect = document.getElementById('tax_regime');
     var nemmpInp = document.getElementById('nemmp_incentive');
     var discountInp = document.getElementById('discount');
     
+    var sgstOut = document.getElementById('sgst');
+    var cgstOut = document.getElementById('cgst');
+    var igstOut = document.getElementById('igst');
     var subtotalOut = document.getElementById('subtotal_incl_gst');
     var grandTotalOut = document.getElementById('grand_total');
 
+    function toggleRegimeFields() {
+        var isIgst = taxRegimeSelect.value === 'igst';
+        document.getElementById('cgst_sgst_fields').classList.toggle('d-none', isIgst);
+        document.getElementById('cgst_sgst_fields2').classList.toggle('d-none', isIgst);
+        document.getElementById('igst_field').classList.toggle('d-none', !isIgst);
+    }
+
+    taxRegimeSelect.addEventListener('change', function() {
+        toggleRegimeFields();
+        calculateInvoice();
+    });
+
     function calculateInvoice() {
-        var rate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
-        var subtotal = rate;
+        var gstType = gstTypeSelect.value;
+        var taxRegime = taxRegimeSelect.value;
+        var enteredRate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
+        var subtotal = 0;
+        var cgst = 0;
+        var sgst = 0;
+        var igst = 0;
+
+        if (gstType === 'inclusive') {
+            var baseRate = enteredRate / 1.05;
+            if (taxRegime === 'igst') {
+                igst = Math.round(baseRate * 5) / 100;
+            } else {
+                cgst = Math.round(baseRate * 2.5) / 100;
+                sgst = Math.round(baseRate * 2.5) / 100;
+            }
+            subtotal = enteredRate;
+        } else {
+            if (taxRegime === 'igst') {
+                igst = Math.round(enteredRate * 5) / 100;
+            } else {
+                cgst = Math.round(enteredRate * 2.5) / 100;
+                sgst = Math.round(enteredRate * 2.5) / 100;
+            }
+            subtotal = enteredRate + cgst + sgst + igst;
+        }
         
         var nemmp = parseFloat(nemmpInp.value) || 0;
         var discount = parseFloat(discountInp.value) || 0;
         var grand = subtotal - nemmp - discount;
 
+        sgstOut.value = sgst.toFixed(2);
+        cgstOut.value = cgst.toFixed(2);
+        igstOut.value = igst.toFixed(2);
         subtotalOut.value = subtotal.toFixed(2);
         grandTotalOut.value = grand.toFixed(2);
+    }
+
+    function convertInclusiveToExclusive() {
+        var gstType = gstTypeSelect.value;
+        var enteredRate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
+
+        if (gstType === 'inclusive') {
+            var baseRate = enteredRate / 1.05;
+            rateInp.value = baseRate.toFixed(2);
+        } else {
+            rateInp.value = enteredRate.toFixed(2);
+        }
+        calculateInvoice();
     }
 
     rateInp.addEventListener('input', function() {
         rateInp.dataset.enteredRate = rateInp.value;
         calculateInvoice();
+    });
+
+    rateInp.addEventListener('focus', function() {
+        if (gstTypeSelect.value === 'inclusive') {
+            var enteredRate = parseFloat(rateInp.dataset.enteredRate) || parseFloat(rateInp.value) || 0;
+            rateInp.value = enteredRate.toFixed(2);
+        }
+    });
+
+    gstTypeSelect.addEventListener('change', function() {
+        convertInclusiveToExclusive();
+    });
+
+    document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
+        gstTypeSelect.value = 'exclusive';
     });
 
     nemmpInp.addEventListener('input', calculateInvoice);
@@ -403,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (res.status === 200 || res.status === 201) {
                 var customer = res.body.customer;
-                var fullName = customer.first_name + ' ' + (customer.last_name || '');
+                var fullName = customer.name;
                 
                 // Add new customer to select dropdown list
                 var option = document.createElement('option');

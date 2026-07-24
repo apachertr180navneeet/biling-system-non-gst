@@ -157,9 +157,58 @@ class VehicleSalesInvoiceController extends Controller
         return response()->download($path, 'vehicle_sales_invoices_' . date('Ymd_His') . '.xls')->deleteFileAfterSend(true);
     }
 
+    private function isLastFourDigitsUnique($invoiceNumber, $ignoreVehicleId = null, $ignorePartId = null)
+    {
+        if (preg_match('/(\d{4})$/', trim($invoiceNumber), $matches)) {
+            $digits = $matches[1];
+            
+            $vQuery = DB::table('vehicle_sales_invoices')
+                ->whereNull('deleted_at')
+                ->whereRaw("RIGHT(invoice_number, 4) = ?", [$digits]);
+            if ($ignoreVehicleId) {
+                $vQuery->where('id', '!=', $ignoreVehicleId);
+            }
+            if ($vQuery->exists()) {
+                return false;
+            }
+
+            $pQuery = DB::table('part_sales_invoices')
+                ->whereNull('deleted_at')
+                ->whereRaw("RIGHT(invoice_number, 4) = ?", [$digits]);
+            if ($ignorePartId) {
+                $pQuery->where('id', '!=', $ignorePartId);
+            }
+            if ($pQuery->exists()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function generateNextInvoiceNumber($invoiceDate = null)
+    {
+        $dateStr = $invoiceDate ? date('Ymd', strtotime($invoiceDate)) : date('Ymd');
+        
+        $vInvoices = DB::table('vehicle_sales_invoices')->whereNull('deleted_at')->pluck('invoice_number');
+        $pInvoices = DB::table('part_sales_invoices')->whereNull('deleted_at')->pluck('invoice_number');
+        $allInvoices = $vInvoices->concat($pInvoices);
+
+        $maxNum = 850;
+        foreach ($allInvoices as $invNum) {
+            if (preg_match('/(\d+)$/', $invNum, $matches)) {
+                $num = (int)$matches[1];
+                if ($num > $maxNum) {
+                    $maxNum = $num;
+                }
+            }
+        }
+        $nextNum = $maxNum + 1;
+        return 'INV-' . $dateStr . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+    }
+
     public function create()
     {
-        $customers = Customer::where('is_active', true)->orderBy('first_name')->get();
+        $customers = Customer::where('is_active', true)->orderBy('name')->get();
         
         $vehicles = VehicleInventory::where('status', 'available')
             ->where('is_active', true)
@@ -181,13 +230,15 @@ class VehicleSalesInvoiceController extends Controller
             });
 
         $financeMasters = FinanceMaster::where('is_active', true)->orderBy('name')->get();
+        $nextInvoiceNumber = $this->generateNextInvoiceNumber();
 
-        return view('admin.vehicle_sales_invoices.create', compact('customers', 'vehicles', 'financeMasters'));
+        return view('admin.vehicle_sales_invoices.create', compact('customers', 'vehicles', 'financeMasters', 'nextInvoiceNumber'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'invoice_number' => 'nullable|string|max:255|unique:vehicle_sales_invoices,invoice_number',
             'invoice_date' => 'required|date',
             'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'required|string|max:255',
@@ -198,24 +249,63 @@ class VehicleSalesInvoiceController extends Controller
             'customer_residence_phone' => 'nullable|string|max:20',
             'vehicle_inventory_id' => 'required|exists:vehicle_inventories,id',
             'rate' => 'required|numeric|min:0',
+            'gst_type' => 'required|string|in:exclusive,inclusive',
             'nemmp_incentive' => 'nullable|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'payment_mode' => 'nullable|string|max:255',
             'finance_name' => 'nullable|string|max:255',
+            'tax_regime' => 'required|string|in:cgst_sgst,igst',
             'previous_balance' => 'nullable|numeric|min:0',
             'received_amount' => 'nullable|numeric|min:0',
             'warranty_notes' => 'nullable|string',
         ]);
+
+        if ($request->filled('invoice_number')) {
+            if (!$this->isLastFourDigitsUnique($request->invoice_number)) {
+                return back()->withErrors(['invoice_number' => 'The last 4 digits of the invoice number must be unique across both vehicle and parts invoices.'])->withInput();
+            }
+        }
 
         $vehicle = VehicleInventory::findOrFail($request->vehicle_inventory_id);
         if ($vehicle->status !== 'available') {
             return back()->withErrors(['vehicle_inventory_id' => 'This vehicle is not available.'])->withInput();
         }
 
+        // Calculations
         $rate_input = floatval($request->rate);
-        $total = $rate_input;
-        $rate = $rate_input;
-        $sub_total = $rate_input;
+        $gst_type = $request->input('gst_type', 'exclusive');
+        $tax_regime = $request->input('tax_regime', 'cgst_sgst');
+        $cgst_rate = config('app.cgst_rate', 2.50);
+        $sgst_rate = config('app.sgst_rate', 2.50);
+        $igst_rate = config('app.igst_rate', 5.00);
+        
+        if ($gst_type === 'inclusive') {
+            $sub_total = round($rate_input / 1.05, 2);
+            if ($tax_regime === 'igst') {
+                $cgst_amount = 0;
+                $sgst_amount = 0;
+                $igst_amount = round(($sub_total * $igst_rate) / 100, 2);
+            } else {
+                $cgst_amount = round(($sub_total * $cgst_rate) / 100, 2);
+                $sgst_amount = round(($sub_total * $sgst_rate) / 100, 2);
+                $igst_amount = 0;
+            }
+            $total = $rate_input;
+            $rate = $sub_total;
+        } else {
+            $sub_total = $rate_input;
+            if ($tax_regime === 'igst') {
+                $cgst_amount = 0;
+                $sgst_amount = 0;
+                $igst_amount = round(($sub_total * $igst_rate) / 100, 2);
+            } else {
+                $cgst_amount = round(($sub_total * $cgst_rate) / 100, 2);
+                $sgst_amount = round(($sub_total * $sgst_rate) / 100, 2);
+                $igst_amount = 0;
+            }
+            $total = $sub_total + $cgst_amount + $sgst_amount + $igst_amount;
+            $rate = $rate_input;
+        }
         
         $nemmp = floatval($request->input('nemmp_incentive', 0));
         $discount = floatval($request->input('discount', 0));
@@ -227,11 +317,13 @@ class VehicleSalesInvoiceController extends Controller
         $balance = $grand_total - $received;
         $curr_bal = $prev_bal + $balance;
 
-        $invoice = DB::transaction(function () use ($request, $vehicle, $rate, $sub_total, $total, $nemmp, $discount, $grand_total, $prev_bal, $received, $balance, $curr_bal) {
-            $last = DB::table('vehicle_sales_invoices')->lockForUpdate()->orderBy('id', 'desc')->first();
-            $nextId = $last ? $last->id + 1 : 1;
-            $invoiceNumber = 'INV-' . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+        $invoice = DB::transaction(function () use ($request, $vehicle, $rate, $sub_total, $cgst_rate, $cgst_amount, $sgst_rate, $sgst_amount, $igst_amount, $tax_regime, $total, $nemmp, $discount, $grand_total, $prev_bal, $received, $balance, $curr_bal) {
+            // Generate or use provided invoice number
+            $invoiceNumber = $request->filled('invoice_number')
+                ? trim($request->input('invoice_number'))
+                : $this->generateNextInvoiceNumber($request->invoice_date);
 
+            // Mark vehicle as sold
             $vehicle->update(['status' => 'sold']);
 
             return VehicleSalesInvoice::create([
@@ -247,12 +339,18 @@ class VehicleSalesInvoiceController extends Controller
                 'vehicle_inventory_id' => $vehicle->id,
                 'rate' => $rate,
                 'sub_total' => $sub_total,
+                'cgst_rate' => $cgst_rate,
+                'cgst_amount' => $cgst_amount,
+                'sgst_rate' => $sgst_rate,
+                'sgst_amount' => $sgst_amount,
                 'total' => $total,
                 'nemmp_incentive' => $nemmp,
                 'discount' => $discount,
                 'grand_total' => $grand_total,
                 'payment_mode' => $request->payment_mode,
                 'finance_name' => $request->input('finance_name'),
+                'tax_regime' => $tax_regime,
+                'igst_amount' => $igst_amount,
                 'received_amount' => $received,
                 'balance' => $balance,
                 'previous_balance' => $prev_bal,
@@ -262,6 +360,181 @@ class VehicleSalesInvoiceController extends Controller
         });
 
         return redirect()->route('admin.vehicle-sales-invoices.show', $invoice)->withSuccess('Vehicle Sales Invoice created successfully.');
+    }
+
+    public function edit(VehicleSalesInvoice $vehicleSalesInvoice)
+    {
+        $vehicleSalesInvoice->load('customer', 'vehicleInventory');
+        $customers = Customer::where('is_active', true)->orderBy('name')->get();
+        
+        $vehicles = VehicleInventory::where(function($q) use ($vehicleSalesInvoice) {
+                $q->where('status', 'available')
+                  ->orWhere('id', $vehicleSalesInvoice->vehicle_inventory_id);
+            })
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($item) {
+                $master = VehicleMaster::where('is_active', true)
+                    ->get()
+                    ->first(function ($m) use ($item) {
+                        $desc = trim($m->variant_name . ' ' . $m->color_name);
+                        return strtolower($desc) === strtolower($item->vehicle_description)
+                            || strtolower($m->variant_name) === strtolower($item->vehicle_description);
+                    });
+                
+                $item->ex_showroom_price = $master ? $master->ex_showroom_price : $item->purchase_price;
+                $item->battery_type = $master ? $master->battery_type : 'LITHIUM';
+                $item->battery_make = $master ? $master->battery_make : 'LITHIUM';
+                return $item;
+            });
+
+        $financeMasters = FinanceMaster::where('is_active', true)->orderBy('name')->get();
+
+        return view('admin.vehicle_sales_invoices.edit', compact('vehicleSalesInvoice', 'customers', 'vehicles', 'financeMasters'));
+    }
+
+    public function update(Request $request, VehicleSalesInvoice $vehicleSalesInvoice)
+    {
+        $request->validate([
+            'invoice_number' => 'required|string|max:255|unique:vehicle_sales_invoices,invoice_number,' . $vehicleSalesInvoice->id,
+            'invoice_date' => 'required|date',
+            'customer_id' => 'nullable|exists:customers,id',
+            'customer_name' => 'required|string|max:255',
+            'customer_age' => 'nullable|integer|min:0',
+            'customer_occupation' => 'nullable|string|max:255',
+            'customer_mobile' => 'nullable|string|max:20',
+            'customer_address' => 'nullable|string',
+            'customer_residence_phone' => 'nullable|string|max:20',
+            'vehicle_inventory_id' => 'required|exists:vehicle_inventories,id',
+            'rate' => 'required|numeric|min:0',
+            'gst_type' => 'required|string|in:exclusive,inclusive',
+            'nemmp_incentive' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'payment_mode' => 'nullable|string|max:255',
+            'finance_name' => 'nullable|string|max:255',
+            'tax_regime' => 'required|string|in:cgst_sgst,igst',
+            'previous_balance' => 'nullable|numeric|min:0',
+            'received_amount' => 'nullable|numeric|min:0',
+            'warranty_notes' => 'nullable|string',
+        ]);
+
+        if (!$this->isLastFourDigitsUnique($request->invoice_number, $vehicleSalesInvoice->id, null)) {
+            return back()->withErrors(['invoice_number' => 'The last 4 digits of the invoice number must be unique across both vehicle and parts invoices.'])->withInput();
+        }
+
+        if ($vehicleSalesInvoice->vehicle_inventory_id != $request->vehicle_inventory_id) {
+            $newVehicle = VehicleInventory::findOrFail($request->vehicle_inventory_id);
+            if ($newVehicle->status !== 'available') {
+                return back()->withErrors(['vehicle_inventory_id' => 'The newly selected vehicle is not available.'])->withInput();
+            }
+        }
+
+        // Calculations
+        $rate_input = floatval($request->rate);
+        $gst_type = $request->input('gst_type', 'exclusive');
+        $tax_regime = $request->input('tax_regime', 'cgst_sgst');
+        $cgst_rate = config('app.cgst_rate', 2.50);
+        $sgst_rate = config('app.sgst_rate', 2.50);
+        $igst_rate = config('app.igst_rate', 5.00);
+        
+        if ($gst_type === 'inclusive') {
+            $sub_total = round($rate_input / 1.05, 2);
+            if ($tax_regime === 'igst') {
+                $cgst_amount = 0;
+                $sgst_amount = 0;
+                $igst_amount = round(($sub_total * $igst_rate) / 100, 2);
+            } else {
+                $cgst_amount = round(($sub_total * $cgst_rate) / 100, 2);
+                $sgst_amount = round(($sub_total * $sgst_rate) / 100, 2);
+                $igst_amount = 0;
+            }
+            $total = $rate_input;
+            $rate = $sub_total;
+        } else {
+            $sub_total = $rate_input;
+            if ($tax_regime === 'igst') {
+                $cgst_amount = 0;
+                $sgst_amount = 0;
+                $igst_amount = round(($sub_total * $igst_rate) / 100, 2);
+            } else {
+                $cgst_amount = round(($sub_total * $cgst_rate) / 100, 2);
+                $sgst_amount = round(($sub_total * $sgst_rate) / 100, 2);
+                $igst_amount = 0;
+            }
+            $total = $sub_total + $cgst_amount + $sgst_amount + $igst_amount;
+            $rate = $rate_input;
+        }
+        
+        $nemmp = floatval($request->input('nemmp_incentive', 0));
+        $discount = floatval($request->input('discount', 0));
+        
+        $grand_total = $total - $nemmp - $discount;
+
+        $prev_bal = floatval($request->input('previous_balance', 0));
+        $received = floatval($request->input('received_amount', 0));
+        $balance = $grand_total - $received;
+        $curr_bal = $prev_bal + $balance;
+
+        DB::transaction(function () use ($request, $vehicleSalesInvoice, $rate, $sub_total, $cgst_rate, $cgst_amount, $sgst_rate, $sgst_amount, $igst_amount, $tax_regime, $total, $nemmp, $discount, $grand_total, $prev_bal, $received, $balance, $curr_bal) {
+            // Handle vehicle inventory status change if changed
+            if ($vehicleSalesInvoice->vehicle_inventory_id != $request->vehicle_inventory_id) {
+                VehicleInventory::where('id', $vehicleSalesInvoice->vehicle_inventory_id)->update(['status' => 'available']);
+                VehicleInventory::where('id', $request->vehicle_inventory_id)->update(['status' => 'sold']);
+            }
+
+            $vehicleSalesInvoice->update([
+                'invoice_number' => $request->invoice_number,
+                'invoice_date' => $request->invoice_date,
+                'customer_id' => $request->customer_id,
+                'customer_name' => $request->customer_name,
+                'customer_age' => $request->customer_age,
+                'customer_occupation' => $request->customer_occupation,
+                'customer_mobile' => $request->customer_mobile,
+                'customer_address' => $request->customer_address,
+                'customer_residence_phone' => $request->customer_residence_phone,
+                'vehicle_inventory_id' => $request->vehicle_inventory_id,
+                'rate' => $rate,
+                'sub_total' => $sub_total,
+                'cgst_rate' => $cgst_rate,
+                'cgst_amount' => $cgst_amount,
+                'sgst_rate' => $sgst_rate,
+                'sgst_amount' => $sgst_amount,
+                'total' => $total,
+                'nemmp_incentive' => $nemmp,
+                'discount' => $discount,
+                'grand_total' => $grand_total,
+                'payment_mode' => $request->payment_mode,
+                'finance_name' => $request->input('finance_name'),
+                'tax_regime' => $tax_regime,
+                'igst_amount' => $igst_amount,
+                'received_amount' => $received,
+                'balance' => $balance,
+                'previous_balance' => $prev_bal,
+                'current_balance' => $curr_bal,
+                'warranty_notes' => $request->input('warranty_notes'),
+            ]);
+        });
+
+        return redirect()->route('admin.vehicle-sales-invoices.show', $vehicleSalesInvoice)->withSuccess('Vehicle Sales Invoice updated successfully.');
+    }
+
+    public function quickUpdateDate(Request $request, VehicleSalesInvoice $vehicleSalesInvoice)
+    {
+        $request->validate([
+            'invoice_number' => 'required|string|max:255|unique:vehicle_sales_invoices,invoice_number,' . $vehicleSalesInvoice->id,
+            'invoice_date' => 'required|date',
+        ]);
+
+        if (!$this->isLastFourDigitsUnique($request->invoice_number, $vehicleSalesInvoice->id, null)) {
+            return response()->json(['success' => false, 'message' => 'The last 4 digits of the invoice number must be unique across both vehicle and parts invoices.']);
+        }
+
+        $vehicleSalesInvoice->update([
+            'invoice_number' => $request->invoice_number,
+            'invoice_date' => $request->invoice_date,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Invoice Date & Number updated successfully.']);
     }
 
     public function show(VehicleSalesInvoice $vehicleSalesInvoice)

@@ -65,8 +65,9 @@
                         <td>{{ $inv->payment_mode ?? '-' }}</td>
                         <td>
                             <a href="{{ route('admin.vehicle-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info" title="Print"><i class="bx bx-printer"></i></a>
+                            <a href="{{ route('admin.vehicle-sales-invoices.edit', $inv) }}" class="btn btn-sm btn-primary ms-1" title="Edit"><i class="bx bx-edit"></i></a>
                             @if($inv->balance > 0)
-                            <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.vehicle-sales-invoices.receive-payment', $inv) }}" data-balance="{{ $inv->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>
+                            <button class="btn btn-sm btn-success receive-payment-btn ms-1" data-url="{{ route('admin.vehicle-sales-invoices.receive-payment', $inv) }}" data-balance="{{ $inv->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>
                             @endif
                         </td>
                     </tr>

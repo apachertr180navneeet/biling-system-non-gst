@@ -13,9 +13,10 @@
                 @if($purchaseOrder->status != 'received')
                 <a href="{{ route('admin.purchase-orders.receive', $purchaseOrder) }}" class="btn btn-sm btn-primary"><i class="bx bx-import"></i> Receive Items</a>
                 @endif
-                <a href="{{ route('admin.purchase-orders.pdf', $purchaseOrder) }}" class="btn btn-sm btn-danger" target="_blank"><i class="bx bxs-file-pdf"></i> Download PDF</a>
-                <a href="{{ route('admin.purchase-orders.whatsapp', $purchaseOrder) }}" class="btn btn-sm btn-success" target="_blank"><i class="bx bxl-whatsapp"></i> Send to WhatsApp</a>
-                <a href="{{ route('admin.purchase-orders.index') }}" class="btn btn-secondary">Back</a>
+                <button type="button" onclick="directPrintPdf('{{ route('admin.purchase-orders.pdf', $purchaseOrder) }}')" class="btn btn-sm btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
+                <a href="{{ route('admin.purchase-orders.pdf', $purchaseOrder) }}" class="btn btn-sm btn-danger me-1" target="_blank"><i class="bx bxs-file-pdf"></i> Download PDF</a>
+                <a href="{{ route('admin.purchase-orders.whatsapp', $purchaseOrder) }}" class="btn btn-sm btn-success me-1" target="_blank"><i class="bx bxl-whatsapp"></i> Send to WhatsApp</a>
+                <a href="{{ route('admin.purchase-orders.index') }}" class="btn btn-secondary btn-sm">Back</a>
             </div>
         </div>
         <div class="card-body">
