@@ -12,13 +12,17 @@ let menu, animate;
 
   let layoutMenuEl = document.querySelectorAll('#layout-menu');
   layoutMenuEl.forEach(function (element) {
-    menu = new Menu(element, {
-      orientation: 'vertical',
-      closeChildren: false
-    });
-    // Change parameter to true if you want scroll animation
-    window.Helpers.scrollToActive((animate = false));
-    window.Helpers.mainMenu = menu;
+    if (typeof Menu !== 'undefined') {
+      menu = new Menu(element, {
+        orientation: 'vertical',
+        closeChildren: false
+      });
+      // Change parameter to true if you want scroll animation
+      if (window.Helpers) {
+        window.Helpers.scrollToActive((animate = false));
+        window.Helpers.mainMenu = menu;
+      }
+    }
   });
 
   // Initialize menu togglers and bind click on each
@@ -95,24 +99,24 @@ let menu, animate;
   });
 
   // Auto update layout based on screen size
-  window.Helpers.setAutoUpdate(true);
+  if (window.Helpers) {
+    if (window.Helpers.setAutoUpdate) window.Helpers.setAutoUpdate(true);
 
-  // Toggle Password Visibility
-  window.Helpers.initPasswordToggle();
+    // Toggle Password Visibility
+    if (window.Helpers.initPasswordToggle) window.Helpers.initPasswordToggle();
 
-  // Speech To Text
-  window.Helpers.initSpeechToText();
+    // Speech To Text
+    if (window.Helpers.initSpeechToText) window.Helpers.initSpeechToText();
 
-  // Manage menu expanded/collapsed with templateCustomizer & local storage
-  //------------------------------------------------------------------
+    // Manage menu expanded/collapsed with templateCustomizer & local storage
+    //------------------------------------------------------------------
 
-  // If current layout is horizontal OR current window screen is small (overlay menu) than return from here
-  if (window.Helpers.isSmallScreen()) {
-    return;
+    // If current layout is horizontal OR current window screen is small (overlay menu) than return from here
+    if (window.Helpers.isSmallScreen && window.Helpers.isSmallScreen()) {
+      return;
+    }
+
+    // Auto update menu collapsed/expanded based on the themeConfig
+    if (window.Helpers.setCollapsed) window.Helpers.setCollapsed(true, false);
   }
-
-  // If current layout is vertical and current window screen is > small
-
-  // Auto update menu collapsed/expanded based on the themeConfig
-  window.Helpers.setCollapsed(true, false);
 })();
