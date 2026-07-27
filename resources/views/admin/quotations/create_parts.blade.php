@@ -138,32 +138,48 @@ document.addEventListener('DOMContentLoaded', function() {
     $(customerSelect).on('change', function() {
         const option = this.options ? this.options[this.selectedIndex] : null;
         if (option && option.value) {
-            document.getElementById('customer_name').value = option.getAttribute('data-name') || '';
-            document.getElementById('customer_mobile').value = option.getAttribute('data-mobile') || '';
-            document.getElementById('customer_address').value = option.getAttribute('data-address') || '';
-            document.getElementById('customer_gstin').value = option.getAttribute('data-gstin') || '';
-            document.getElementById('customer_pan').value = option.getAttribute('data-pan') || '';
+            const nameEl = document.getElementById('customer_name');
+            const mobEl = document.getElementById('customer_mobile');
+            const addrEl = document.getElementById('customer_address');
+            const gstinEl = document.getElementById('customer_gstin');
+            const panEl = document.getElementById('customer_pan');
+
+            if (nameEl) nameEl.value = option.getAttribute('data-name') || '';
+            if (mobEl) mobEl.value = option.getAttribute('data-mobile') || '';
+            if (addrEl) addrEl.value = option.getAttribute('data-address') || '';
+            if (gstinEl) gstinEl.value = option.getAttribute('data-gstin') || '';
+            if (panEl) panEl.value = option.getAttribute('data-pan') || '';
         } else {
-            document.getElementById('customer_name').value = '';
-            document.getElementById('customer_mobile').value = '';
-            document.getElementById('customer_address').value = '';
-            document.getElementById('customer_gstin').value = '';
-            document.getElementById('customer_pan').value = '';
+            const nameEl = document.getElementById('customer_name');
+            const mobEl = document.getElementById('customer_mobile');
+            const addrEl = document.getElementById('customer_address');
+            const gstinEl = document.getElementById('customer_gstin');
+            const panEl = document.getElementById('customer_pan');
+
+            if (nameEl) nameEl.value = '';
+            if (mobEl) mobEl.value = '';
+            if (addrEl) addrEl.value = '';
+            if (gstinEl) gstinEl.value = '';
+            if (panEl) panEl.value = '';
         }
     });
 
     // Tax Regime Change
-    taxRegimeSelect.addEventListener('change', function() {
-        const regime = this.value;
-        if (regime === 'cgst_sgst') {
-            document.querySelectorAll('.cgst-summary, .sgst-summary').forEach(el => el.classList.remove('d-none'));
-            document.querySelector('.igst-summary').classList.add('d-none');
-        } else {
-            document.querySelectorAll('.cgst-summary, .sgst-summary').forEach(el => el.classList.add('d-none'));
-            document.querySelector('.igst-summary').classList.remove('d-none');
-        }
-        calculateTotals();
-    });
+    if (taxRegimeSelect) {
+        taxRegimeSelect.addEventListener('change', function() {
+            const regime = this.value;
+            if (regime === 'cgst_sgst') {
+                document.querySelectorAll('.cgst-summary, .sgst-summary').forEach(el => el.classList.remove('d-none'));
+                const igstEl = document.querySelector('.igst-summary');
+                if (igstEl) igstEl.classList.add('d-none');
+            } else {
+                document.querySelectorAll('.cgst-summary, .sgst-summary').forEach(el => el.classList.add('d-none'));
+                const igstEl = document.querySelector('.igst-summary');
+                if (igstEl) igstEl.classList.remove('d-none');
+            }
+            calculateTotals();
+        });
+    }
 
     // Add Row button click
     addRowBtn.addEventListener('click', function() {
@@ -274,7 +290,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalErrorAlert = document.getElementById('modalErrorAlert');
     var saveCustomerBtn = document.getElementById('btnSaveCustomer');
     
-    quickAddForm.addEventListener('submit', function(e) {
+    if (quickAddForm) {
+        quickAddForm.addEventListener('submit', function(e) {
         e.preventDefault();
         saveCustomerBtn.disabled = true;
         saveCustomerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
@@ -346,6 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error(err);
         });
     });
+}
 });
 </script>
 
