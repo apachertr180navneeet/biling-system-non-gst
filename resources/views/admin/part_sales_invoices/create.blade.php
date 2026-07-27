@@ -416,8 +416,8 @@ document.addEventListener('DOMContentLoaded', function() {
         summaryCurrentBalance.value = currentBal.toFixed(2);
     }
 
-    prevBalanceInput.addEventListener('input', calculateSummary);
-    receivedAmountInput.addEventListener('input', calculateSummary);
+    if (prevBalanceInput) prevBalanceInput.addEventListener('input', calculateSummary);
+    if (receivedAmountInput) receivedAmountInput.addEventListener('input', calculateSummary);
 
     // AJAX Quick Add Customer Form Handler
     var quickAddForm = document.getElementById('quickAddCustomerForm');

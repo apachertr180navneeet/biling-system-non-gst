@@ -122,34 +122,38 @@ $(document).ready(function() {
         $('#grandTotal').text(total.toFixed(2));
     }
     calcTotal();
-});
-document.getElementById('poForm').addEventListener('submit', function(e) {
-    var valid = true;
-    var items = document.querySelectorAll('.item-row');
-    if (items.length === 0) {
-        alert('Please add at least one item.');
-        e.preventDefault();
-        return;
-    }
-    items.forEach(function(row) {
-        var partSelect = row.querySelector('select[name*="spare_part_id"]');
-        var qtyInput = row.querySelector('input[name*="quantity"]');
-        if (partSelect && !partSelect.value) {
-            valid = false;
-            partSelect.classList.add('is-invalid');
-        } else if (partSelect) {
-            partSelect.classList.remove('is-invalid');
-        }
-        if (qtyInput && (parseInt(qtyInput.value) || 0) < 1) {
-            valid = false;
-            qtyInput.classList.add('is-invalid');
-        } else if (qtyInput) {
-            qtyInput.classList.remove('is-invalid');
-        }
-    });
-    if (!valid) {
-        e.preventDefault();
-        alert('Please fill in all required fields for each item.');
+
+    var poForm = document.getElementById('poForm');
+    if (poForm) {
+        poForm.addEventListener('submit', function(e) {
+            var valid = true;
+            var items = document.querySelectorAll('.item-row');
+            if (items.length === 0) {
+                alert('Please add at least one item.');
+                e.preventDefault();
+                return;
+            }
+            items.forEach(function(row) {
+                var partSelect = row.querySelector('select[name*="spare_part_id"]');
+                var qtyInput = row.querySelector('input[name*="quantity"]');
+                if (partSelect && !partSelect.value) {
+                    valid = false;
+                    partSelect.classList.add('is-invalid');
+                } else if (partSelect) {
+                    partSelect.classList.remove('is-invalid');
+                }
+                if (qtyInput && (parseInt(qtyInput.value) || 0) < 1) {
+                    valid = false;
+                    qtyInput.classList.add('is-invalid');
+                } else if (qtyInput) {
+                    qtyInput.classList.remove('is-invalid');
+                }
+            });
+            if (!valid) {
+                e.preventDefault();
+                alert('Please fill in all required fields for each item.');
+            }
+        });
     }
 });
 </script>
