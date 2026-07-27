@@ -419,15 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
     prevBalanceInput.addEventListener('input', calculateSummary);
     receivedAmountInput.addEventListener('input', calculateSummary);
 
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
-        var gstSelects = document.querySelectorAll('.gst-type-select');
-        gstSelects.forEach(function(select) {
-            select.value = 'exclusive';
-        });
-    });
-
     // AJAX Quick Add Customer Form Handler
     var quickAddForm = document.getElementById('quickAddCustomerForm');
     var modalErrorAlert = document.getElementById('modalErrorAlert');
