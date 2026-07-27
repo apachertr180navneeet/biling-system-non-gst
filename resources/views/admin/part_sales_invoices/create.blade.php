@@ -187,7 +187,7 @@
 <!-- Quick Add Customer Modal -->
 <div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form id="quickAddCustomerForm">
+        <form id="quickAddCustomerForm" method="POST" action="javascript:void(0);">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">

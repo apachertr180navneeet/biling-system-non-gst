@@ -219,7 +219,8 @@
                 <h5 class="modal-title">Quick Add Customer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="quickAddCustomerForm">
+            <form id="quickAddCustomerForm" method="POST" action="javascript:void(0);">
+                @csrf
                 <div class="modal-body">
                     <div id="modalErrorAlert" class="alert alert-danger d-none" role="alert"></div>
                     <div class="row g-3">
