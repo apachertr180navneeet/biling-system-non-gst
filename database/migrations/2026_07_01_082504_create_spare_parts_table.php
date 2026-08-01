@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('purchase_price', 12, 2)->default(0);
             $table->decimal('selling_price', 12, 2)->default(0);
             $table->decimal('mrp', 12, 2)->default(0);
-            $table->string('unit', 10)->default('pcs');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();

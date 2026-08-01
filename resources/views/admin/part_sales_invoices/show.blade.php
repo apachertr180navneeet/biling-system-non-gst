@@ -754,7 +754,7 @@ if (!function_exists('getIndianRupeesInWords')) {
                                 <span class="item-desc">{{ $item->serial_no_warranty_notes }}</span>
                                 @endif
                             </td>
-                            <td class="text-center" style="font-weight: 600;">{{ $item->quantity }} {{ strtoupper($item->sparePart->unit) }}</td>
+                            <td class="text-center" style="font-weight: 600;">{{ $item->quantity }}</td>
                             <td class="text-right">{{ number_format($item->rate, 2) }}</td>
                             <td class="text-right">
                                 {{ number_format($item->tax_amount, 2) }}

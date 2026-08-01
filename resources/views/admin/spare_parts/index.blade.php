@@ -108,7 +108,7 @@
                         <input type="file" name="csv_file" class="form-control" accept=".csv,.txt,.xls,.xlsx" required>
                         <div class="form-text text-muted mt-2">
                             Please upload a valid CSV/Excel file using the template headers:<br>
-                            <code>part_no, name, selling_price, mrp, unit, min_stock</code>
+                            <code>part_no, name, selling_price, mrp, min_stock</code>
                         </div>
                     </div>
                 </div>

@@ -62,9 +62,9 @@ class MasterImportTest extends TestCase
 
     public function test_can_import_valid_spare_parts(): void
     {
-        $csvContent = "part_no,name,selling_price,mrp,unit\n"
-            . "P-101,Brake Pads,450.00,500.00,Piece\n"
-            . "P-102,Air Filter,250.00,300.00,Piece\n";
+        $csvContent = "part_no,name,selling_price,mrp\n"
+            . "P-101,Brake Pads,450.00,500.00\n"
+            . "P-102,Air Filter,250.00,300.00\n";
 
         $file = UploadedFile::fake()->createWithContent('parts.csv', $csvContent);
 
@@ -81,7 +81,6 @@ class MasterImportTest extends TestCase
             'name' => 'Brake Pads',
             'selling_price' => 450.00,
             'mrp' => 500.00,
-            'unit' => 'Piece',
         ]);
     }
 

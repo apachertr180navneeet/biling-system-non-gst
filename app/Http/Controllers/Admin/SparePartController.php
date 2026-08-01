@@ -49,9 +49,8 @@ class SparePartController extends Controller
         $sheet->setCellValue('B1', 'Name');
         $sheet->setCellValue('C1', 'MRP');
         $sheet->setCellValue('D1', 'Selling Price');
-        $sheet->setCellValue('E1', 'Unit');
-        $sheet->setCellValue('F1', 'Min Stock');
-        $sheet->setCellValue('G1', 'Status');
+        $sheet->setCellValue('E1', 'Min Stock');
+        $sheet->setCellValue('F1', 'Status');
 
         $row = 2;
         foreach ($parts as $p) {
@@ -59,9 +58,8 @@ class SparePartController extends Controller
             $sheet->setCellValue('B' . $row, $p->name);
             $sheet->setCellValue('C' . $row, $p->mrp);
             $sheet->setCellValue('D' . $row, $p->selling_price);
-            $sheet->setCellValue('E' . $row, $p->unit);
-            $sheet->setCellValue('F' . $row, $p->min_stock ?? 0);
-            $sheet->setCellValue('G' . $row, $p->is_active ? 'Active' : 'Inactive');
+            $sheet->setCellValue('E' . $row, $p->min_stock ?? 0);
+            $sheet->setCellValue('F' . $row, $p->is_active ? 'Active' : 'Inactive');
             $row++;
         }
 
@@ -84,7 +82,6 @@ class SparePartController extends Controller
             'name' => 'required|string|max:255',
             'selling_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:10',
             'min_stock' => 'nullable|integer|min:0',
         ]);
         $data['min_stock'] = $data['min_stock'] ?? 0;
@@ -108,7 +105,6 @@ class SparePartController extends Controller
             'name' => 'required|string|max:255',
             'selling_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:10',
             'min_stock' => 'nullable|integer|min:0',
         ]);
         $data['min_stock'] = $data['min_stock'] ?? 0;
@@ -140,16 +136,14 @@ class SparePartController extends Controller
         $sheet->setCellValue('B1', 'name');
         $sheet->setCellValue('C1', 'selling_price');
         $sheet->setCellValue('D1', 'mrp');
-        $sheet->setCellValue('E1', 'unit');
-        $sheet->setCellValue('F1', 'min_stock');
+        $sheet->setCellValue('E1', 'min_stock');
         
         // Example row
         $sheet->setCellValue('A2', 'PART-001');
         $sheet->setCellValue('B2', 'Engine Oil');
         $sheet->setCellValue('C2', '350.00');
         $sheet->setCellValue('D2', '400.00');
-        $sheet->setCellValue('E2', 'Litre');
-        $sheet->setCellValue('F2', '5');
+        $sheet->setCellValue('E2', '5');
 
         $writer = new Xls($spreadsheet);
         $path = storage_path('app/spare_part_template.xls');
@@ -198,7 +192,7 @@ class SparePartController extends Controller
             fclose($handle);
         }
 
-        $required = ['part_no', 'name', 'selling_price', 'mrp', 'unit'];
+        $required = ['part_no', 'name', 'selling_price', 'mrp'];
         foreach ($required as $req) {
             if (!in_array($req, $header)) {
                 return redirect()->back()->withErrors(['csv_file' => "Missing required header column: {$req}"]);
@@ -228,11 +222,10 @@ class SparePartController extends Controller
             $name = isset($data['name']) ? trim($data['name']) : '';
             $sellingPrice = isset($data['selling_price']) ? trim($data['selling_price']) : '0';
             $mrp = isset($data['mrp']) ? trim($data['mrp']) : '0';
-            $unit = isset($data['unit']) ? trim($data['unit']) : '';
             $minStock = isset($data['min_stock']) && is_numeric(trim($data['min_stock'])) ? (int)trim($data['min_stock']) : 0;
 
-            if (empty($partNo) || empty($name) || empty($unit)) {
-                $errors[] = "Row {$rowCount}: Part No, Name and Unit are required.";
+            if (empty($partNo) || empty($name)) {
+                $errors[] = "Row {$rowCount}: Part No and Name are required.";
                 $skipped++;
                 continue;
             }
@@ -266,7 +259,6 @@ class SparePartController extends Controller
                 'name' => $name,
                 'selling_price' => floatval($sellingPrice),
                 'mrp' => floatval($mrp),
-                'unit' => $unit,
                 'min_stock' => $minStock,
                 'is_active' => true,
             ]);

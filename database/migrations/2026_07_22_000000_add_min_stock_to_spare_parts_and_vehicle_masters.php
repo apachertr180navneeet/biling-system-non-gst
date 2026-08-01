@@ -10,7 +10,7 @@ return new class extends Migration
     {
         if (Schema::hasTable('spare_parts') && !Schema::hasColumn('spare_parts', 'min_stock')) {
             Schema::table('spare_parts', function (Blueprint $table) {
-                $table->integer('min_stock')->default(0)->after('unit');
+                $table->integer('min_stock')->default(0)->after('mrp');
             });
         }
 

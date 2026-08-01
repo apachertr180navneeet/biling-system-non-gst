@@ -40,7 +40,6 @@
                     <tr class="table-light">
                         <th>Part No.</th>
                         <th>Part Name</th>
-                        <th>Unit</th>
                         <th class="text-center">Total Stock In</th>
                         <th class="text-center">Total Stock Out</th>
                         <th class="text-center">Remaining Stock</th>
@@ -51,7 +50,6 @@
                     <tr>
                         <td><code>{{ $s->part_no }}</code></td>
                         <td><strong>{{ $s->name }}</strong></td>
-                        <td>{{ $s->unit ?? 'pcs' }}</td>
                         <td class="text-center text-success font-weight-bold">+{{ $s->total_in }}</td>
                         <td class="text-center text-danger font-weight-bold">-{{ $s->total_out }}</td>
                         <td class="text-center">
@@ -67,7 +65,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="text-center">No part stock summaries available.</td></tr>
+                    <tr><td colspan="5" class="text-center">No part stock summaries available.</td></tr>
                     @endforelse
                 </tbody>
             </table>

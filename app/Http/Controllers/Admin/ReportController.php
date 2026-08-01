@@ -78,13 +78,12 @@ class ReportController extends Controller
                 'spare_parts.id',
                 'spare_parts.part_no',
                 'spare_parts.name',
-                'spare_parts.unit',
                 'spare_parts.min_stock',
                 DB::raw('COALESCE(SUM(CASE WHEN t.transaction_type = "in" THEN t.quantity ELSE 0 END), 0) as total_in'),
                 DB::raw('COALESCE(SUM(CASE WHEN t.transaction_type = "out" THEN t.quantity ELSE 0 END), 0) as total_out'),
                 DB::raw('COALESCE(MAX(s.quantity), 0) as remaining')
             )
-            ->groupBy('spare_parts.id', 'spare_parts.part_no', 'spare_parts.name', 'spare_parts.unit', 'spare_parts.min_stock');
+            ->groupBy('spare_parts.id', 'spare_parts.part_no', 'spare_parts.name', 'spare_parts.min_stock');
 
         if ($search) {
             $escapedSearch = '%' . addcslashes($search, '%_') . '%';
