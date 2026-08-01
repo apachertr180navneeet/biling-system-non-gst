@@ -168,7 +168,14 @@ class PurchaseOrderController extends Controller
     public function create()
     {
         $suppliers = Supplier::orderBy('name')->get();
-        $spareParts = SparePart::orderBy('name')->get();
+        $spareParts = SparePart::where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($part) {
+                $stock = SparePartStock::where('spare_part_id', $part->id)->first();
+                $part->qty_available = $stock ? $stock->quantity : 0;
+                return $part;
+            });
         return view('admin.purchase_orders.create', compact('suppliers', 'spareParts'));
     }
 
@@ -227,9 +234,16 @@ class PurchaseOrderController extends Controller
         if ($purchaseOrder->status !== 'pending') {
             return redirect()->route('admin.purchase-orders.index')->with('error', 'Only pending orders can be edited.');
         }
-        $purchaseOrder->load('items');
+        $purchaseOrder->load('items.sparePart');
         $suppliers = Supplier::orderBy('name')->get();
-        $spareParts = SparePart::orderBy('name')->get();
+        $spareParts = SparePart::where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($part) {
+                $stock = SparePartStock::where('spare_part_id', $part->id)->first();
+                $part->qty_available = $stock ? $stock->quantity : 0;
+                return $part;
+            });
         return view('admin.purchase_orders.edit', compact('purchaseOrder', 'suppliers', 'spareParts'));
     }
 
