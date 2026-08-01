@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold mb-4">Create Part Sales Invoice</h4>
+    <h4 class="fw-bold mb-4">Edit Part Sales Invoice #{{ $partSalesInvoice->invoice_number }}</h4>
     
     @if ($errors->has('items'))
         <div class="alert alert-danger alert-dismissible" role="alert">
@@ -12,8 +12,9 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.part-sales-invoices.store') }}" id="invoiceForm">
+            <form method="POST" action="{{ route('admin.part-sales-invoices.update', $partSalesInvoice->id) }}" id="invoiceForm">
                 @csrf
+                @method('PUT')
                 
                 <h5 class="card-title text-primary mb-3">Customer Information</h5>
                 <div class="row g-3 mb-4">
@@ -24,6 +25,7 @@
                                 <option value="">-- New Customer / Walk-in --</option>
                                 @foreach($customers as $c)
                                 <option value="{{ $c->id }}" 
+                                        {{ old('customer_id', $partSalesInvoice->customer_id) == $c->id ? 'selected' : '' }}
                                         data-name="{{ $c->name }}"
                                         data-mobile="{{ $c->phone }}"
                                         data-address="{{ $c->address }}"
@@ -40,32 +42,32 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Customer Name <span class="text-danger">*</span></label>
-                        <input type="text" id="customer_name" name="customer_name" class="form-control @error('customer_name') is-invalid @enderror" value="{{ old('customer_name') }}" required>
+                        <input type="text" id="customer_name" name="customer_name" class="form-control @error('customer_name') is-invalid @enderror" value="{{ old('customer_name', $partSalesInvoice->customer_name) }}" required>
                         @error('customer_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Mobile Number</label>
-                        <input type="text" id="customer_mobile" name="customer_mobile" class="form-control @error('customer_mobile') is-invalid @enderror" value="{{ old('customer_mobile') }}">
+                        <input type="text" id="customer_mobile" name="customer_mobile" class="form-control @error('customer_mobile') is-invalid @enderror" value="{{ old('customer_mobile', $partSalesInvoice->customer_mobile) }}">
                         @error('customer_mobile')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">GSTIN (Optional)</label>
-                        <input type="text" id="customer_gstin" name="customer_gstin" class="form-control @error('customer_gstin') is-invalid @enderror" value="{{ old('customer_gstin') }}" placeholder="15-digit GSTIN" maxlength="15">
+                        <input type="text" id="customer_gstin" name="customer_gstin" class="form-control @error('customer_gstin') is-invalid @enderror" value="{{ old('customer_gstin', $partSalesInvoice->customer_gstin ?? '') }}" placeholder="15-digit GSTIN" maxlength="15">
                         @error('customer_gstin')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">PAN Number (Optional)</label>
-                        <input type="text" id="customer_pan" name="customer_pan" class="form-control @error('customer_pan') is-invalid @enderror" value="{{ old('customer_pan') }}" placeholder="10-digit PAN" maxlength="10">
+                        <input type="text" id="customer_pan" name="customer_pan" class="form-control @error('customer_pan') is-invalid @enderror" value="{{ old('customer_pan', $partSalesInvoice->customer_pan) }}" placeholder="10-digit PAN" maxlength="10">
                         @error('customer_pan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Place of Supply <span class="text-danger">*</span></label>
-                        <input type="text" id="place_of_supply" name="place_of_supply" class="form-control @error('place_of_supply') is-invalid @enderror" value="{{ old('place_of_supply', 'Rajasthan') }}" required>
+                        <input type="text" id="place_of_supply" name="place_of_supply" class="form-control @error('place_of_supply') is-invalid @enderror" value="{{ old('place_of_supply', $partSalesInvoice->place_of_supply) }}" required>
                         @error('place_of_supply')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">Billing Address</label>
-                        <textarea id="customer_address" name="customer_address" class="form-control @error('customer_address') is-invalid @enderror" rows="2">{{ old('customer_address') }}</textarea>
+                        <textarea id="customer_address" name="customer_address" class="form-control @error('customer_address') is-invalid @enderror" rows="2">{{ old('customer_address', $partSalesInvoice->customer_address) }}</textarea>
                         @error('customer_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -74,20 +76,20 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
                         <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
-                        <input type="text" name="invoice_number" class="form-control @error('invoice_number') is-invalid @enderror" value="{{ old('invoice_number', $nextInvoiceNumber ?? '') }}" required>
+                        <input type="text" name="invoice_number" class="form-control @error('invoice_number') is-invalid @enderror" value="{{ old('invoice_number', $partSalesInvoice->invoice_number) }}" required>
                         @error('invoice_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
-                        <input type="date" name="invoice_date" class="form-control @error('invoice_date') is-invalid @enderror" value="{{ old('invoice_date', date('Y-m-d')) }}" required>
+                        <input type="date" name="invoice_date" class="form-control @error('invoice_date') is-invalid @enderror" value="{{ old('invoice_date', \Carbon\Carbon::parse($partSalesInvoice->invoice_date)->format('Y-m-d')) }}" required>
                         @error('invoice_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                         <select name="payment_mode" class="form-select no-select2 @error('payment_mode') is-invalid @enderror" required>
-                            <option value="Cash" {{ old('payment_mode') === 'Cash' ? 'selected' : '' }}>Cash</option>
-                            <option value="UPI / Online" {{ old('payment_mode') === 'UPI / Online' ? 'selected' : '' }}>UPI / Online</option>
-                            <option value="Card" {{ old('payment_mode') === 'Card' ? 'selected' : '' }}>Card</option>
+                            <option value="Cash" {{ old('payment_mode', $partSalesInvoice->payment_mode) === 'Cash' ? 'selected' : '' }}>Cash</option>
+                            <option value="UPI / Online" {{ old('payment_mode', $partSalesInvoice->payment_mode) === 'UPI / Online' ? 'selected' : '' }}>UPI / Online</option>
+                            <option value="Card" {{ old('payment_mode', $partSalesInvoice->payment_mode) === 'Card' ? 'selected' : '' }}>Card</option>
                         </select>
                         @error('payment_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -115,11 +117,41 @@
                             </tr>
                         </thead>
                         <tbody id="itemsContainer">
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4 empty-msg">
-                                    <i class="bx bx-package me-1 fs-4"></i> No parts selected yet. Click <strong>"Browse & Add Parts (Modal)"</strong> above to select items.
+                            @foreach($partSalesInvoice->items as $idx => $item)
+                            @php
+                                $partStock = 0;
+                                foreach($spareParts as $p) {
+                                    if ($p->id == $item->spare_part_id) {
+                                        $partStock = $p->qty_available + $item->quantity;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            <tr class="item-row" data-part-id="{{ $item->spare_part_id }}">
+                                <td>
+                                    <div class="fw-bold text-primary font-monospace fs-6">{{ $item->sparePart->part_no ?? '' }} - {{ $item->sparePart->name ?? '' }}</div>
+                                    <input type="hidden" name="items[{{ $idx }}][spare_part_id]" value="{{ $item->spare_part_id }}">
+                                    <div class="mt-1">
+                                        <input type="text" name="items[{{ $idx }}][serial_no_warranty_notes]" class="form-control form-control-sm" value="{{ $item->serial_no_warranty_notes }}" placeholder="Serial No. / Warranty Notes (Optional)">
+                                    </div>
+                                </td>
+                                <td class="text-center bg-light">
+                                    <span class="stock-badge fw-bold text-secondary">{{ $partStock }}</span>
+                                </td>
+                                <td>
+                                    <input type="number" name="items[{{ $idx }}][quantity]" class="form-control qty-input text-center fw-bold" min="1" max="{{ $partStock }}" value="{{ $item->quantity }}" required>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="items[{{ $idx }}][rate]" class="form-control rate-input fw-semibold" min="0" value="{{ number_format($item->rate, 2, '.', '') }}" required>
+                                </td>
+                                <td class="bg-light">
+                                    <input type="text" class="form-control line-total bg-transparent border-0 fw-bold text-end" readonly value="{{ number_format($item->amount, 2, '.', '') }}">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" title="Remove"><i class="bx bx-trash"></i></button>
                                 </td>
                             </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -134,32 +166,32 @@
                 <div class="row g-3 mb-4 bg-light p-3 rounded border border-light-subtle">
                     <div class="col-md-3">
                         <label class="form-label">Subtotal Amount (INR)</label>
-                        <input type="text" id="summary_taxable" class="form-control bg-white" readonly value="0.00">
+                        <input type="text" id="summary_taxable" class="form-control bg-white" readonly value="{{ number_format($partSalesInvoice->taxable_amount, 2, '.', '') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Round Off (INR)</label>
-                        <input type="text" id="summary_round" class="form-control bg-white" readonly value="0.00">
+                        <input type="text" id="summary_round" class="form-control bg-white" readonly value="{{ number_format($partSalesInvoice->round_off, 2, '.', '') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Grand Total (INR)</label>
-                        <input type="text" id="summary_grand" class="form-control bg-white fw-bold text-success" readonly value="0.00">
+                        <input type="text" id="summary_grand" class="form-control bg-white fw-bold text-success" readonly value="{{ number_format($partSalesInvoice->total_amount, 2, '.', '') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Previous Balance (INR)</label>
-                        <input type="number" step="0.01" name="previous_balance" id="previous_balance" class="form-control" value="0.00" min="0">
+                        <input type="number" step="0.01" name="previous_balance" id="previous_balance" class="form-control" value="{{ number_format($partSalesInvoice->previous_balance, 2, '.', '') }}" min="0">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Received Amount (INR) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" name="received_amount" id="received_amount" class="form-control fw-bold" value="0.00" required min="0">
+                        <input type="number" step="0.01" name="received_amount" id="received_amount" class="form-control fw-bold" value="{{ number_format($partSalesInvoice->received_amount, 2, '.', '') }}" required min="0">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold text-danger">Current Balance (INR)</label>
-                        <input type="text" id="summary_current_balance" class="form-control bg-white fw-bold text-danger" readonly value="0.00">
+                        <input type="text" id="summary_current_balance" class="form-control bg-white fw-bold text-danger" readonly value="{{ number_format($partSalesInvoice->current_balance, 2, '.', '') }}">
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary"><i class="bx bx-check"></i> Generate Invoice</button>
+                    <button type="submit" class="btn btn-primary"><i class="bx bx-save"></i> Update Invoice</button>
                     <a href="{{ route('admin.part-sales-invoices.index') }}" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
@@ -321,26 +353,18 @@ document.addEventListener('DOMContentLoaded', function() {
             customerAddressInput.value = opt.getAttribute('data-address') || '';
             customerGstInput.value = opt.getAttribute('data-gstin') || '';
             customerPanInput.value = opt.getAttribute('data-pan') || '';
-        } else {
-            customerNameInput.value = '';
-            customerMobileInput.value = '';
-            customerAddressInput.value = '';
-            customerGstInput.value = '';
-            customerPanInput.value = '';
         }
     });
 
     var itemsContainer = document.getElementById('itemsContainer');
-    var itemIndex = 0;
+    var itemIndex = {{ count($partSalesInvoice->items) }};
 
     function addPartRowFromModal(partId, partNo, partName, stockVal, rateVal, qtyVal) {
-        // Remove empty state message if present
         var emptyMsg = itemsContainer.querySelector('.empty-msg');
         if (emptyMsg) {
             emptyMsg.closest('tr').remove();
         }
 
-        // Check if row already exists for this partId
         var existingRow = itemsContainer.querySelector('tr[data-part-id="' + partId + '"]');
         if (existingRow) {
             var existingQtyInput = existingRow.querySelector('.qty-input');
@@ -447,6 +471,12 @@ document.addEventListener('DOMContentLoaded', function() {
         lineTotal.value = net.toFixed(2);
         calculateSummary();
     }
+
+    // Initialize existing rows
+    var existingRows = itemsContainer.querySelectorAll('.item-row');
+    existingRows.forEach(function(row) {
+        bindRowEvents(row);
+    });
 
     // Summary calculations
     var summaryTaxable = document.getElementById('summary_taxable');
@@ -607,7 +637,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 var customer = res.body.customer;
                 var fullName = customer.name;
                 
-                // Add new customer to select dropdown list
                 var option = document.createElement('option');
                 option.value = customer.id;
                 option.text = fullName + ' (' + customer.phone + ')';
@@ -621,11 +650,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 customerSelect.value = customer.id;
                 $(customerSelect).trigger('change.select2');
                 
-                // Trigger change event to populate input fields
                 var event = new Event('change');
                 customerSelect.dispatchEvent(event);
                 
-                // Close modal
                 var modalEl = document.getElementById('quickAddCustomerModal');
                 var modalInstance = bootstrap.Modal.getInstance(modalEl);
                 if (!modalInstance) {
@@ -633,7 +660,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 modalInstance.hide();
                 
-                // Reset form
                 quickAddForm.reset();
             } else {
                 var errorMsg = 'Error saving customer.';

@@ -132,7 +132,7 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::get('vehicle-sales-invoices/outstanding/export', [VehicleSalesInvoiceController::class, 'exportOutstanding'])->name('vehicle-sales-invoices.outstanding.export');
             Route::post('vehicle-sales-invoices/{vehicle_sales_invoice}/receive-payment', [VehicleSalesInvoiceController::class, 'receivePayment'])->name('vehicle-sales-invoices.receive-payment');
 
-            Route::resource('part-sales-invoices', PartSalesInvoiceController::class)->except(['edit', 'update']);
+            Route::resource('part-sales-invoices', PartSalesInvoiceController::class);
             Route::get('part-sales-invoices/export', [PartSalesInvoiceController::class, 'export'])->name('part-sales-invoices.export');
             Route::get('part-sales-invoices/outstanding/list', [PartSalesInvoiceController::class, 'outstanding'])->name('part-sales-invoices.outstanding');
             Route::get('part-sales-invoices/outstanding/export', [PartSalesInvoiceController::class, 'exportOutstanding'])->name('part-sales-invoices.outstanding.export');
