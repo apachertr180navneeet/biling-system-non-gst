@@ -253,18 +253,6 @@ class PartSalesInvoiceController extends Controller
             }
         }
 
-        // Validate stock availability first
-        foreach ($request->items as $itemData) {
-            $part = SparePart::findOrFail($itemData['spare_part_id']);
-            $stock = SparePartStock::where('spare_part_id', $part->id)->first();
-            $available = $stock ? $stock->quantity : 0;
-            if ($available < intval($itemData['quantity'])) {
-                return back()->withErrors([
-                    'items' => "Insufficient stock for part: {$part->name}. Available: {$available}, Requested: {$itemData['quantity']}"
-                ])->withInput();
-            }
-        }
-
         // Calculations
         $taxable_amount = 0;
         $subtotal = 0;
@@ -321,7 +309,10 @@ class PartSalesInvoiceController extends Controller
                 $line_amount = $qty * $rate;
 
                 // Decrement stock
-                $stock = SparePartStock::where('spare_part_id', $itemData['spare_part_id'])->lockForUpdate()->first();
+                $stock = SparePartStock::firstOrCreate(
+                    ['spare_part_id' => $itemData['spare_part_id']],
+                    ['quantity' => 0, 'min_quantity' => 0, 'purchase_price' => 0]
+                );
                 $stock->decrement('quantity', $qty);
 
                 // Transaction log
@@ -458,22 +449,10 @@ class PartSalesInvoiceController extends Controller
                 $stock->increment('quantity', $oldItem->quantity);
             }
 
-            // 2. Validate stock for updated items
-            foreach ($request->items as $itemData) {
-                $part = SparePart::findOrFail($itemData['spare_part_id']);
-                $stock = SparePartStock::where('spare_part_id', $part->id)->first();
-                $available = $stock ? $stock->quantity : 0;
-                if ($available < intval($itemData['quantity'])) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'items' => "Insufficient stock for part: {$part->name}. Available: {$available}, Requested: {$itemData['quantity']}"
-                    ]);
-                }
-            }
-
-            // 3. Delete existing items
+            // 2. Delete existing items
             $partSalesInvoice->items()->delete();
 
-            // 4. Calculations
+            // 3. Calculations
             $subtotal = 0;
             foreach ($request->items as $itemData) {
                 $qty = intval($itemData['quantity']);
@@ -493,7 +472,7 @@ class PartSalesInvoiceController extends Controller
             $balance = $grand_total - $received;
             $curr_bal = $prev_bal + $balance;
 
-            // 5. Update invoice
+            // 4. Update invoice
             $partSalesInvoice->update([
                 'invoice_number' => $request->invoice_number,
                 'invoice_date' => $request->invoice_date,
@@ -513,13 +492,16 @@ class PartSalesInvoiceController extends Controller
                 'current_balance' => $curr_bal,
             ]);
 
-            // 6. Create updated items and decrement stock
+            // 5. Create updated items and decrement stock
             foreach ($request->items as $itemData) {
                 $qty = intval($itemData['quantity']);
                 $rate = floatval($itemData['rate']);
                 $line_amount = $qty * $rate;
 
-                $stock = SparePartStock::where('spare_part_id', $itemData['spare_part_id'])->lockForUpdate()->first();
+                $stock = SparePartStock::firstOrCreate(
+                    ['spare_part_id' => $itemData['spare_part_id']],
+                    ['quantity' => 0, 'min_quantity' => 0, 'purchase_price' => 0]
+                );
                 $stock->decrement('quantity', $qty);
 
                 SparePartStockTransaction::create([

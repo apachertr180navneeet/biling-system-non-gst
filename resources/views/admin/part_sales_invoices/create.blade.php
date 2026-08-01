@@ -259,7 +259,7 @@
                             @foreach($spareParts as $p)
                             <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ $p->name }}" data-partno="{{ $p->part_no }}" data-hsn="{{ $p->hsn_sac_code ?? '' }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
                                 <td class="text-center">
-                                    <input type="checkbox" class="form-check-input part-checkbox" {{ $p->qty_available <= 0 ? 'disabled' : '' }}>
+                                    <input type="checkbox" class="form-check-input part-checkbox">
                                 </td>
                                 <td>
                                     <span class="fw-bold text-primary font-monospace">{{ $p->part_no }}</span>
@@ -278,10 +278,10 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;" {{ $p->qty_available <= 0 ? 'disabled' : '' }}>
+                                    <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;">
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" max="{{ $p->qty_available }}" style="min-width: 70px;" {{ $p->qty_available <= 0 ? 'disabled' : '' }}>
+                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" style="min-width: 70px;">
                                 </td>
                             </tr>
                             @endforeach
@@ -347,9 +347,6 @@ document.addEventListener('DOMContentLoaded', function() {
             var existingRateInput = existingRow.querySelector('.rate-input');
             var currentQty = parseInt(existingQtyInput.value) || 0;
             var newQty = currentQty + qtyVal;
-            if (stockVal > 0 && newQty > stockVal) {
-                newQty = stockVal;
-            }
             existingQtyInput.value = newQty;
             existingRateInput.value = rateVal.toFixed(2);
             calculateRow(existingRow);
@@ -371,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="stock-badge fw-bold text-secondary">${stockVal}</span>
             </td>
             <td>
-                <input type="number" name="items[${itemIndex}][quantity]" class="form-control qty-input text-center fw-bold" min="1" max="${stockVal}" value="${qtyVal}" required>
+                <input type="number" name="items[${itemIndex}][quantity]" class="form-control qty-input text-center fw-bold" min="1" value="${qtyVal}" required>
             </td>
             <td>
                 <input type="number" step="0.01" name="items[${itemIndex}][rate]" class="form-control rate-input fw-semibold" min="0" value="${rateVal.toFixed(2)}" required>
@@ -418,15 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function bindRowEvents(row) {
         var qtyInput = row.querySelector('.qty-input');
         var rateInput = row.querySelector('.rate-input');
-        var stockBadge = row.querySelector('.stock-badge');
-        var stockVal = parseInt(stockBadge.textContent) || 0;
 
         qtyInput.addEventListener('input', function() {
-            var val = parseInt(qtyInput.value) || 0;
-            if (stockVal > 0 && val > stockVal) {
-                alert('Quantity cannot exceed available stock (' + stockVal + ')');
-                qtyInput.value = stockVal;
-            }
             calculateRow(row);
         });
 
@@ -554,10 +544,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 var rateVal = parseFloat(modalRow.querySelector('.modal-rate-input').value) || 0;
                 var qtyVal = parseInt(modalRow.querySelector('.modal-qty-input').value) || 1;
                 var stockVal = parseInt(modalRow.getAttribute('data-stock')) || 0;
-
-                if (qtyVal > stockVal && stockVal > 0) {
-                    qtyVal = stockVal;
-                }
 
                 addPartRowFromModal(partId, partNo, partName, stockVal, rateVal, qtyVal);
 
