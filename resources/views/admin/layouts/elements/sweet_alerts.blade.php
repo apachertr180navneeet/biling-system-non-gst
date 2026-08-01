@@ -82,3 +82,11 @@
     })
 </script>
 @endif
+@if(isset($errors) && $errors->any())
+<script>
+    Toast.fire({
+        icon: 'error',
+        title: @json($errors->first())
+    })
+</script>
+@endif

@@ -145,10 +145,20 @@ class SparePartStockController extends Controller
 
         try {
             DB::transaction(function () use ($data) {
-                $stock = SparePartStock::firstOrCreate(
+                $part = \App\Models\SparePart::findOrFail($data['spare_part_id']);
+
+                $stock = SparePartStock::withTrashed()->firstOrCreate(
                     ['spare_part_id' => $data['spare_part_id']],
-                    ['quantity' => 0, 'min_quantity' => 0, 'purchase_price' => 0]
+                    [
+                        'quantity' => 0,
+                        'min_quantity' => $part->min_stock ?? 0,
+                        'purchase_price' => $part->purchase_price ?? 0
+                    ]
                 );
+
+                if ($stock->trashed()) {
+                    $stock->restore();
+                }
 
                 if ($data['adjustment_type'] === 'out') {
                     if ($stock->quantity < $data['quantity']) {
@@ -170,7 +180,7 @@ class SparePartStockController extends Controller
 
             return back()->withSuccess('Stock adjusted successfully.');
         } catch (\Exception $e) {
-            return back()->withErrors(['quantity' => $e->getMessage()])->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 }

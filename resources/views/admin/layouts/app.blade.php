@@ -74,17 +74,29 @@
                 <script async defer src="https://buttons.github.io/buttons.js"></script>
                 <script>
                 $(document).ready(function() {
-                    $('select').not('.no-select2').not('.swal2-select').select2({
-                        width: '100%',
-                        theme: 'bootstrap-5'
+                    $('select').not('.no-select2').not('.swal2-select').each(function() {
+                        var $modal = $(this).closest('.modal');
+                        var opts = {
+                            width: '100%',
+                            theme: 'bootstrap-5'
+                        };
+                        if ($modal.length) {
+                            opts.dropdownParent = $modal;
+                        }
+                        $(this).select2(opts);
                     });
                 });
                 function initSelect2(el) {
                     if ($(el).hasClass('swal2-select')) return;
-                    $(el).select2({
+                    var $modal = $(el).closest('.modal');
+                    var opts = {
                         width: '100%',
                         theme: 'bootstrap-5'
-                    });
+                    };
+                    if ($modal.length) {
+                        opts.dropdownParent = $modal;
+                    }
+                    $(el).select2(opts);
                 }
                 function directPrintPdf(url) {
                     var printUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'print=1';

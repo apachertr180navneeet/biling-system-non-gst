@@ -111,24 +111,24 @@
                         <select name="spare_part_id" id="spare_part_id" class="form-select" required>
                             <option value="">-- Select Spare Part --</option>
                             @foreach($spareParts as $p)
-                            <option value="{{ $p->id }}">{{ $p->part_no }} - {{ $p->name }}</option>
+                            <option value="{{ $p->id }}" {{ old('spare_part_id') == $p->id ? 'selected' : '' }}>{{ $p->part_no }} - {{ $p->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="adjustment_type" class="form-label">Adjustment Type</label>
                         <select name="adjustment_type" id="adjustment_type" class="form-select no-select2" required>
-                            <option value="in">Stock In (+)</option>
-                            <option value="out">Stock Out (-)</option>
+                            <option value="in" {{ old('adjustment_type') == 'in' ? 'selected' : '' }}>Stock In (+)</option>
+                            <option value="out" {{ old('adjustment_type', 'out') == 'out' ? 'selected' : '' }}>Stock Out (-)</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" name="quantity" id="quantity" class="form-control" min="1" required>
+                        <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="{{ old('quantity') }}" required>
                     </div>
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes / Reference</label>
-                        <input type="text" name="notes" id="notes" class="form-control" placeholder="e.g. Sold to customer, Manual count adjustment">
+                        <input type="text" name="notes" id="notes" class="form-control" value="{{ old('notes') }}" placeholder="e.g. Sold to customer, Manual count adjustment">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -139,4 +139,23 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('script')
+<script>
+$(document).ready(function() {
+    $('#adjustStockModal').on('shown.bs.modal', function () {
+        $('#spare_part_id').select2({
+            dropdownParent: $('#adjustStockModal'),
+            width: '100%',
+            theme: 'bootstrap-5'
+        });
+    });
+
+    @if(isset($errors) && $errors->any())
+        var modal = new bootstrap.Modal(document.getElementById('adjustStockModal'));
+        modal.show();
+    @endif
+});
+</script>
 @endsection
