@@ -722,8 +722,10 @@
         <h4 class="fw-bold mb-0">Invoice Detail</h4>
         <div>
             <a href="{{ route('admin.vehicle-sales-invoices.edit', $vehicleSalesInvoice) }}" class="btn btn-warning me-1"><i class="bx bx-edit"></i> Edit Invoice</a>
-            <button onclick="window.print();" class="btn btn-primary me-1"><i class="bx bx-printer"></i> Print Invoice</button>
+            <button type="button" onclick="directPrintPdf('{{ route('admin.vehicle-sales-invoices.pdf', $vehicleSalesInvoice) }}')" class="btn btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
+            <a href="{{ route('admin.vehicle-sales-invoices.pdf', $vehicleSalesInvoice) }}" class="btn btn-danger me-1" target="_blank"><i class="bx bxs-file-pdf"></i> Download PDF</a>
             <a href="{{ route('admin.vehicle-sales-invoices.index') }}" class="btn btn-secondary">Back to List</a>
+
         </div>
     </div>
 

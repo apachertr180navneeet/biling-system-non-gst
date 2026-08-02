@@ -52,6 +52,9 @@ Route::name('admin.')->prefix('admin')->group(function () {
     Route::get('purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'generatePdf'])->name('purchase-orders.pdf');
     Route::get('vehicle-purchase-orders/{vehicle_purchase_order}/pdf', [VehiclePurchaseOrderController::class, 'generatePdf'])->name('vehicle-purchase-orders.pdf');
     Route::get('quotations/{quotation}/pdf', [QuotationController::class, 'generatePdf'])->name('quotations.pdf');
+    Route::get('part-sales-invoices/{part_sales_invoice}/pdf', [PartSalesInvoiceController::class, 'generatePdf'])->name('part-sales-invoices.pdf');
+    Route::get('vehicle-sales-invoices/{vehicle_sales_invoice}/pdf', [VehicleSalesInvoiceController::class, 'generatePdf'])->name('vehicle-sales-invoices.pdf');
+
 
     Route::middleware(['admin'])->group(function () {
             Route::get('dashboard', [AdminAuthController::class, 'adminDashboard'])->name('dashboard');

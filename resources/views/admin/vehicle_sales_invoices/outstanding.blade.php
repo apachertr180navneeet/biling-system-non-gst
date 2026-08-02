@@ -64,12 +64,15 @@
                         <td><span class="badge bg-danger">{{ number_format($inv->balance, 2) }}</span></td>
                         <td>{{ $inv->payment_mode ?? '-' }}</td>
                         <td>
-                            <a href="{{ route('admin.vehicle-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info" title="Print"><i class="bx bx-printer"></i></a>
+                            <a href="{{ route('admin.vehicle-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info" title="View Invoice"><i class="bx bx-show"></i></a>
+                            <a href="{{ route('admin.vehicle-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger ms-1" target="_blank" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
+                            <button type="button" class="btn btn-sm btn-dark ms-1" onclick="directPrintPdf('{{ route('admin.vehicle-sales-invoices.pdf', $inv) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
                             <a href="{{ route('admin.vehicle-sales-invoices.edit', $inv) }}" class="btn btn-sm btn-primary ms-1" title="Edit"><i class="bx bx-edit"></i></a>
                             @if($inv->balance > 0)
                             <button class="btn btn-sm btn-success receive-payment-btn ms-1" data-url="{{ route('admin.vehicle-sales-invoices.receive-payment', $inv) }}" data-balance="{{ $inv->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>
                             @endif
                         </td>
+
                     </tr>
                     @empty
                     <tr><td colspan="10" class="text-center text-muted">No outstanding vehicle sales invoices found.</td></tr>

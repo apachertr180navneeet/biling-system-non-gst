@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VehicleSalesInvoiceController extends Controller
 {
@@ -513,5 +514,35 @@ class VehicleSalesInvoiceController extends Controller
         });
 
         return response()->json(['success' => true, 'message' => 'Payment received successfully.']);
+    }
+
+    public function generatePdf(Request $request, VehicleSalesInvoice $vehicleSalesInvoice)
+    {
+        $vehicleSalesInvoice->load('customer', 'vehicleInventory.purchaseOrder');
+
+        $vehicle = $vehicleSalesInvoice->vehicleInventory;
+        $master = VehicleMaster::where('is_active', true)
+            ->get()
+            ->first(function ($m) use ($vehicle) {
+                $desc = trim($m->variant_name . ' ' . $m->color_name);
+                return strtolower($desc) === strtolower($vehicle->vehicle_description)
+                    || strtolower($m->variant_name) === strtolower($vehicle->vehicle_description);
+            });
+
+        $battery_type = $master ? $master->battery_type : 'LITHIUM';
+        $battery_make = $master ? $master->battery_make : 'LITHIUM';
+        $color_name = $master ? $master->color_name : '-';
+
+        $pdf = Pdf::loadView('admin.vehicle_sales_invoices.pdf', compact('vehicleSalesInvoice', 'battery_type', 'battery_make', 'color_name'));
+        $pdf->setPaper('a4');
+        $pdf->setOption('isRemoteEnabled', true);
+
+        if ($request->has('print')) {
+            $pdf->render();
+            $canvas = $pdf->getCanvas();
+            $canvas->javascript("this.print();");
+        }
+
+        return $pdf->stream('Vehicle-Invoice-' . $vehicleSalesInvoice->invoice_number . '.pdf');
     }
 }
