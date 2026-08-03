@@ -12,7 +12,7 @@
                 <a href="{{ route('admin.vehicle-purchase-orders.receive', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-primary"><i class="bx bx-import"></i> Receive Items</a>
                 @endif
                 <button type="button" onclick="directPrintPdf('{{ route('admin.vehicle-purchase-orders.pdf', $vehiclePurchaseOrder) }}')" class="btn btn-sm btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
-                <a href="{{ route('admin.vehicle-purchase-orders.pdf', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-danger me-1" target="_blank"><i class="bx bxs-file-pdf"></i> Download PDF</a>
+                <a href="{{ route('admin.vehicle-purchase-orders.pdf', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-danger me-1"><i class="bx bxs-file-pdf"></i> Download PDF</a>
                 <a href="{{ route('admin.vehicle-purchase-orders.whatsapp', $vehiclePurchaseOrder) }}" class="btn btn-sm btn-success me-1" target="_blank"><i class="bx bxl-whatsapp"></i> Send to WhatsApp</a>
                 <a href="{{ route('admin.vehicle-purchase-orders.index') }}" class="btn btn-secondary btn-sm">Back</a>
             </div>

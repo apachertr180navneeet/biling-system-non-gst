@@ -24,7 +24,7 @@
                 <button type="button" onclick="directPrintPdf('{{ route('admin.quotations.pdf', $quotation) }}')" class="btn btn-sm btn-dark me-1">
                     <i class="bx bx-printer"></i> Print PDF
                 </button>
-                <a href="{{ route('admin.quotations.pdf', $quotation) }}" class="btn btn-sm btn-danger me-1" target="_blank">
+                <a href="{{ route('admin.quotations.pdf', $quotation) }}" class="btn btn-sm btn-danger me-1">
                     <i class="bx bxs-file-pdf"></i> Download PDF
                 </a>
                 <a href="{{ route('admin.quotations.whatsapp', $quotation) }}" class="btn btn-sm btn-success me-1" target="_blank">

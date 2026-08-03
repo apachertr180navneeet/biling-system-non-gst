@@ -65,7 +65,7 @@
                         <td>{{ $inv->payment_mode ?? '-' }}</td>
                         <td>
                             <a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info me-1" title="View Invoice"><i class="bx bx-show"></i></a>
-                            <a href="{{ route('admin.part-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger me-1" target="_blank" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
+                            <a href="{{ route('admin.part-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger me-1" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
                             <button type="button" class="btn btn-sm btn-dark me-1" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $inv) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
                             @if($inv->balance > 0)
                             <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.part-sales-invoices.receive-payment', $inv) }}" data-balance="{{ $inv->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>

@@ -85,7 +85,7 @@
                             @if($order->status == 'pending')
                             <a href="{{ route('admin.purchase-orders.edit', $order) }}" class="btn btn-sm btn-primary" title="Edit"><i class="bx bx-edit"></i></a>
                             @endif
-                            <a href="{{ route('admin.purchase-orders.pdf', $order) }}" class="btn btn-sm btn-danger" target="_blank" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
+                            <a href="{{ route('admin.purchase-orders.pdf', $order) }}" class="btn btn-sm btn-danger" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
                             <button type="button" class="btn btn-sm btn-dark" onclick="directPrintPdf('{{ route('admin.purchase-orders.pdf', $order) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
                             <a href="{{ route('admin.purchase-orders.whatsapp', $order) }}" class="btn btn-sm btn-success" target="_blank" title="Send WhatsApp"><i class="bx bxl-whatsapp"></i></a>
                             <button class="btn btn-sm btn-danger btn-delete" data-url="{{ route('admin.purchase-orders.destroy', $order) }}" title="Delete"><i class="bx bx-trash"></i></button>

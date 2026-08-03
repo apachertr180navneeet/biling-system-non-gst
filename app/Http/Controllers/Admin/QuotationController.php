@@ -266,9 +266,14 @@ class QuotationController extends Controller
             $pdf->render();
             $canvas = $pdf->getCanvas();
             $canvas->javascript("this.print();");
+            return $pdf->stream($quotation->quotation_number . '.pdf');
         }
 
-        return $pdf->stream($quotation->quotation_number . '.pdf');
+        if ($request->has('stream')) {
+            return $pdf->stream($quotation->quotation_number . '.pdf');
+        }
+
+        return $pdf->download($quotation->quotation_number . '.pdf');
     }
 
     public function sendWhatsapp(Quotation $quotation)

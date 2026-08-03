@@ -541,8 +541,13 @@ class VehicleSalesInvoiceController extends Controller
             $pdf->render();
             $canvas = $pdf->getCanvas();
             $canvas->javascript("this.print();");
+            return $pdf->stream('Vehicle-Invoice-' . $vehicleSalesInvoice->invoice_number . '.pdf');
         }
 
-        return $pdf->stream('Vehicle-Invoice-' . $vehicleSalesInvoice->invoice_number . '.pdf');
+        if ($request->has('stream')) {
+            return $pdf->stream('Vehicle-Invoice-' . $vehicleSalesInvoice->invoice_number . '.pdf');
+        }
+
+        return $pdf->download('Vehicle-Invoice-' . $vehicleSalesInvoice->invoice_number . '.pdf');
     }
 }

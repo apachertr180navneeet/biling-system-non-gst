@@ -560,8 +560,13 @@ class PartSalesInvoiceController extends Controller
             $pdf->render();
             $canvas = $pdf->getCanvas();
             $canvas->javascript("this.print();");
+            return $pdf->stream('Part-Invoice-' . $partSalesInvoice->invoice_number . '.pdf');
         }
 
-        return $pdf->stream('Part-Invoice-' . $partSalesInvoice->invoice_number . '.pdf');
+        if ($request->has('stream')) {
+            return $pdf->stream('Part-Invoice-' . $partSalesInvoice->invoice_number . '.pdf');
+        }
+
+        return $pdf->download('Part-Invoice-' . $partSalesInvoice->invoice_number . '.pdf');
     }
 }

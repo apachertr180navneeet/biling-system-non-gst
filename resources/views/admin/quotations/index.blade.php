@@ -100,7 +100,7 @@
                                         <i class="bx bx-edit-alt"></i>
                                     </a>
                                 @endif
-                                <a href="{{ route('admin.quotations.pdf', $q) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Download PDF">
+                                <a href="{{ route('admin.quotations.pdf', $q) }}" class="btn btn-sm btn-outline-danger" title="Download PDF">
                                     <i class="bx bxs-file-pdf"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-dark" onclick="directPrintPdf('{{ route('admin.quotations.pdf', $q) }}')" title="Direct Print PDF">

@@ -15,8 +15,11 @@
             <a href="{{ route('admin.reports.party-report-by-item.export-excel', request()->query()) }}" class="btn btn-outline-success btn-sm">
                 <i class="bx bx-download me-1"></i> Download Excel
             </a>
-            <a href="{{ route('admin.reports.party-report-by-item.print-pdf', request()->query()) }}" target="_blank" class="btn btn-outline-danger btn-sm">
-                <i class="bx bxs-file-pdf me-1"></i> Print PDF
+            <button type="button" onclick="directPrintPdf('{{ route('admin.reports.party-report-by-item.print-pdf', request()->query()) }}')" class="btn btn-outline-dark btn-sm">
+                <i class="bx bx-printer me-1"></i> Print PDF
+            </button>
+            <a href="{{ route('admin.reports.party-report-by-item.print-pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm">
+                <i class="bx bxs-file-pdf me-1"></i> Download PDF
             </a>
         </div>
     </div>

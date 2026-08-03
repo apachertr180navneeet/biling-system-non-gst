@@ -664,9 +664,14 @@ class VehiclePurchaseOrderController extends Controller
             $pdf->render();
             $canvas = $pdf->getCanvas();
             $canvas->javascript("this.print();");
+            return $pdf->stream('VPO-' . $vehiclePurchaseOrder->po_number . '.pdf');
         }
 
-        return $pdf->stream('VPO-' . $vehiclePurchaseOrder->po_number . '.pdf');
+        if ($request->has('stream')) {
+            return $pdf->stream('VPO-' . $vehiclePurchaseOrder->po_number . '.pdf');
+        }
+
+        return $pdf->download('VPO-' . $vehiclePurchaseOrder->po_number . '.pdf');
     }
 
     public function sendWhatsapp(VehiclePurchaseOrder $vehiclePurchaseOrder)

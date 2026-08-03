@@ -666,7 +666,7 @@ if (!function_exists('getIndianRupeesInWords')) {
         <div>
             <a href="{{ route('admin.part-sales-invoices.edit', $partSalesInvoice) }}" class="btn btn-warning me-1"><i class="bx bx-edit"></i> Edit Invoice</a>
             <button type="button" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $partSalesInvoice) }}')" class="btn btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
-            <a href="{{ route('admin.part-sales-invoices.pdf', $partSalesInvoice) }}" class="btn btn-danger me-1" target="_blank"><i class="bx bxs-file-pdf"></i> Download PDF</a>
+            <a href="{{ route('admin.part-sales-invoices.pdf', $partSalesInvoice) }}" class="btn btn-danger me-1"><i class="bx bxs-file-pdf"></i> Download PDF</a>
             <a href="{{ route('admin.part-sales-invoices.index') }}" class="btn btn-secondary">Back to List</a>
 
         </div>

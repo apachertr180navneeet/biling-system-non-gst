@@ -499,7 +499,18 @@ class ReportController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.reports.party_report_by_item_pdf', $data);
         $pdf->setPaper('a4', 'portrait');
-        return $pdf->stream('Party_Report_By_Item.pdf');
+        if ($request->has('print')) {
+            $pdf->render();
+            $canvas = $pdf->getCanvas();
+            $canvas->javascript("this.print();");
+            return $pdf->stream('Party_Report_By_Item.pdf');
+        }
+
+        if ($request->has('stream')) {
+            return $pdf->stream('Party_Report_By_Item.pdf');
+        }
+
+        return $pdf->download('Party_Report_By_Item.pdf');
     }
 
     public function exportPartyReportExcel(Request $request)

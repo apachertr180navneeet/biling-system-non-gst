@@ -59,7 +59,7 @@
                         <td>{{ $inv->payment_mode ?? '-' }}</td>
                         <td>
                             <a href="{{ route('admin.vehicle-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info me-1" title="View Invoice"><i class="bx bx-show"></i></a>
-                            <a href="{{ route('admin.vehicle-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger me-1" target="_blank" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
+                            <a href="{{ route('admin.vehicle-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger me-1" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
                             <button type="button" class="btn btn-sm btn-dark me-1" onclick="directPrintPdf('{{ route('admin.vehicle-sales-invoices.pdf', $inv) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
                             <a href="{{ route('admin.vehicle-sales-invoices.edit', $inv) }}" class="btn btn-sm btn-primary me-1" title="Edit Full Invoice"><i class="bx bx-edit"></i></a>
                             <button class="btn btn-sm btn-warning quick-date-btn me-1" data-id="{{ $inv->id }}" data-url="{{ route('admin.vehicle-sales-invoices.quick-update-date', $inv) }}" data-number="{{ $inv->invoice_number }}" data-date="{{ $inv->invoice_date->format('Y-m-d') }}" title="Edit Date & Invoice No"><i class="bx bx-calendar-edit"></i></button>

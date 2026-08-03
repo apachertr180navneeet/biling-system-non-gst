@@ -400,9 +400,14 @@ class PurchaseOrderController extends Controller
             $pdf->render();
             $canvas = $pdf->getCanvas();
             $canvas->javascript("this.print();");
+            return $pdf->stream('PO-' . $purchaseOrder->order_number . '.pdf');
         }
 
-        return $pdf->stream('PO-' . $purchaseOrder->order_number . '.pdf');
+        if ($request->has('stream')) {
+            return $pdf->stream('PO-' . $purchaseOrder->order_number . '.pdf');
+        }
+
+        return $pdf->download('PO-' . $purchaseOrder->order_number . '.pdf');
     }
 
     public function sendWhatsapp(PurchaseOrder $purchaseOrder)
