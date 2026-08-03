@@ -321,20 +321,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal Live Search
     var modalPartSearch = document.getElementById('modalPartSearch');
     if (modalPartSearch) {
-        modalPartSearch.addEventListener('input', function() {
-            var query = this.value.toLowerCase().trim();
+        function filterModalParts() {
+            var query = modalPartSearch.value.toLowerCase().trim();
             var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
             rows.forEach(function(row) {
                 var name = (row.getAttribute('data-name') || '').toLowerCase();
                 var partno = (row.getAttribute('data-partno') || '').toLowerCase();
                 var hsn = (row.getAttribute('data-hsn') || '').toLowerCase();
-                if (name.includes(query) || partno.includes(query) || hsn.includes(query)) {
-                    row.style.display = '';
+                var fullText = row.textContent.toLowerCase();
+
+                if (!query || name.includes(query) || partno.includes(query) || hsn.includes(query) || fullText.includes(query)) {
+                    row.classList.remove('d-none');
+                    row.style.setProperty('display', '', '');
                 } else {
-                    row.style.display = 'none';
+                    row.classList.add('d-none');
+                    row.style.setProperty('display', 'none', 'important');
                 }
             });
-        });
+        }
+
+        modalPartSearch.addEventListener('input', filterModalParts);
+        modalPartSearch.addEventListener('keyup', filterModalParts);
     }
 
     // Modal Check All Checkbox
@@ -344,7 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var isChecked = this.checked;
             var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
             rows.forEach(function(row) {
-                if (row.style.display !== 'none') {
+                var isHidden = row.classList.contains('d-none') || row.style.display === 'none' || window.getComputedStyle(row).display === 'none';
+                if (!isHidden) {
                     var cb = row.querySelector('.part-checkbox');
                     if (cb && !cb.disabled) {
                         cb.checked = isChecked;

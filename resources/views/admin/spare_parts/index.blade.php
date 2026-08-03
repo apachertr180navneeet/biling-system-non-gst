@@ -66,7 +66,7 @@
                     @forelse($parts as $part)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $part->part_no }}</td>
+                        <td>{{ $part->part_no ?: '-' }}</td>
                         <td>{{ $part->name }}</td>
                         <td>{{ number_format($part->mrp, 2) }}</td>
                         <td>{{ number_format($part->selling_price, 2) }}</td>

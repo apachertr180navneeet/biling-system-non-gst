@@ -48,7 +48,7 @@
                 <tbody>
                     @forelse($summaries as $s)
                     <tr>
-                        <td><code>{{ $s->part_no }}</code></td>
+                        <td><code>{{ $s->part_no ?: '-' }}</code></td>
                         <td><strong>{{ $s->name }}</strong></td>
                         <td class="text-center text-success font-weight-bold">+{{ $s->total_in }}</td>
                         <td class="text-center text-danger font-weight-bold">-{{ $s->total_out }}</td>

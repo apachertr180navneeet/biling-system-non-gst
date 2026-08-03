@@ -78,12 +78,13 @@ class SparePartController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'part_no' => 'required|string|max:100|unique:spare_parts',
+            'part_no' => 'nullable|string|max:100|unique:spare_parts',
             'name' => 'required|string|max:255',
             'selling_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
             'min_stock' => 'nullable|integer|min:0',
         ]);
+        $data['part_no'] = $data['part_no'] ?? null;
         $data['min_stock'] = $data['min_stock'] ?? 0;
         try {
             SparePart::create($data);
@@ -101,12 +102,13 @@ class SparePartController extends Controller
     public function update(Request $request, SparePart $sparePart)
     {
         $data = $request->validate([
-            'part_no' => 'required|string|max:100|unique:spare_parts,part_no,' . $sparePart->id,
+            'part_no' => 'nullable|string|max:100|unique:spare_parts,part_no,' . $sparePart->id,
             'name' => 'required|string|max:255',
             'selling_price' => 'required|numeric|min:0',
             'mrp' => 'required|numeric|min:0',
             'min_stock' => 'nullable|integer|min:0',
         ]);
+        $data['part_no'] = $data['part_no'] ?? null;
         $data['min_stock'] = $data['min_stock'] ?? 0;
         try {
             $sparePart->update($data);
@@ -192,7 +194,7 @@ class SparePartController extends Controller
             fclose($handle);
         }
 
-        $required = ['part_no', 'name', 'selling_price', 'mrp'];
+        $required = ['name', 'selling_price', 'mrp'];
         foreach ($required as $req) {
             if (!in_array($req, $header)) {
                 return redirect()->back()->withErrors(['csv_file' => "Missing required header column: {$req}"]);
@@ -224,8 +226,8 @@ class SparePartController extends Controller
             $mrp = isset($data['mrp']) ? trim($data['mrp']) : '0';
             $minStock = isset($data['min_stock']) && is_numeric(trim($data['min_stock'])) ? (int)trim($data['min_stock']) : 0;
 
-            if (empty($partNo) || empty($name)) {
-                $errors[] = "Row {$rowCount}: Part No and Name are required.";
+            if (empty($name)) {
+                $errors[] = "Row {$rowCount}: Name is required.";
                 $skipped++;
                 continue;
             }
@@ -238,24 +240,26 @@ class SparePartController extends Controller
 
             $partNoKey = strtolower($partNo);
 
-            if (in_array($partNoKey, $seenInFile)) {
-                $errors[] = "Row {$rowCount}: Duplicate Part No '{$partNo}' in the CSV file.";
-                $skipped++;
-                continue;
+            if ($partNoKey !== '') {
+                if (in_array($partNoKey, $seenInFile)) {
+                    $errors[] = "Row {$rowCount}: Duplicate Part No '{$partNo}' in the CSV file.";
+                    $skipped++;
+                    continue;
+                }
+
+                $exists = SparePart::whereRaw('LOWER(part_no) = ?', [$partNoKey])->exists();
+
+                if ($exists) {
+                    $errors[] = "Row {$rowCount}: Duplicate Part No '{$partNo}' already exists in the database.";
+                    $skipped++;
+                    continue;
+                }
+
+                $seenInFile[] = $partNoKey;
             }
-
-            $exists = SparePart::whereRaw('LOWER(part_no) = ?', [$partNoKey])->exists();
-
-            if ($exists) {
-                $errors[] = "Row {$rowCount}: Duplicate Part No '{$partNo}' already exists in the database.";
-                $skipped++;
-                continue;
-            }
-
-            $seenInFile[] = $partNoKey;
 
             SparePart::create([
-                'part_no' => $partNo,
+                'part_no' => $partNo !== '' ? $partNo : null,
                 'name' => $name,
                 'selling_price' => floatval($sellingPrice),
                 'mrp' => floatval($mrp),

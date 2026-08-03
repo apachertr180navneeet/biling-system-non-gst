@@ -84,6 +84,50 @@ class MasterImportTest extends TestCase
         ]);
     }
 
+    public function test_can_import_spare_parts_without_part_no(): void
+    {
+        $csvContent = "name,selling_price,mrp\n"
+            . "Engine Oil Filter,150.00,200.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('parts_no_partno.csv', $csvContent);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.spare-parts.import'), [
+                'csv_file' => $file,
+            ]);
+
+        $response->assertRedirect(route('admin.spare-parts.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('spare_parts', [
+            'part_no' => null,
+            'name' => 'Engine Oil Filter',
+            'selling_price' => 150.00,
+            'mrp' => 200.00,
+        ]);
+    }
+
+    public function test_can_create_spare_part_without_part_no(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.spare-parts.store'), [
+                'part_no' => '',
+                'name' => 'Gear Cable',
+                'selling_price' => 350.00,
+                'mrp' => 400.00,
+            ]);
+
+        $response->assertRedirect(route('admin.spare-parts.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('spare_parts', [
+            'part_no' => null,
+            'name' => 'Gear Cable',
+            'selling_price' => 350.00,
+            'mrp' => 400.00,
+        ]);
+    }
+
     public function test_can_download_suppliers_import_template(): void
     {
         $response = $this->actingAs($this->admin)
