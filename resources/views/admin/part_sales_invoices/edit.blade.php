@@ -289,7 +289,7 @@
                         </thead>
                         <tbody id="modalPartsList" class="bg-white">
                             @foreach($spareParts as $p)
-                            <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ $p->name }}" data-partno="{{ $p->part_no }}" data-hsn="{{ $p->hsn_sac_code ?? '' }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
+                            <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ e($p->name) }}" data-partno="{{ e($p->part_no ?? '') }}" data-hsn="{{ e($p->hsn_sac_code ?? '') }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
                                 <td class="text-center">
                                     <input type="checkbox" class="form-check-input part-checkbox">
                                 </td>
@@ -313,7 +313,7 @@
                                     <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;">
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" style="min-width: 70px;">
+                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" style="min-width: 85px;">
                                 </td>
                             </tr>
                             @endforeach
@@ -508,30 +508,49 @@ document.addEventListener('DOMContentLoaded', function() {
     if (receivedAmountInput) receivedAmountInput.addEventListener('input', calculateSummary);
 
     // Modal Live Search
-    var modalPartSearch = document.getElementById('modalPartSearch');
-    if (modalPartSearch) {
-        function filterModalParts() {
-            var query = modalPartSearch.value.toLowerCase().trim();
-            var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
-            rows.forEach(function(row) {
-                var name = (row.getAttribute('data-name') || '').toLowerCase();
-                var partno = (row.getAttribute('data-partno') || '').toLowerCase();
-                var hsn = (row.getAttribute('data-hsn') || '').toLowerCase();
-                var fullText = row.textContent.toLowerCase();
+    function filterModalParts() {
+        var searchInput = document.getElementById('modalPartSearch');
+        if (!searchInput) return;
+        var query = searchInput.value.toLowerCase().trim();
+        var queryWords = query.split(/\s+/).filter(Boolean);
+        var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
 
-                if (!query || name.includes(query) || partno.includes(query) || hsn.includes(query) || fullText.includes(query)) {
-                    row.classList.remove('d-none');
-                    row.style.setProperty('display', '', '');
-                } else {
-                    row.classList.add('d-none');
-                    row.style.setProperty('display', 'none', 'important');
-                }
+        rows.forEach(function(row) {
+            if (queryWords.length === 0) {
+                row.classList.remove('d-none');
+                row.style.setProperty('display', '', '');
+                return;
+            }
+
+            var name = (row.getAttribute('data-name') || '').toLowerCase();
+            var partno = (row.getAttribute('data-partno') || '').toLowerCase();
+            var hsn = (row.getAttribute('data-hsn') || '').toLowerCase();
+            var textContent = (row.textContent || '').toLowerCase();
+            var combinedText = name + ' ' + partno + ' ' + hsn + ' ' + textContent;
+
+            var matches = queryWords.every(function(word) {
+                return combinedText.indexOf(word) !== -1;
             });
-        }
 
-        modalPartSearch.addEventListener('input', filterModalParts);
-        modalPartSearch.addEventListener('keyup', filterModalParts);
+            if (matches) {
+                row.classList.remove('d-none');
+                row.style.setProperty('display', '', '');
+            } else {
+                row.classList.add('d-none');
+                row.style.setProperty('display', 'none', 'important');
+            }
+        });
     }
+
+    $(document).on('input keyup search change clear', '#modalPartSearch', filterModalParts);
+
+    $('#selectPartsModal').on('shown.bs.modal', function () {
+        var searchInput = document.getElementById('modalPartSearch');
+        if (searchInput) {
+            searchInput.focus();
+            filterModalParts();
+        }
+    });
 
     // Modal Check All Checkbox
     var checkAllParts = document.getElementById('checkAllParts');
@@ -584,7 +603,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 var stockVal = parseInt(modalRow.getAttribute('data-stock')) || 0;
 
                 addPartRowFromModal(partId, partNo, partName, stockVal, rateVal, qtyVal);
-
                 cb.checked = false;
             });
 
@@ -605,7 +623,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalErrorAlert = document.getElementById('modalErrorAlert');
     var saveCustomerBtn = document.getElementById('btnSaveCustomer');
     
-    quickAddForm.addEventListener('submit', function(e) {
+    if (quickAddForm) {
+        quickAddForm.addEventListener('submit', function(e) {
         e.preventDefault();
         saveCustomerBtn.disabled = true;
         saveCustomerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
@@ -674,6 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error(err);
         });
     });
+    }
 });
 </script>
 @endsection

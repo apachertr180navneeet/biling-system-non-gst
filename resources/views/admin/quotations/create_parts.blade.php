@@ -194,9 +194,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Add Row button click
-    addRowBtn.addEventListener('click', function() {
-        addNewRow();
-    });
+    if (addRowBtn) {
+        addRowBtn.addEventListener('click', function() {
+            if (typeof addNewRow === 'function') addNewRow();
+        });
+    }
 
     const addRowBtnSecondary = document.getElementById('addRowBtnSecondary');
     if (addRowBtnSecondary) {
@@ -278,9 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </tr>
             `;
         }
-    }
-
-        rowIndex++;
     }
 
     function calculateRowTotal(row) {
@@ -392,30 +391,49 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
     // Modal Live Search
-    var modalPartSearch = document.getElementById('modalPartSearch');
-    if (modalPartSearch) {
-        function filterModalParts() {
-            var query = modalPartSearch.value.toLowerCase().trim();
-            var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
-            rows.forEach(function(row) {
-                var name = (row.getAttribute('data-name') || '').toLowerCase();
-                var partno = (row.getAttribute('data-partno') || '').toLowerCase();
-                var hsn = (row.getAttribute('data-hsn') || '').toLowerCase();
-                var fullText = row.textContent.toLowerCase();
+    function filterModalParts() {
+        var searchInput = document.getElementById('modalPartSearch');
+        if (!searchInput) return;
+        var query = searchInput.value.toLowerCase().trim();
+        var queryWords = query.split(/\s+/).filter(Boolean);
+        var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
 
-                if (!query || name.includes(query) || partno.includes(query) || hsn.includes(query) || fullText.includes(query)) {
-                    row.classList.remove('d-none');
-                    row.style.setProperty('display', '', '');
-                } else {
-                    row.classList.add('d-none');
-                    row.style.setProperty('display', 'none', 'important');
-                }
+        rows.forEach(function(row) {
+            if (queryWords.length === 0) {
+                row.classList.remove('d-none');
+                row.style.setProperty('display', '', '');
+                return;
+            }
+
+            var name = (row.getAttribute('data-name') || '').toLowerCase();
+            var partno = (row.getAttribute('data-partno') || '').toLowerCase();
+            var hsn = (row.getAttribute('data-hsn') || '').toLowerCase();
+            var textContent = (row.textContent || '').toLowerCase();
+            var combinedText = name + ' ' + partno + ' ' + hsn + ' ' + textContent;
+
+            var matches = queryWords.every(function(word) {
+                return combinedText.indexOf(word) !== -1;
             });
-        }
 
-        modalPartSearch.addEventListener('input', filterModalParts);
-        modalPartSearch.addEventListener('keyup', filterModalParts);
+            if (matches) {
+                row.classList.remove('d-none');
+                row.style.setProperty('display', '', '');
+            } else {
+                row.classList.add('d-none');
+                row.style.setProperty('display', 'none', 'important');
+            }
+        });
     }
+
+    $(document).on('input keyup search change clear', '#modalPartSearch', filterModalParts);
+
+    $('#selectPartsModal').on('shown.bs.modal', function () {
+        var searchInput = document.getElementById('modalPartSearch');
+        if (searchInput) {
+            searchInput.focus();
+            filterModalParts();
+        }
+    });
 
     // Modal Check All Checkbox
     var checkAllParts = document.getElementById('checkAllParts');
@@ -576,9 +594,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         </thead>
                         <tbody id="modalPartsList" class="bg-white">
                             @foreach($spareParts as $p)
-                            <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ $p->name }}" data-partno="{{ $p->part_no }}" data-hsn="{{ $p->hsn_sac_code ?? '' }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
+                            <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ e($p->name) }}" data-partno="{{ e($p->part_no ?? '') }}" data-hsn="{{ e($p->hsn_sac_code ?? '') }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
                                 <td class="text-center">
-                                    <input type="checkbox" class="form-check-input part-checkbox" {{ $p->qty_available <= 0 ? 'disabled' : '' }}>
+                                    <input type="checkbox" class="form-check-input part-checkbox">
                                 </td>
                                 <td>
                                     <span class="fw-bold text-primary font-monospace">{{ $p->part_no }}</span>
@@ -597,10 +615,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                     @endif
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;" {{ $p->qty_available <= 0 ? 'disabled' : '' }}>
+                                    <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;">
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" max="{{ $p->qty_available }}" style="min-width: 70px;" {{ $p->qty_available <= 0 ? 'disabled' : '' }}>
+                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" style="min-width: 85px;">
                                 </td>
                             </tr>
                             @endforeach
