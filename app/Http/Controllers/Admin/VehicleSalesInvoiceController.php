@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\VehicleSalesInvoice;
 use App\Models\VehicleInventory;
 use App\Models\Customer;
-use App\Models\VehicleMaster;
 use App\Models\FinanceMaster;
+use App\Models\VehicleMaster;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -498,22 +499,80 @@ class VehicleSalesInvoiceController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'payment_mode' => 'nullable|string|max:255',
         ]);
 
         $amount = floatval($request->input('amount'));
+        $paymentMode = $request->input('payment_mode', $vehicleSalesInvoice->payment_mode ?? 'Cash');
 
         if ($amount > $vehicleSalesInvoice->balance) {
             return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($vehicleSalesInvoice->balance, 2) . ')']);
         }
 
-        DB::transaction(function () use ($vehicleSalesInvoice, $amount) {
+        DB::transaction(function () use ($vehicleSalesInvoice, $amount, $paymentMode) {
             $vehicleSalesInvoice->received_amount += $amount;
             $vehicleSalesInvoice->balance -= $amount;
             $vehicleSalesInvoice->current_balance -= $amount;
             $vehicleSalesInvoice->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'sales',
+                'bill_type' => 'vehicle_sales',
+                'bill_id' => $vehicleSalesInvoice->id,
+                'party_type' => 'customer',
+                'party_id' => $vehicleSalesInvoice->customer_id,
+                'party_name' => $vehicleSalesInvoice->customer_name,
+                'payment_date' => date('Y-m-d'),
+                'amount' => $amount,
+                'payment_mode' => $paymentMode,
+                'type' => 'payment',
+                'created_by' => auth()->id() ?? null,
+            ]);
         });
 
         return response()->json(['success' => true, 'message' => 'Payment received successfully.']);
+    }
+
+    public function rollbackPayment(Request $request, VehicleSalesInvoice $vehicleSalesInvoice, PaymentTransaction $paymentTransaction)
+    {
+        $request->validate([
+            'rollback_reason' => 'required|string|max:255',
+        ]);
+
+        if ($paymentTransaction->bill_id != $vehicleSalesInvoice->id || $paymentTransaction->bill_type != 'vehicle_sales') {
+            return response()->json(['success' => false, 'message' => 'Invalid payment transaction for this invoice.']);
+        }
+
+        if ($paymentTransaction->type === 'rollback' || $paymentTransaction->isRolledBack()) {
+            return response()->json(['success' => false, 'message' => 'This payment has already been rolled back.']);
+        }
+
+        $rollbackAmount = (float)$paymentTransaction->amount;
+
+        DB::transaction(function () use ($vehicleSalesInvoice, $paymentTransaction, $rollbackAmount, $request) {
+            $vehicleSalesInvoice->received_amount = max(0, $vehicleSalesInvoice->received_amount - $rollbackAmount);
+            $vehicleSalesInvoice->balance += $rollbackAmount;
+            $vehicleSalesInvoice->current_balance += $rollbackAmount;
+            $vehicleSalesInvoice->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'sales',
+                'bill_type' => 'vehicle_sales',
+                'bill_id' => $vehicleSalesInvoice->id,
+                'party_type' => 'customer',
+                'party_id' => $vehicleSalesInvoice->customer_id,
+                'party_name' => $vehicleSalesInvoice->customer_name,
+                'payment_date' => date('Y-m-d'),
+                'amount' => -$rollbackAmount,
+                'payment_mode' => $paymentTransaction->payment_mode,
+                'type' => 'rollback',
+                'rollback_reason' => $request->input('rollback_reason'),
+                'reversed_payment_id' => $paymentTransaction->id,
+                'created_by' => auth()->id() ?? null,
+            ]);
+        });
+
+        return response()->json(['success' => true, 'message' => 'Payment rolled back successfully. Ledger and balance updated.']);
     }
 
     public function generatePdf(Request $request, VehicleSalesInvoice $vehicleSalesInvoice)

@@ -8,6 +8,7 @@ use App\Models\VehicleInventory;
 use App\Models\VehiclePoItem;
 use App\Models\Supplier;
 use App\Models\VehicleMaster;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -717,21 +718,78 @@ class VehiclePurchaseOrderController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'payment_mode' => 'nullable|string|max:255',
         ]);
 
         $amount = floatval($request->input('amount'));
+        $paymentMode = $request->input('payment_mode', 'Cash');
 
         if ($amount > $vehiclePurchaseOrder->balance) {
             return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($vehiclePurchaseOrder->balance, 2) . ')']);
         }
 
-        DB::transaction(function () use ($vehiclePurchaseOrder, $amount) {
+        DB::transaction(function () use ($vehiclePurchaseOrder, $amount, $paymentMode) {
             $vehiclePurchaseOrder->received_amount += $amount;
             $vehiclePurchaseOrder->balance -= $amount;
             $vehiclePurchaseOrder->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'purchase',
+                'bill_type' => 'vehicle_purchase',
+                'bill_id' => $vehiclePurchaseOrder->id,
+                'party_type' => 'supplier',
+                'party_id' => $vehiclePurchaseOrder->supplier_id,
+                'party_name' => $vehiclePurchaseOrder->supplier->name ?? 'Supplier #' . $vehiclePurchaseOrder->supplier_id,
+                'payment_date' => date('Y-m-d'),
+                'amount' => $amount,
+                'payment_mode' => $paymentMode,
+                'type' => 'payment',
+                'created_by' => auth()->id() ?? null,
+            ]);
         });
 
         return response()->json(['success' => true, 'message' => 'Payment received successfully.']);
+    }
+
+    public function rollbackPayment(Request $request, VehiclePurchaseOrder $vehiclePurchaseOrder, PaymentTransaction $paymentTransaction)
+    {
+        $request->validate([
+            'rollback_reason' => 'required|string|max:255',
+        ]);
+
+        if ($paymentTransaction->bill_id != $vehiclePurchaseOrder->id || $paymentTransaction->bill_type != 'vehicle_purchase') {
+            return response()->json(['success' => false, 'message' => 'Invalid payment transaction for this purchase order.']);
+        }
+
+        if ($paymentTransaction->type === 'rollback' || $paymentTransaction->isRolledBack()) {
+            return response()->json(['success' => false, 'message' => 'This payment has already been rolled back.']);
+        }
+
+        $rollbackAmount = (float)$paymentTransaction->amount;
+
+        DB::transaction(function () use ($vehiclePurchaseOrder, $paymentTransaction, $rollbackAmount, $request) {
+            $vehiclePurchaseOrder->received_amount = max(0, $vehiclePurchaseOrder->received_amount - $rollbackAmount);
+            $vehiclePurchaseOrder->balance += $rollbackAmount;
+            $vehiclePurchaseOrder->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'purchase',
+                'bill_type' => 'vehicle_purchase',
+                'bill_id' => $vehiclePurchaseOrder->id,
+                'party_type' => 'supplier',
+                'party_id' => $vehiclePurchaseOrder->supplier_id,
+                'party_name' => $vehiclePurchaseOrder->supplier->name ?? 'Supplier #' . $vehiclePurchaseOrder->supplier_id,
+                'payment_date' => date('Y-m-d'),
+                'amount' => -$rollbackAmount,
+                'payment_mode' => $paymentTransaction->payment_mode,
+                'type' => 'rollback',
+                'rollback_reason' => $request->input('rollback_reason'),
+                'reversed_payment_id' => $paymentTransaction->id,
+                'created_by' => auth()->id() ?? null,
+            ]);
+        });
+
+        return response()->json(['success' => true, 'message' => 'Payment rolled back successfully. Ledger and balance updated.']);
     }
 
     private function getVehicleOptions(): array

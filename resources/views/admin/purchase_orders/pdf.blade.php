@@ -5,13 +5,14 @@
     <title>Purchase Order - {{ $purchaseOrder->order_number }}</title>
     <style>
         @page {
-            margin: 40px;
+            size: A4 portrait;
+            margin: 12mm 15mm 12mm 15mm;
         }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            color: #333;
-            font-size: 11px;
-            line-height: 1.5;
+            font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            font-size: 9.5px;
+            line-height: 1.4;
         }
         #watermark {
             position: fixed;

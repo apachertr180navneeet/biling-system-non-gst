@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\SparePart;
 use App\Models\SparePartStock;
 use App\Models\SparePartStockTransaction;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -379,22 +380,80 @@ class PartSalesInvoiceController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'payment_mode' => 'nullable|string|max:255',
         ]);
 
         $amount = floatval($request->input('amount'));
+        $paymentMode = $request->input('payment_mode', $partSalesInvoice->payment_mode ?? 'Cash');
 
         if ($amount > $partSalesInvoice->balance) {
             return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($partSalesInvoice->balance, 2) . ')']);
         }
 
-        DB::transaction(function () use ($partSalesInvoice, $amount) {
+        DB::transaction(function () use ($partSalesInvoice, $amount, $paymentMode) {
             $partSalesInvoice->received_amount += $amount;
             $partSalesInvoice->balance -= $amount;
             $partSalesInvoice->current_balance -= $amount;
             $partSalesInvoice->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'sales',
+                'bill_type' => 'part_sales',
+                'bill_id' => $partSalesInvoice->id,
+                'party_type' => 'customer',
+                'party_id' => $partSalesInvoice->customer_id,
+                'party_name' => $partSalesInvoice->customer_name,
+                'payment_date' => date('Y-m-d'),
+                'amount' => $amount,
+                'payment_mode' => $paymentMode,
+                'type' => 'payment',
+                'created_by' => auth()->id() ?? null,
+            ]);
         });
 
         return response()->json(['success' => true, 'message' => 'Payment received successfully.']);
+    }
+
+    public function rollbackPayment(Request $request, PartSalesInvoice $partSalesInvoice, PaymentTransaction $paymentTransaction)
+    {
+        $request->validate([
+            'rollback_reason' => 'required|string|max:255',
+        ]);
+
+        if ($paymentTransaction->bill_id != $partSalesInvoice->id || $paymentTransaction->bill_type != 'part_sales') {
+            return response()->json(['success' => false, 'message' => 'Invalid payment transaction for this invoice.']);
+        }
+
+        if ($paymentTransaction->type === 'rollback' || $paymentTransaction->isRolledBack()) {
+            return response()->json(['success' => false, 'message' => 'This payment has already been rolled back.']);
+        }
+
+        $rollbackAmount = (float)$paymentTransaction->amount;
+
+        DB::transaction(function () use ($partSalesInvoice, $paymentTransaction, $rollbackAmount, $request) {
+            $partSalesInvoice->received_amount = max(0, $partSalesInvoice->received_amount - $rollbackAmount);
+            $partSalesInvoice->balance += $rollbackAmount;
+            $partSalesInvoice->current_balance += $rollbackAmount;
+            $partSalesInvoice->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'sales',
+                'bill_type' => 'part_sales',
+                'bill_id' => $partSalesInvoice->id,
+                'party_type' => 'customer',
+                'party_id' => $partSalesInvoice->customer_id,
+                'party_name' => $partSalesInvoice->customer_name,
+                'payment_date' => date('Y-m-d'),
+                'amount' => -$rollbackAmount,
+                'payment_mode' => $paymentTransaction->payment_mode,
+                'type' => 'rollback',
+                'rollback_reason' => $request->input('rollback_reason'),
+                'reversed_payment_id' => $paymentTransaction->id,
+                'created_by' => auth()->id() ?? null,
+            ]);
+        });
+
+        return response()->json(['success' => true, 'message' => 'Payment rolled back successfully. Ledger and balance updated.']);
     }
 
     public function edit(PartSalesInvoice $partSalesInvoice)

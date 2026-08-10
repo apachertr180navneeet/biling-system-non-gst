@@ -5,13 +5,14 @@
     <title>Quotation - {{ $quotation->quotation_number }}</title>
     <style>
         @page {
-            margin: 40px;
+            size: A4 portrait;
+            margin: 12mm 15mm 12mm 15mm;
         }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            color: #333;
-            font-size: 11px;
-            line-height: 1.5;
+            font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            font-size: 9.5px;
+            line-height: 1.4;
         }
         #watermark {
             position: fixed;
@@ -160,10 +161,10 @@
                 <div class="info-card">
                     <div class="info-title">Company details</div>
                     <strong>SHREE KRISHNA AUTO GREEN</strong><br>
-                    Plot No. 12, Auto Green Zone,<br>
-                    Jaipur Road, Rajasthan<br>
-                    Mobile: +91 9999999999<br>
-                    Email: info@shreekrishnaautogreen.com
+                    Near Mahamandir Circle, Main Mandore Road,<br>
+                    Jodhpur (Raj.)<br>
+                    Office No.: 9602029148<br>
+                    E-mail ID: vijay.deora429@gmail.com
                 </div>
             </td>
             <td class="info-col">

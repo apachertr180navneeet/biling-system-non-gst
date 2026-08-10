@@ -834,6 +834,8 @@ if (!function_exists('getIndianRupeesInWords')) {
                     </div>
                 </div>
 
+                @include('admin.layouts.elements.payment_history_rollback', ['billType' => 'part_sales', 'billId' => $partSalesInvoice->id])
+
             </div>
         </div>
     </div>

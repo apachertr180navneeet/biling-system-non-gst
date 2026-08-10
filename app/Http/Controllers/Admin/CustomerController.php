@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\VehicleSalesInvoice;
+use App\Models\PartSalesInvoice;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -322,4 +325,132 @@ class CustomerController extends Controller
 
         return redirect()->route('admin.customers.index')->withSuccess($msg);
     }
+
+    public function ledgerApi(Request $request, Customer $customer)
+    {
+        $vehicleInvoices = VehicleSalesInvoice::where('customer_id', $customer->id)
+            ->orWhere(function($q) use ($customer) {
+                $q->whereNull('customer_id')->where('customer_name', $customer->name);
+            })
+            ->orderBy('invoice_date', 'asc')
+            ->get();
+
+        $partInvoices = PartSalesInvoice::where('customer_id', $customer->id)
+            ->orWhere(function($q) use ($customer) {
+                $q->whereNull('customer_id')->where('customer_name', $customer->name);
+            })
+            ->orderBy('invoice_date', 'asc')
+            ->get();
+
+        $payments = PaymentTransaction::where('party_type', 'customer')
+            ->where('party_id', $customer->id)
+            ->orderBy('payment_date', 'asc')
+            ->get();
+
+        $totalBilled = 0;
+        $totalPaid = 0;
+
+        foreach ($vehicleInvoices as $v) {
+            $totalBilled += (float)$v->grand_total;
+            $totalPaid += (float)$v->received_amount;
+        }
+
+        foreach ($partInvoices as $p) {
+            $totalBilled += (float)$p->total_amount;
+            $totalPaid += (float)$p->received_amount;
+        }
+
+        $outstandingBalance = $totalBilled - $totalPaid;
+
+        $history = [];
+
+        foreach ($vehicleInvoices as $v) {
+            $history[] = [
+                'date' => $v->invoice_date ? $v->invoice_date->format('Y-m-d') : '',
+                'display_date' => $v->invoice_date ? $v->invoice_date->format('d-m-Y') : '',
+                'type' => 'Vehicle Invoice',
+                'doc_no' => $v->invoice_number,
+                'debit' => (float)$v->grand_total,
+                'credit' => 0,
+                'received' => (float)$v->received_amount,
+                'balance' => (float)$v->balance,
+                'payment_mode' => $v->payment_mode,
+                'notes' => 'Vehicle Invoice #' . $v->invoice_number,
+                'view_url' => route('admin.vehicle-sales-invoices.show', $v->id),
+            ];
+        }
+
+        foreach ($partInvoices as $p) {
+            $history[] = [
+                'date' => $p->invoice_date ? $p->invoice_date->format('Y-m-d') : '',
+                'display_date' => $p->invoice_date ? $p->invoice_date->format('d-m-Y') : '',
+                'type' => 'Part Invoice',
+                'doc_no' => $p->invoice_number,
+                'debit' => (float)$p->total_amount,
+                'credit' => 0,
+                'received' => (float)$p->received_amount,
+                'balance' => (float)$p->balance,
+                'payment_mode' => $p->payment_mode,
+                'notes' => 'Part Invoice #' . $p->invoice_number,
+                'view_url' => route('admin.part-sales-invoices.show', $p->id),
+            ];
+        }
+
+        foreach ($payments as $pay) {
+            $history[] = [
+                'date' => $pay->payment_date ? $pay->payment_date->format('Y-m-d') : '',
+                'display_date' => $pay->payment_date ? $pay->payment_date->format('d-m-Y') : '',
+                'type' => $pay->type === 'rollback' ? 'Payment Rollback' : 'Payment Received',
+                'doc_no' => 'PAY-' . $pay->id,
+                'debit' => $pay->type === 'rollback' ? (float)abs($pay->amount) : 0,
+                'credit' => $pay->type === 'rollback' ? 0 : (float)$pay->amount,
+                'received' => (float)$pay->amount,
+                'balance' => 0,
+                'payment_mode' => $pay->payment_mode,
+                'notes' => $pay->type === 'rollback' ? 'Rollback: ' . ($pay->rollback_reason ?? 'Reversal') : 'Payment via ' . $pay->payment_mode,
+                'view_url' => '#',
+            ];
+        }
+
+        usort($history, function($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        $runningBal = 0;
+        foreach ($history as &$item) {
+            $runningBal += ($item['debit'] - $item['credit']);
+            $item['running_balance'] = $runningBal;
+        }
+
+        return response()->json([
+            'success' => true,
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'email' => $customer->email,
+                'company_name' => $customer->company_name,
+            ],
+            'summary' => [
+                'total_billed' => $totalBilled,
+                'total_paid' => $totalPaid,
+                'outstanding_balance' => $outstandingBalance,
+                'total_invoices' => count($vehicleInvoices) + count($partInvoices),
+            ],
+            'history' => array_reverse($history),
+        ]);
+    }
+
+    public function showLedger(Request $request, Customer $customer)
+    {
+        $apiResponse = $this->ledgerApi($request, $customer);
+        $data = $apiResponse->getData(true);
+
+        return view('admin.customers.ledger', [
+            'customer' => $customer,
+            'summary' => $data['summary'],
+            'history' => $data['history'],
+        ]);
+    }
 }
+

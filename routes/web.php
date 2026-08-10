@@ -87,11 +87,39 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::resource('suppliers', SupplierController::class)->except(['show']);
             Route::post('suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
 
+            Route::get('customers/{customer}/ledger-api', [CustomerController::class, 'ledgerApi'])->name('customers.ledger-api');
+            Route::get('customers/{customer}/ledger', [CustomerController::class, 'showLedger'])->name('customers.ledger');
             Route::get('customers/import-template', [CustomerController::class, 'downloadTemplate'])->name('customers.import-template');
             Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
             Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
             Route::resource('customers', CustomerController::class);
             Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
+
+            // Payment Rollbacks
+            Route::post('vehicle-sales-invoices/{vehicle_sales_invoice}/rollback-payment/{payment_transaction}', [VehicleSalesInvoiceController::class, 'rollbackPayment'])->name('vehicle-sales-invoices.rollback-payment');
+            Route::post('part-sales-invoices/{part_sales_invoice}/rollback-payment/{payment_transaction}', [PartSalesInvoiceController::class, 'rollbackPayment'])->name('part-sales-invoices.rollback-payment');
+            Route::post('vehicle-purchase-orders/{vehicle_purchase_order}/rollback-payment/{payment_transaction}', [VehiclePurchaseOrderController::class, 'rollbackPayment'])->name('vehicle-purchase-orders.rollback-payment');
+            Route::post('purchase-orders/{purchase_order}/rollback-payment/{payment_transaction}', [PurchaseOrderController::class, 'rollbackPayment'])->name('purchase-orders.rollback-payment');
+
+            Route::get('reports/vehicle-ledger', [ReportController::class, 'vehicleLedger'])->name('reports.vehicle-ledger');
+            Route::get('reports/part-ledger', [ReportController::class, 'partLedger'])->name('reports.part-ledger');
+            Route::get('reports/outstanding-ledger', [ReportController::class, 'outstandingLedger'])->name('reports.outstanding-ledger');
+            Route::get('reports/party-report-by-item', [ReportController::class, 'partyReportByItem'])->name('reports.party-report-by-item');
+            Route::get('reports/party-report-by-item/export-excel', [ReportController::class, 'exportPartyReportExcel'])->name('reports.party-report-by-item.export-excel');
+            Route::post('reports/party-report-by-item/email-excel', [ReportController::class, 'emailPartyReportExcel'])->name('reports.party-report-by-item.email-excel');
+            Route::get('reports/party-report-by-item/print-pdf', [ReportController::class, 'printPartyReportPdf'])->name('reports.party-report-by-item.print-pdf');
+
+            // Missing Reports Routes
+            Route::get('reports/item-report-by-party', [ReportController::class, 'itemReportByParty'])->name('reports.item-report-by-party');
+            Route::get('reports/item-sales-purchase-summary', [ReportController::class, 'itemSalesPurchaseSummary'])->name('reports.item-sales-purchase-summary');
+            Route::get('reports/low-stock-summary', [ReportController::class, 'lowStockSummary'])->name('reports.low-stock-summary');
+            Route::get('reports/rate-list', [ReportController::class, 'rateList'])->name('reports.rate-list');
+            Route::get('reports/stock-detail-report', [ReportController::class, 'stockDetailReport'])->name('reports.stock-detail-report');
+            Route::get('reports/stock-summary', [ReportController::class, 'stockSummary'])->name('reports.stock-summary');
+            Route::get('reports/receivable-ageing', [ReportController::class, 'receivableAgeing'])->name('reports.receivable-ageing');
+            Route::get('reports/party-statement', [ReportController::class, 'partyStatement'])->name('reports.party-statement');
+            Route::get('reports/party-wise-outstanding', [ReportController::class, 'partyWiseOutstanding'])->name('reports.party-wise-outstanding');
+            Route::get('reports/sales-summary-category-wise', [ReportController::class, 'salesSummaryCategoryWise'])->name('reports.sales-summary-category-wise');
 
             Route::get('finance-masters/import-template', [FinanceMasterController::class, 'downloadTemplate'])->name('finance-masters.import-template');
             Route::post('finance-masters/import', [FinanceMasterController::class, 'import'])->name('finance-masters.import');
@@ -158,9 +186,6 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::post('reports/party-report-by-item/email-excel', [ReportController::class, 'emailPartyReportExcel'])->name('reports.party-report-by-item.email-excel');
             Route::get('reports/party-report-by-item/print-pdf', [ReportController::class, 'printPartyReportPdf'])->name('reports.party-report-by-item.print-pdf');
     });
-
-
-    
 });
 
 Route::get('run-migration', function () {

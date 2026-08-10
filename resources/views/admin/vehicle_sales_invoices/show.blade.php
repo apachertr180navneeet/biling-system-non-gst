@@ -822,38 +822,48 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="text-center" style="font-weight: 600;">1</td>
+                            <td class="text-center" style="font-weight: 700;">1</td>
                             <td>
-                                <span class="item-name">{{ strtoupper($vehicleSalesInvoice->vehicleInventory->vehicle_description) }}</span>
-                                <span class="item-badge">{{ strtoupper($battery_type) }}</span>
-
-                                <div class="warranty-box">
-                                    <strong>WARRANTY DETAILS</strong>
-                                    <div>{!! nl2br(e($vehicleSalesInvoice->warranty_notes)) !!}</div>
+                                <div class="mb-1">
+                                    <span class="item-name d-inline-block">{{ strtoupper($vehicleSalesInvoice->vehicleInventory->vehicle_description) }}</span>
+                                    <span class="ms-2 text-muted fw-semibold small text-uppercase">{{ strtoupper($battery_make) }}</span>
                                 </div>
 
-                                <!-- Restructured Borderless Specifications Grid -->
-                                <div class="specs-grid">
-                                    <div class="specs-cell"><b>Model:</b> {{ $vehicleSalesInvoice->vehicleInventory->vehicle_description }}</div>
-                                    <div class="specs-cell"><b>Colour:</b> {{ $color_name }}</div>
-                                    <div class="specs-cell"><b>Chassis No:</b> <strong style="color: #059669;">{{ $vehicleSalesInvoice->vehicleInventory->chassis_number }}</strong></div>
-                                    
-                                    <div class="specs-cell"><b>Battery No:</b> {{ $vehicleSalesInvoice->vehicleInventory->battery_number ?? '-' }}</div>
-                                    <div class="specs-cell"><b>Charger No:</b> {{ $vehicleSalesInvoice->vehicleInventory->charger_number ?? '-' }}</div>
-                                    <div class="specs-cell"><b>Controller No:</b> {{ $vehicleSalesInvoice->vehicleInventory->controller_number ?? '-' }}</div>
-                                    
-                                    <div class="specs-cell"><b>Convertor No:</b> {{ $vehicleSalesInvoice->vehicleInventory->convertor_number ?? '-' }}</div>
-                                    <div class="specs-cell"><b>Manual No:</b> {{ $vehicleSalesInvoice->vehicleInventory->manual_number ?? '-' }}</div>
-                                    <div class="specs-cell"><b>Motor No:</b> {{ $vehicleSalesInvoice->vehicleInventory->motor_number ?? '-' }}</div>
-                                    
-                                    <div class="specs-cell"><b>Battery Type:</b> {{ $battery_type }}</div>
-                                    <div class="specs-cell"><b>Battery Make:</b> {{ $battery_make }}</div>
-                                    <div class="specs-cell"></div>
+                                <div class="warranty-box mb-2 p-2 bg-light border-start border-3 border-secondary rounded-1">
+                                    <strong class="d-block text-uppercase small text-dark mb-1">WARRANTY DETAILS</strong>
+                                    <div class="small text-secondary">
+                                        @if($vehicleSalesInvoice->warranty_notes)
+                                            {!! nl2br(e($vehicleSalesInvoice->warranty_notes)) !!}
+                                        @else
+                                            MOTOR / CONTROLLER WARRANTY - 1 YEAR<br>
+                                            BATTERY WARRANTY - 3 YEAR<br>
+                                            CHARGER WARRANTY - 2 YEAR
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- 2-Column Specifications Grid Matching Image -->
+                                <div class="row g-1 small">
+                                    <div class="col-6">
+                                        <div><strong>Model:</strong> {{ $vehicleSalesInvoice->vehicleInventory->vehicle_description }}</div>
+                                        <div><strong>Chassis No:</strong> <strong class="text-dark">{{ $vehicleSalesInvoice->vehicleInventory->chassis_number }}</strong></div>
+                                        <div><strong>Charger No:</strong> {{ $vehicleSalesInvoice->vehicleInventory->charger_number ?? '-' }}</div>
+                                        <div><strong>Convertor No:</strong> {{ $vehicleSalesInvoice->vehicleInventory->convertor_number ?? '-' }}</div>
+                                        <div><strong>Motor No:</strong> {{ $vehicleSalesInvoice->vehicleInventory->motor_number ?? '-' }}</div>
+                                        <div><strong>Battery Make:</strong> {{ $battery_make }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div><strong>Colour:</strong> {{ $color_name }}</div>
+                                        <div><strong>Battery No:</strong> {{ $vehicleSalesInvoice->vehicleInventory->battery_number ?? '-' }}</div>
+                                        <div><strong>Controller No:</strong> {{ $vehicleSalesInvoice->vehicleInventory->controller_number ?? '-' }}</div>
+                                        <div><strong>Manual No:</strong> {{ $vehicleSalesInvoice->vehicleInventory->manual_number ?? '-' }}</div>
+                                        <div><strong>Battery Type:</strong> {{ $battery_type }}</div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="text-center" style="font-weight: 600;">1</td>
-                            <td class="text-right" style="font-weight: 600;">{{ number_format($vehicleSalesInvoice->rate, 2) }}</td>
-                            <td class="text-right" style="font-weight: 600;">{{ number_format($vehicleSalesInvoice->rate, 2) }}</td>
+                            <td class="text-center fw-bold">1</td>
+                            <td class="text-right fw-bold">{{ number_format($vehicleSalesInvoice->rate, 2) }}</td>
+                            <td class="text-right fw-bold">{{ number_format($vehicleSalesInvoice->rate, 2) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -861,16 +871,15 @@
                 <!-- Bottom Section -->
                 <div class="bottom-section">
                     <div class="terms-box">
-                        <h4>TERMS & CONDITIONS</h4>
-                        <ol>
-                            <li>Received vehicle, tool kit, charger, jack, stepny and Battery in good and running condition.</li>
+                        <h4 class="fw-bold text-uppercase">TERMS & CONDITIONS</h4>
+                        <ol class="ps-3 mb-2 small text-secondary">
+                            <li>Received vehicle, tool kit, charger, jack, stepny and battery in good and running condition.</li>
                             <li>Our responsibility ceases upon delivery & claim for loss/ shortage etc. will not be entertained thereafter.</li>
-                            <li>Goods Once sold will not be taken back or exchanged under any circumstances.</li>
-                            <li>Warranty as per Company's policy given in owner's manual. 12Month motor and Controller.</li>
+                            <li>Goods Once Sold will Not Be Taken Back or exchanged under any circumstances.</li>
                             <li>Subject to JODHPUR Jurisdiction only.</li>
-                            <li>Getting any work done on the vehicle outside of our authorized office workshop will void the entire warranty.</li>
+                            <li>Getting any work done on the vehicle outside of our authorized office/workshop will void the entire warranty.</li>
                         </ol>
-                        <p style="font-size: 12px; font-weight: 600; color: #059669; margin-top: 15px; font-style: italic;">Thanks for shopping with us.</p>
+                        <p class="small fw-semibold text-secondary fst-italic mt-2 mb-0">Thanks for shopping with us.</p>
                     </div>
 
                     <div class="summary-card">
@@ -908,17 +917,13 @@
                 </div>
 
                 <!-- Signature Section -->
-                <div class="signature-row">
-                    <div class="sig-box">
-                        <div class="sig-line"></div>
-                        <div class="sig-text">CUSTOMER SIGNATURE</div>
-                    </div>
-                    <div class="sig-box">
-                        <div class="sig-text" style="margin-bottom: 25px;">For SHREE KRISHNA AUTO GREEN</div>
-                        <div class="sig-line" style="width: 50%;"></div>
-                        <div class="sig-text">Prop.</div>
+                <div class="signature-row text-center mt-4">
+                    <div class="w-100 text-center">
+                        <div class="sig-text fw-bold text-uppercase text-secondary mt-3">CUSTOMER SIGNATURE</div>
                     </div>
                 </div>
+
+                @include('admin.layouts.elements.payment_history_rollback', ['billType' => 'vehicle_sales', 'billId' => $vehicleSalesInvoice->id])
 
             </div>
         </div>

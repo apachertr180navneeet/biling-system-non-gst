@@ -63,7 +63,7 @@
                     <tr><th colspan="4" class="text-end">Total:</th><th>{{ number_format($vehiclePurchaseOrder->total_amount, 2) }}</th><th></th></tr>
                 </tfoot>
             </table>
-            </div>
+            @include('admin.layouts.elements.payment_history_rollback', ['billType' => 'vehicle_purchase', 'billId' => $vehiclePurchaseOrder->id])
         </div>
     </div>
 </div>

@@ -5,12 +5,13 @@
     <title>Vehicle Sales Invoice - {{ $vehicleSalesInvoice->invoice_number }}</title>
     <style>
         @page {
-            margin: 25px;
+            size: A4 portrait;
+            margin: 12mm 15mm 12mm 15mm;
         }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #1e293b;
-            font-size: 10px;
+            font-size: 9.5px;
             line-height: 1.4;
         }
         #watermark {
@@ -19,7 +20,7 @@
             left: 10%;
             width: 80%;
             text-align: center;
-            opacity: 0.05;
+            opacity: 0.04;
             z-index: -1000;
         }
         #watermark img {
@@ -29,15 +30,16 @@
         .company-header {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border-bottom: 2px solid #059669;
-            padding-bottom: 6px;
+            padding-bottom: 5px;
         }
         .company-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             color: #14532d;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
+            letter-spacing: -0.3px;
         }
         .company-info {
             font-size: 9px;
@@ -49,22 +51,23 @@
             vertical-align: top;
         }
         .invoice-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #059669;
             text-transform: uppercase;
             text-align: right;
+            letter-spacing: 0.5px;
         }
         .meta-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
         }
         .meta-table td {
-            padding: 5px 8px;
-            font-size: 9.5px;
+            padding: 4px 8px;
+            font-size: 9px;
         }
         .meta-label {
             color: #64748b;
@@ -77,47 +80,49 @@
         .billing-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .billing-box {
             vertical-align: top;
             border: 1px solid #e2e8f0;
-            padding: 8px;
+            padding: 6px 8px;
             background-color: #ffffff;
             border-left: 4px solid #10b981;
         }
         .billing-title {
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: bold;
             color: #64748b;
             text-transform: uppercase;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             border-bottom: 1px solid #f1f5f9;
             padding-bottom: 2px;
         }
         .billing-name {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: bold;
             color: #0f172a;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
         .billing-desc {
-            font-size: 9px;
+            font-size: 8.5px;
             color: #475569;
         }
         .items-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
+            border: 1px solid #cbd5e1;
         }
         .items-table th {
-            background-color: #0f172a;
+            background-color: #1e293b;
             color: #ffffff;
             font-weight: bold;
             text-align: left;
-            padding: 6px 8px;
+            padding: 5px 8px;
             font-size: 9.5px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .items-table td {
             padding: 6px 8px;
@@ -127,41 +132,63 @@
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
+        .item-name-row {
+            margin-bottom: 6px;
+        }
         .item-name {
             font-size: 11px;
             font-weight: bold;
-            color: #0f172a;
-            display: block;
+            color: #000000;
+            text-transform: uppercase;
+        }
+        .item-make {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #64748b;
+            margin-left: 8px;
+            text-transform: uppercase;
         }
         .warranty-box {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            padding: 5px 8px;
-            margin-top: 5px;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            padding: 4px 8px;
+            margin-top: 4px;
+            margin-bottom: 6px;
             font-size: 8.5px;
+            color: #334155;
         }
         .warranty-title {
             font-weight: bold;
-            color: #14532d;
+            color: #1e293b;
             text-transform: uppercase;
+            margin-bottom: 2px;
+            font-size: 8.5px;
         }
         .specs-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+            margin-top: 4px;
         }
         .specs-table td {
-            padding: 3px 6px;
+            padding: 2px 4px;
             font-size: 8.5px;
+            color: #1e293b;
+            width: 50%;
+            vertical-align: top;
+        }
+        .specs-label {
+            font-weight: bold;
             color: #334155;
-            border: 1px solid #f1f5f9;
+            display: inline-block;
+            width: 95px;
+        }
+        .specs-value {
+            color: #0f172a;
         }
         .bottom-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
+            margin-top: 6px;
         }
         .bottom-col {
             vertical-align: top;
@@ -169,7 +196,7 @@
         .terms-box {
             border: 1px solid #e2e8f0;
             background-color: #ffffff;
-            padding: 8px;
+            padding: 6px 8px;
         }
         .terms-title {
             font-size: 9px;
@@ -179,16 +206,19 @@
             margin-bottom: 4px;
         }
         .terms-list {
-            font-size: 8.5px;
+            font-size: 8px;
             color: #475569;
             margin: 0;
             padding-left: 14px;
-            line-height: 1.3;
+            line-height: 1.35;
+        }
+        .terms-list li {
+            margin-bottom: 2px;
         }
         .summary-card {
-            background-color: #ecfdf5;
-            border: 1px solid #a7f3d0;
-            padding: 8px;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
         }
         .summary-table {
             width: 100%;
@@ -196,27 +226,27 @@
         }
         .summary-table td {
             padding: 2px 0;
-            font-size: 9.5px;
+            font-size: 9px;
         }
         .summary-label {
-            color: #065f46;
+            color: #475569;
         }
         .summary-value {
             text-align: right;
-            color: #065f46;
+            color: #0f172a;
             font-weight: bold;
         }
         .summary-total-row td {
-            border-top: 1.5px solid #059669;
-            padding-top: 4px;
-            font-size: 11px;
+            border-top: 1.5px solid #0f172a;
+            padding-top: 3px;
+            font-size: 10.5px;
             font-weight: bold;
-            color: #047857;
+            color: #0f172a;
         }
         .signature-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 25px;
+            margin-top: 20px;
         }
         .sig-box {
             width: 50%;
@@ -226,12 +256,14 @@
         .sig-line {
             border-top: 1px dashed #94a3b8;
             width: 60%;
-            margin: 0 auto 5px auto;
+            margin: 0 auto 4px auto;
         }
         .sig-text {
             font-size: 9px;
             font-weight: bold;
             color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -246,12 +278,12 @@
             <td>
                 <div class="company-title">SHREE KRISHNA AUTO GREEN</div>
                 <div class="company-info">
-                    NEAR MAHAMANDIR CIRCLE, MANDORE ROAD, JODHPUR (RAJASTHAN)<br>
-                    Contact: 7586899148, 9829028792
+                    Near Mahamandir Circle, Main Mandore Road, Jodhpur (Raj.)<br>
+                    Office No.: 9602029148 | E-mail ID: vijay.deora429@gmail.com
                 </div>
             </td>
             <td class="logo-td">
-                <img src="{{ public_path('assets/admin/img/logo.jpg') }}" style="height: 55px; margin-bottom: 4px;"><br>
+                <img src="{{ public_path('assets/admin/img/logo.jpg') }}" style="height: 50px; margin-bottom: 2px;"><br>
                 <div class="invoice-title">Vehicle Sales Invoice</div>
             </td>
         </tr>
@@ -304,7 +336,7 @@
         <thead>
             <tr>
                 <th style="width: 5%; text-align: center;">#</th>
-                <th style="width: 59%;">Item & Description</th>
+                <th style="width: 59%;">ITEM & DESCRIPTION</th>
                 <th style="width: 8%; text-align: center;">Qty</th>
                 <th style="width: 14%; text-align: right;">Rate</th>
                 <th style="width: 14%; text-align: right;">Amount</th>
@@ -314,33 +346,45 @@
             <tr>
                 <td class="text-center" style="font-weight: bold;">1</td>
                 <td>
-                    <span class="item-name">{{ strtoupper($vehicleSalesInvoice->vehicleInventory->vehicle_description) }} ({{ strtoupper($battery_type) }})</span>
-
-                    @if($vehicleSalesInvoice->warranty_notes)
-                    <div class="warranty-box">
-                        <span class="warranty-title">WARRANTY DETAILS:</span> {{ $vehicleSalesInvoice->warranty_notes }}
+                    <div class="item-name-row">
+                        <span class="item-name">{{ strtoupper($vehicleSalesInvoice->vehicleInventory->vehicle_description) }}</span>
+                        <span class="item-make">{{ strtoupper($battery_make) }}</span>
                     </div>
-                    @endif
+
+                    <div class="warranty-box">
+                        <div class="warranty-title">WARRANTY DETAILS</div>
+                        @if($vehicleSalesInvoice->warranty_notes)
+                            {!! nl2br(e($vehicleSalesInvoice->warranty_notes)) !!}
+                        @else
+                            MOTOR / CONTROLLER WARRANTY - 1 YEAR<br>
+                            BATTERY WARRANTY - 3 YEAR<br>
+                            CHARGER WARRANTY - 2 YEAR
+                        @endif
+                    </div>
 
                     <table class="specs-table">
                         <tr>
-                            <td><b>Model:</b> {{ $vehicleSalesInvoice->vehicleInventory->vehicle_description }}</td>
-                            <td><b>Colour:</b> {{ $color_name }}</td>
-                            <td><b>Chassis No:</b> <strong style="color: #059669;">{{ $vehicleSalesInvoice->vehicleInventory->chassis_number }}</strong></td>
+                            <td><span class="specs-label">Model:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->vehicle_description }}</span></td>
+                            <td><span class="specs-label">Colour:</span> <span class="specs-value">{{ $color_name }}</span></td>
                         </tr>
                         <tr>
-                            <td><b>Battery No:</b> {{ $vehicleSalesInvoice->vehicleInventory->battery_number ?? '-' }}</td>
-                            <td><b>Charger No:</b> {{ $vehicleSalesInvoice->vehicleInventory->charger_number ?? '-' }}</td>
-                            <td><b>Controller No:</b> {{ $vehicleSalesInvoice->vehicleInventory->controller_number ?? '-' }}</td>
+                            <td><span class="specs-label">Chassis No:</span> <span class="specs-value"><strong>{{ $vehicleSalesInvoice->vehicleInventory->chassis_number }}</strong></span></td>
+                            <td><span class="specs-label">Battery No:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->battery_number ?? '-' }}</span></td>
                         </tr>
                         <tr>
-                            <td><b>Convertor No:</b> {{ $vehicleSalesInvoice->vehicleInventory->convertor_number ?? '-' }}</td>
-                            <td><b>Manual No:</b> {{ $vehicleSalesInvoice->vehicleInventory->manual_number ?? '-' }}</td>
-                            <td><b>Motor No:</b> {{ $vehicleSalesInvoice->vehicleInventory->motor_number ?? '-' }}</td>
+                            <td><span class="specs-label">Charger No:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->charger_number ?? '-' }}</span></td>
+                            <td><span class="specs-label">Controller No:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->controller_number ?? '-' }}</span></td>
                         </tr>
                         <tr>
-                            <td><b>Battery Type:</b> {{ $battery_type }}</td>
-                            <td><b>Battery Make:</b> {{ $battery_make }}</td>
+                            <td><span class="specs-label">Convertor No:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->convertor_number ?? '-' }}</span></td>
+                            <td><span class="specs-label">Manual No:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->manual_number ?? '-' }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="specs-label">Motor No:</span> <span class="specs-value">{{ $vehicleSalesInvoice->vehicleInventory->motor_number ?? '-' }}</span></td>
+                            <td><span class="specs-label">Battery Type:</span> <span class="specs-value">{{ $battery_type }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="specs-label">Battery Make:</span> <span class="specs-value">{{ $battery_make }}</span></td>
                             <td></td>
                         </tr>
                     </table>
@@ -358,14 +402,13 @@
                 <div class="terms-box">
                     <div class="terms-title">TERMS & CONDITIONS</div>
                     <ol class="terms-list">
-                        <li>Received vehicle, tool kit, charger, jack, stepny and Battery in good and running condition.</li>
+                        <li>Received vehicle, tool kit, charger, jack, stepny and battery in good and running condition.</li>
                         <li>Our responsibility ceases upon delivery & claim for loss/ shortage etc. will not be entertained thereafter.</li>
-                        <li>Goods Once sold will not be taken back or exchanged under any circumstances.</li>
-                        <li>Warranty as per Company's policy given in owner's manual. 12Month motor and Controller.</li>
+                        <li>Goods Once Sold will Not Be Taken Back or exchanged under any circumstances.</li>
                         <li>Subject to JODHPUR Jurisdiction only.</li>
-                        <li>Getting any work done on the vehicle outside of our authorized office workshop will void the entire warranty.</li>
+                        <li>Getting any work done on the vehicle outside of our authorized office/workshop will void the entire warranty.</li>
                     </ol>
-                    <div style="font-size: 9px; font-weight: bold; color: #059669; margin-top: 8px; font-style: italic;">Thanks for shopping with us.</div>
+                    <div style="font-size: 8.5px; font-weight: bold; color: #475569; margin-top: 6px; font-style: italic;">Thanks for shopping with us.</div>
                 </div>
             </td>
             <td style="width: 4%;"></td>
@@ -408,17 +451,12 @@
 
     <table class="signature-table">
         <tr>
-            <td class="sig-box">
-                <div class="sig-line"></div>
-                <div class="sig-text">CUSTOMER SIGNATURE</div>
-            </td>
-            <td class="sig-box">
-                <div class="sig-text" style="margin-bottom: 20px;">For <strong>SHREE KRISHNA AUTO GREEN</strong></div>
-                <div class="sig-line" style="width: 50%;"></div>
-                <div class="sig-text">Prop.</div>
+            <td class="sig-box" style="width: 100%; text-align: center;" colspan="2">
+                <div class="sig-text" style="margin-top: 15px;">CUSTOMER SIGNATURE</div>
             </td>
         </tr>
     </table>
 
 </body>
 </html>
+

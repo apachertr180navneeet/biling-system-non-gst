@@ -154,6 +154,83 @@
 
 		<li class="menu-header small text-uppercase"><span class="menu-header-text">Reports</span></li>
 
+		<li class="menu-item {{ request()->routeIs('admin.reports.item-report-by-party') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.item-report-by-party')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-list-ol"></i>
+				<div data-i18n="Item Report By Party">Item Report By Party</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.item-sales-purchase-summary') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.item-sales-purchase-summary')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-line-chart"></i>
+				<div data-i18n="Item Sales & Purchase Summary">Item Sales & Purchase Summary</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.low-stock-summary') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.low-stock-summary')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-error"></i>
+				<div data-i18n="Low Stock Summary">Low Stock Summary</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.rate-list') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.rate-list')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-purchase-tag-alt"></i>
+				<div data-i18n="Rate List">Rate List</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.stock-detail-report') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.stock-detail-report')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-detail"></i>
+				<div data-i18n="Stock Detail Report">Stock Detail Report</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.stock-summary') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.stock-summary')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-pie-chart-alt"></i>
+				<div data-i18n="Stock Summary">Stock Summary</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.receivable-ageing') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.receivable-ageing')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-time-five"></i>
+				<div data-i18n="Receivable Ageing Report">Receivable Ageing Report</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.party-report-by-item') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.party-report-by-item')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-group"></i>
+				<div data-i18n="Party Report By Item">Party Report By Item</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.party-statement') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.party-statement')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-book-open"></i>
+				<div data-i18n="Party Statement (Ledger)">Party Statement (Ledger)</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.party-wise-outstanding') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.party-wise-outstanding')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-user-voice"></i>
+				<div data-i18n="Party Wise Outstanding">Party Wise Outstanding</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.reports.sales-summary-category-wise') ? 'active' : ''}}">
+			<a href="{{route('admin.reports.sales-summary-category-wise')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-bar-chart-square"></i>
+				<div data-i18n="Sales Summary - Category Wise">Sales Summary - Category Wise</div>
+			</a>
+		</li>
+
 		<li class="menu-item {{ request()->routeIs('admin.reports.vehicle-ledger') ? 'active' : ''}}">
 			<a href="{{route('admin.reports.vehicle-ledger')}}" class="menu-link">
 				<i class="menu-icon tf-icons bx bxs-report"></i>
@@ -172,13 +249,6 @@
 			<a href="{{route('admin.reports.outstanding-ledger')}}" class="menu-link">
 				<i class="menu-icon tf-icons bx bx-list-check"></i>
 				<div data-i18n="Outstanding Ledger">Outstanding Ledger</div>
-			</a>
-		</li>
-
-		<li class="menu-item {{ request()->routeIs('admin.reports.party-report-by-item') ? 'active' : ''}}">
-			<a href="{{route('admin.reports.party-report-by-item')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-group"></i>
-				<div data-i18n="Party Report By Item">Party Report By Item</div>
 			</a>
 		</li>
 	</ul>

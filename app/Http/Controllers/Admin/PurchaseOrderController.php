@@ -9,6 +9,7 @@ use App\Models\Supplier;
 use App\Models\SparePart;
 use App\Models\SparePartStock;
 use App\Models\SparePartStockTransaction;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -456,20 +457,77 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'payment_mode' => 'nullable|string|max:255',
         ]);
 
         $amount = floatval($request->input('amount'));
+        $paymentMode = $request->input('payment_mode', 'Cash');
 
         if ($amount > $purchaseOrder->balance) {
             return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($purchaseOrder->balance, 2) . ')']);
         }
 
-        DB::transaction(function () use ($purchaseOrder, $amount) {
+        DB::transaction(function () use ($purchaseOrder, $amount, $paymentMode) {
             $purchaseOrder->received_amount += $amount;
             $purchaseOrder->balance -= $amount;
             $purchaseOrder->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'purchase',
+                'bill_type' => 'part_purchase',
+                'bill_id' => $purchaseOrder->id,
+                'party_type' => 'supplier',
+                'party_id' => $purchaseOrder->supplier_id,
+                'party_name' => $purchaseOrder->supplier->name ?? 'Supplier #' . $purchaseOrder->supplier_id,
+                'payment_date' => date('Y-m-d'),
+                'amount' => $amount,
+                'payment_mode' => $paymentMode,
+                'type' => 'payment',
+                'created_by' => auth()->id() ?? null,
+            ]);
         });
 
         return response()->json(['success' => true, 'message' => 'Payment received successfully.']);
+    }
+
+    public function rollbackPayment(Request $request, PurchaseOrder $purchaseOrder, PaymentTransaction $paymentTransaction)
+    {
+        $request->validate([
+            'rollback_reason' => 'required|string|max:255',
+        ]);
+
+        if ($paymentTransaction->bill_id != $purchaseOrder->id || $paymentTransaction->bill_type != 'part_purchase') {
+            return response()->json(['success' => false, 'message' => 'Invalid payment transaction for this purchase order.']);
+        }
+
+        if ($paymentTransaction->type === 'rollback' || $paymentTransaction->isRolledBack()) {
+            return response()->json(['success' => false, 'message' => 'This payment has already been rolled back.']);
+        }
+
+        $rollbackAmount = (float)$paymentTransaction->amount;
+
+        DB::transaction(function () use ($purchaseOrder, $paymentTransaction, $rollbackAmount, $request) {
+            $purchaseOrder->received_amount = max(0, $purchaseOrder->received_amount - $rollbackAmount);
+            $purchaseOrder->balance += $rollbackAmount;
+            $purchaseOrder->save();
+
+            PaymentTransaction::create([
+                'transaction_type' => 'purchase',
+                'bill_type' => 'part_purchase',
+                'bill_id' => $purchaseOrder->id,
+                'party_type' => 'supplier',
+                'party_id' => $purchaseOrder->supplier_id,
+                'party_name' => $purchaseOrder->supplier->name ?? 'Supplier #' . $purchaseOrder->supplier_id,
+                'payment_date' => date('Y-m-d'),
+                'amount' => -$rollbackAmount,
+                'payment_mode' => $paymentTransaction->payment_mode,
+                'type' => 'rollback',
+                'rollback_reason' => $request->input('rollback_reason'),
+                'reversed_payment_id' => $paymentTransaction->id,
+                'created_by' => auth()->id() ?? null,
+            ]);
+        });
+
+        return response()->json(['success' => true, 'message' => 'Payment rolled back successfully. Ledger and balance updated.']);
     }
 }
