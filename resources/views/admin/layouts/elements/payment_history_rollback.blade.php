@@ -3,6 +3,14 @@
         ->where('bill_id', $billId)
         ->orderBy('created_at', 'desc')
         ->get();
+
+    $rollbackRouteMap = [
+        'vehicle_sales' => 'admin.vehicle-sales-invoices.rollback-payment',
+        'part_sales' => 'admin.part-sales-invoices.rollback-payment',
+        'vehicle_purchase' => 'admin.vehicle-purchase-orders.rollback-payment',
+        'part_purchase' => 'admin.purchase-orders.rollback-payment',
+    ];
+    $rollbackRoute = $rollbackRouteMap[$billType] ?? 'admin.part-sales-invoices.rollback-payment';
 @endphp
 
 <div class="card shadow-sm mt-4">
@@ -53,7 +61,7 @@
                             <button type="button" class="btn btn-xs btn-outline-danger btn-rollback-modal" 
                                     data-payment-id="{{ $pay->id }}" 
                                     data-amount="{{ number_format($pay->amount, 2) }}"
-                                    data-url="{{ route('admin.' . str_replace('_', '-', $billType) . 's.rollback-payment', [$billId, $pay->id]) }}">
+                                    data-url="{{ route($rollbackRoute, [$billId, $pay->id]) }}">
                                 <i class="bx bx-undo me-1"></i> Rollback Payment
                             </button>
                         @elseif($pay->type === 'payment' && $pay->isRolledBack())
