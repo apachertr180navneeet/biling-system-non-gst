@@ -42,9 +42,9 @@ class User extends Authenticatable
 
     public function getAvatarFullPathAttribute()
     {
-        if ($this->avatar) {
+        if (!empty($this->avatar) && file_exists(public_path($this->avatar))) {
             return asset($this->avatar);
         }
-        return '';
+        return asset('assets/admin/img/avatars/1.png');
     }
 }

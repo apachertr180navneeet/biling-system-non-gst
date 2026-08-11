@@ -71,13 +71,9 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                @if($user->avatar)
-                                    <img src="{{asset($user->avatar)}}" class="user-image" id="user-image">
-                                @else
-                                    <img src="{{asset('assets/admin/img/avatars/1.png')}}" class="user-image" id="user-image">
-                                @endif
-                            </div>
+                             <div class="col-md-6">
+                                 <img src="{{ $user->avatar_full_path }}" class="user-image" id="user-image" alt="Profile Picture">
+                             </div>
                         </div>
                        
                         <div class="pt-4">
