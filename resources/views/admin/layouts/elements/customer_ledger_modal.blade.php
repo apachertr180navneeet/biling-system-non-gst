@@ -79,7 +79,7 @@ function fetchCustomerLedger(customerId, updatePreviousBalance = true) {
     $('#ledger_modal_content').hide();
 
     $.ajax({
-        url: '/admin/customers/' + customerId + '/ledger-api',
+        url: '{{ url('admin/customers') }}/' + customerId + '/ledger-api',
         type: 'GET',
         success: function(res) {
             if (res.success) {
@@ -98,7 +98,7 @@ function fetchCustomerLedger(customerId, updatePreviousBalance = true) {
                 $('#modal_total_billed').text('₹' + Number(res.summary.total_billed).toLocaleString('en-IN', {minimumFractionDigits: 2}));
                 $('#modal_total_paid').text('₹' + Number(res.summary.total_paid).toLocaleString('en-IN', {minimumFractionDigits: 2}));
                 $('#modal_outstanding').text('₹' + Number(res.summary.outstanding_balance).toLocaleString('en-IN', {minimumFractionDigits: 2}));
-                $('#modal_full_statement_link').attr('href', '/admin/customers/' + customerId + '/ledger');
+                $('#modal_full_statement_link').attr('href', '{{ url('admin/customers') }}/' + customerId + '/ledger');
 
                 var tbody = '';
                 if (res.history && res.history.length > 0) {

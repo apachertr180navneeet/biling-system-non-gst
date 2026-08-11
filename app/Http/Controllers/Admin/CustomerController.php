@@ -328,22 +328,37 @@ class CustomerController extends Controller
 
     public function ledgerApi(Request $request, Customer $customer)
     {
-        $vehicleInvoices = VehicleSalesInvoice::where('customer_id', $customer->id)
-            ->orWhere(function($q) use ($customer) {
-                $q->whereNull('customer_id')->where('customer_name', $customer->name);
+        $vehicleInvoices = VehicleSalesInvoice::where(function($q) use ($customer) {
+                $q->where('customer_id', $customer->id);
+                if (!empty($customer->name)) {
+                    $q->orWhere(function($subQ) use ($customer) {
+                        $subQ->whereNull('customer_id')->where('customer_name', $customer->name);
+                    });
+                }
             })
             ->orderBy('invoice_date', 'asc')
             ->get();
 
-        $partInvoices = PartSalesInvoice::where('customer_id', $customer->id)
-            ->orWhere(function($q) use ($customer) {
-                $q->whereNull('customer_id')->where('customer_name', $customer->name);
+        $partInvoices = PartSalesInvoice::where(function($q) use ($customer) {
+                $q->where('customer_id', $customer->id);
+                if (!empty($customer->name)) {
+                    $q->orWhere(function($subQ) use ($customer) {
+                        $subQ->whereNull('customer_id')->where('customer_name', $customer->name);
+                    });
+                }
             })
             ->orderBy('invoice_date', 'asc')
             ->get();
 
         $payments = PaymentTransaction::where('party_type', 'customer')
-            ->where('party_id', $customer->id)
+            ->where(function($q) use ($customer) {
+                $q->where('party_id', $customer->id);
+                if (!empty($customer->name)) {
+                    $q->orWhere(function($subQ) use ($customer) {
+                        $subQ->whereNull('party_id')->where('party_name', $customer->name);
+                    });
+                }
+            })
             ->orderBy('payment_date', 'asc')
             ->get();
 
@@ -351,13 +366,13 @@ class CustomerController extends Controller
         $totalPaid = 0;
 
         foreach ($vehicleInvoices as $v) {
-            $totalBilled += (float)$v->grand_total;
-            $totalPaid += (float)$v->received_amount;
+            $totalBilled += (float)($v->grand_total ?? 0);
+            $totalPaid += (float)($v->received_amount ?? 0);
         }
 
         foreach ($partInvoices as $p) {
-            $totalBilled += (float)$p->total_amount;
-            $totalPaid += (float)$p->received_amount;
+            $totalBilled += (float)($p->total_amount ?? 0);
+            $totalPaid += (float)($p->received_amount ?? 0);
         }
 
         $outstandingBalance = $totalBilled - $totalPaid;
@@ -365,49 +380,52 @@ class CustomerController extends Controller
         $history = [];
 
         foreach ($vehicleInvoices as $v) {
+            $vDate = !empty($v->invoice_date) ? (is_a($v->invoice_date, '\DateTimeInterface') ? $v->invoice_date : \Carbon\Carbon::parse($v->invoice_date)) : null;
             $history[] = [
-                'date' => $v->invoice_date ? $v->invoice_date->format('Y-m-d') : '',
-                'display_date' => $v->invoice_date ? $v->invoice_date->format('d-m-Y') : '',
+                'date' => $vDate ? $vDate->format('Y-m-d') : '',
+                'display_date' => $vDate ? $vDate->format('d-m-Y') : '',
                 'type' => 'Vehicle Invoice',
-                'doc_no' => $v->invoice_number,
-                'debit' => (float)$v->grand_total,
+                'doc_no' => $v->invoice_number ?? '',
+                'debit' => (float)($v->grand_total ?? 0),
                 'credit' => 0,
-                'received' => (float)$v->received_amount,
-                'balance' => (float)$v->balance,
-                'payment_mode' => $v->payment_mode,
-                'notes' => 'Vehicle Invoice #' . $v->invoice_number,
+                'received' => (float)($v->received_amount ?? 0),
+                'balance' => (float)($v->balance ?? 0),
+                'payment_mode' => $v->payment_mode ?? '',
+                'notes' => 'Vehicle Invoice #' . ($v->invoice_number ?? ''),
                 'view_url' => route('admin.vehicle-sales-invoices.show', $v->id),
             ];
         }
 
         foreach ($partInvoices as $p) {
+            $pDate = !empty($p->invoice_date) ? (is_a($p->invoice_date, '\DateTimeInterface') ? $p->invoice_date : \Carbon\Carbon::parse($p->invoice_date)) : null;
             $history[] = [
-                'date' => $p->invoice_date ? $p->invoice_date->format('Y-m-d') : '',
-                'display_date' => $p->invoice_date ? $p->invoice_date->format('d-m-Y') : '',
+                'date' => $pDate ? $pDate->format('Y-m-d') : '',
+                'display_date' => $pDate ? $pDate->format('d-m-Y') : '',
                 'type' => 'Part Invoice',
-                'doc_no' => $p->invoice_number,
-                'debit' => (float)$p->total_amount,
+                'doc_no' => $p->invoice_number ?? '',
+                'debit' => (float)($p->total_amount ?? 0),
                 'credit' => 0,
-                'received' => (float)$p->received_amount,
-                'balance' => (float)$p->balance,
-                'payment_mode' => $p->payment_mode,
-                'notes' => 'Part Invoice #' . $p->invoice_number,
+                'received' => (float)($p->received_amount ?? 0),
+                'balance' => (float)($p->balance ?? 0),
+                'payment_mode' => $p->payment_mode ?? '',
+                'notes' => 'Part Invoice #' . ($p->invoice_number ?? ''),
                 'view_url' => route('admin.part-sales-invoices.show', $p->id),
             ];
         }
 
         foreach ($payments as $pay) {
+            $payDate = !empty($pay->payment_date) ? (is_a($pay->payment_date, '\DateTimeInterface') ? $pay->payment_date : \Carbon\Carbon::parse($pay->payment_date)) : null;
             $history[] = [
-                'date' => $pay->payment_date ? $pay->payment_date->format('Y-m-d') : '',
-                'display_date' => $pay->payment_date ? $pay->payment_date->format('d-m-Y') : '',
+                'date' => $payDate ? $payDate->format('Y-m-d') : '',
+                'display_date' => $payDate ? $payDate->format('d-m-Y') : '',
                 'type' => $pay->type === 'rollback' ? 'Payment Rollback' : 'Payment Received',
                 'doc_no' => 'PAY-' . $pay->id,
-                'debit' => $pay->type === 'rollback' ? (float)abs($pay->amount) : 0,
-                'credit' => $pay->type === 'rollback' ? 0 : (float)$pay->amount,
-                'received' => (float)$pay->amount,
+                'debit' => $pay->type === 'rollback' ? (float)abs($pay->amount ?? 0) : 0,
+                'credit' => $pay->type === 'rollback' ? 0 : (float)($pay->amount ?? 0),
+                'received' => (float)($pay->amount ?? 0),
                 'balance' => 0,
-                'payment_mode' => $pay->payment_mode,
-                'notes' => $pay->type === 'rollback' ? 'Rollback: ' . ($pay->rollback_reason ?? 'Reversal') : 'Payment via ' . $pay->payment_mode,
+                'payment_mode' => $pay->payment_mode ?? '',
+                'notes' => $pay->type === 'rollback' ? 'Rollback: ' . ($pay->rollback_reason ?? 'Reversal') : 'Payment via ' . ($pay->payment_mode ?? 'Cash'),
                 'view_url' => '#',
             ];
         }
