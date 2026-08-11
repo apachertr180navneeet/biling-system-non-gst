@@ -8,9 +8,21 @@
 
     <!-- Outstanding Table Card -->
     <div class="card shadow-sm">
-        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
             <h5 class="card-title mb-0">Complete Party Outstanding Summary</h5>
-            <span class="badge bg-label-primary">{{ count($partyOutstandings) }} Party(ies)</span>
+            <div class="d-flex align-items-center gap-2">
+                <form method="GET" action="{{ route('admin.reports.party-wise-outstanding') }}" class="d-flex align-items-center gap-2">
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search party name or phone..." value="{{ $search }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                    @if($search)
+                    <a href="{{ route('admin.reports.party-wise-outstanding') }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                    @endif
+                </form>
+                <span class="badge bg-label-primary ms-2">{{ count($partyOutstandings) }} Party(ies)</span>
+            </div>
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table table-hover align-middle">

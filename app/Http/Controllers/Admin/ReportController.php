@@ -1217,25 +1217,66 @@ class ReportController extends Controller
 
     public function partyWiseOutstanding(Request $request)
     {
-        $search = $request->input('search');
+        $search = trim($request->input('search', ''));
 
-        $customers = Customer::orderBy('name')->get();
-        $suppliers = Supplier::orderBy('name')->get();
+        $customerQuery = Customer::orderBy('name');
+        if ($search !== '') {
+            $customerQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        $customers = $customerQuery->get();
+
+        $supplierQuery = Supplier::orderBy('name');
+        if ($search !== '') {
+            $supplierQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        $suppliers = $supplierQuery->get();
 
         $partyOutstandings = [];
 
         foreach ($customers as $c) {
-            $vBilled = VehicleSalesInvoice::where('customer_id', $c->id)->orWhere('customer_name', $c->name)->sum('grand_total');
-            $vPaid = VehicleSalesInvoice::where('customer_id', $c->id)->orWhere('customer_name', $c->name)->sum('received_amount');
+            $vBilled = (float) VehicleSalesInvoice::where('customer_id', $c->id)
+                ->orWhere(function($q) use ($c) {
+                    $q->whereNull('customer_id')->where('customer_name', $c->name);
+                })->sum('grand_total');
 
-            $pBilled = PartSalesInvoice::where('customer_id', $c->id)->orWhere('customer_name', $c->name)->sum('total_amount');
-            $pPaid = PartSalesInvoice::where('customer_id', $c->id)->orWhere('customer_name', $c->name)->sum('received_amount');
+            $pBilled = (float) PartSalesInvoice::where('customer_id', $c->id)
+                ->orWhere(function($q) use ($c) {
+                    $q->whereNull('customer_id')->where('customer_name', $c->name);
+                })->sum('total_amount');
+
+            // Payment transactions for customer
+            $paymentsReceived = (float) PaymentTransaction::where('party_type', 'customer')
+                ->where('party_id', $c->id)
+                ->where('type', 'payment')
+                ->sum('amount');
+
+            $paymentsRollback = (float) PaymentTransaction::where('party_type', 'customer')
+                ->where('party_id', $c->id)
+                ->where('type', 'rollback')
+                ->sum('amount');
+
+            // Initial invoice received_amounts if payment transactions were not created or only partially logged
+            $vPaid = (float) VehicleSalesInvoice::where('customer_id', $c->id)
+                ->orWhere(function($q) use ($c) {
+                    $q->whereNull('customer_id')->where('customer_name', $c->name);
+                })->sum('received_amount');
+
+            $pPaid = (float) PartSalesInvoice::where('customer_id', $c->id)
+                ->orWhere(function($q) use ($c) {
+                    $q->whereNull('customer_id')->where('customer_name', $c->name);
+                })->sum('received_amount');
 
             $totalBilled = $vBilled + $pBilled;
-            $totalPaid = $vPaid + $pPaid;
+            $totalPaid = max($vPaid + $pPaid, $paymentsReceived - $paymentsRollback);
             $balance = $totalBilled - $totalPaid;
 
-            if ($balance != 0 || $totalBilled > 0) {
+            if ($totalBilled > 0 || $totalPaid > 0 || abs($balance) > 0.001) {
                 $partyOutstandings[] = [
                     'id' => $c->id,
                     'type' => 'Customer',
@@ -1244,23 +1285,23 @@ class ReportController extends Controller
                     'total_billed' => $totalBilled,
                     'total_paid' => $totalPaid,
                     'outstanding' => $balance,
-                    'view_url' => route('admin.customers.ledger', $c->id),
+                    'view_url' => route('admin.reports.party-statement', ['party_id' => 'customer_' . $c->id]),
                 ];
             }
         }
 
         foreach ($suppliers as $s) {
-            $vPoTotal = VehiclePurchaseOrder::where('supplier_id', $s->id)->sum('total_amount');
-            $vPoPaid = VehiclePurchaseOrder::where('supplier_id', $s->id)->sum('received_amount');
+            $vPoTotal = (float) VehiclePurchaseOrder::where('supplier_id', $s->id)->sum('total_amount');
+            $vPoPaid = (float) VehiclePurchaseOrder::where('supplier_id', $s->id)->sum('received_amount');
 
-            $pPoTotal = PurchaseOrder::where('supplier_id', $s->id)->sum('total_amount');
-            $pPoPaid = PurchaseOrder::where('supplier_id', $s->id)->sum('received_amount');
+            $pPoTotal = (float) PurchaseOrder::where('supplier_id', $s->id)->sum('total_amount');
+            $pPoPaid = (float) PurchaseOrder::where('supplier_id', $s->id)->sum('received_amount');
 
             $totalBilled = $vPoTotal + $pPoTotal;
             $totalPaid = $vPoPaid + $pPoPaid;
             $balance = $totalBilled - $totalPaid;
 
-            if ($balance != 0 || $totalBilled > 0) {
+            if ($totalBilled > 0 || $totalPaid > 0 || abs($balance) > 0.001) {
                 $partyOutstandings[] = [
                     'id' => $s->id,
                     'type' => 'Supplier',
@@ -1269,7 +1310,7 @@ class ReportController extends Controller
                     'total_billed' => $totalBilled,
                     'total_paid' => $totalPaid,
                     'outstanding' => $balance,
-                    'view_url' => '#',
+                    'view_url' => route('admin.reports.party-statement', ['party_id' => 'supplier_' . $s->id]),
                 ];
             }
         }
