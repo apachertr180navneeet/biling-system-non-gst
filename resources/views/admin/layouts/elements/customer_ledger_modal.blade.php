@@ -67,9 +67,12 @@
 </div>
 
 <script>
-function fetchCustomerLedger(customerId) {
+function fetchCustomerLedger(customerId, updatePreviousBalance = true) {
     if (!customerId) {
-        $('#customer_ledger_card').hide();
+        $('#customer_ledger_card').slideUp();
+        if ($('#previous_balance').length > 0) {
+            $('#previous_balance').val('0.00').trigger('input');
+        }
         return;
     }
     $('#ledger_modal_loading').show();
@@ -85,8 +88,8 @@ function fetchCustomerLedger(customerId) {
                 $('#ledger_total_paid').text('₹' + Number(res.summary.total_paid).toLocaleString('en-IN', {minimumFractionDigits: 2}));
                 $('#ledger_outstanding').text('₹' + Number(res.summary.outstanding_balance).toLocaleString('en-IN', {minimumFractionDigits: 2}));
                 
-                if ($('#previous_balance').length > 0 && ($('#previous_balance').val() === '' || $('#previous_balance').val() == 0)) {
-                    $('#previous_balance').val(res.summary.outstanding_balance).trigger('input');
+                if ($('#previous_balance').length > 0 && updatePreviousBalance) {
+                    $('#previous_balance').val(Number(res.summary.outstanding_balance).toFixed(2)).trigger('input');
                 }
 
                 $('#customer_ledger_card').slideDown();
@@ -130,11 +133,12 @@ function fetchCustomerLedger(customerId) {
 $(document).ready(function() {
     $('#customer_select').on('change', function() {
         var custId = $(this).val();
-        fetchCustomerLedger(custId);
+        fetchCustomerLedger(custId, true);
     });
 
     if ($('#customer_select').val()) {
-        fetchCustomerLedger($('#customer_select').val());
+        var isEditMode = ($('input[name="_method"]').val() || '').toUpperCase() === 'PUT' || window.location.pathname.indexOf('/edit') !== -1;
+        fetchCustomerLedger($('#customer_select').val(), !isEditMode);
     }
 });
 </script>
