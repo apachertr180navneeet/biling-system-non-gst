@@ -106,8 +106,8 @@
                     }
                 }
                 </script>
-                @yield('script')
                 @include('admin.layouts.elements.sweet_alerts')
+                @yield('script')
             </div>
             <div class="layout-overlay layout-menu-toggle"></div>
         </div>

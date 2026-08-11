@@ -256,8 +256,8 @@
 <div class="modal fade" id="selectPartsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 1100px;">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-primary text-white py-3">
-                <h5 class="modal-title text-white fw-bold"><i class="bx bx-package me-2 fs-4"></i>Select Spare Parts</h5>
+            <div class="modal-header py-3" style="background: linear-gradient(135deg, #1e293b, #0f172a) !important;">
+                <h5 class="modal-title fw-bold" style="color: #ffffff !important;"><i class="bx bx-package me-2 fs-4" style="color: #818cf8 !important;"></i>Select Spare Parts</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
@@ -270,7 +270,7 @@
                     </div>
                     <div class="col-md-5 text-end">
                         <span class="badge bg-label-primary py-2 px-3 fs-6">
-                            <i class="bx bx-info-circle me-1"></i> Select items, adjust Qty & Rate, then click Add
+                            <i class="bx bx-info-circle me-1"></i> Enter Qty (> 0) for items to select, then click Add
                         </span>
                     </div>
                 </div>
@@ -279,22 +279,16 @@
                     <table class="table table-hover align-middle mb-0" id="modalPartsTable">
                         <thead style="position: sticky; top: 0; z-index: 100; background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
                             <tr class="text-uppercase small fw-bold text-secondary">
-                                <th style="width: 45px;" class="text-center bg-light">
-                                    <input type="checkbox" class="form-check-input" id="checkAllParts">
-                                </th>
                                 <th style="width: 160px;" class="bg-light">Part No.</th>
                                 <th class="bg-light">Part Name</th>
                                 <th style="width: 130px;" class="text-center bg-light">Stock Status</th>
                                 <th style="width: 130px;" class="bg-light">Rate (₹)</th>
-                                <th style="width: 100px;" class="text-center bg-light">Qty</th>
+                                <th style="width: 110px;" class="text-center bg-light">Qty</th>
                             </tr>
                         </thead>
                         <tbody id="modalPartsList" class="bg-white">
                             @foreach($spareParts as $p)
                             <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ e($p->name) }}" data-partno="{{ e($p->part_no ?? '') }}" data-hsn="{{ e($p->hsn_sac_code ?? '') }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
-                                <td class="text-center">
-                                    <input type="checkbox" class="form-check-input part-checkbox">
-                                </td>
                                 <td>
                                     <span class="fw-bold text-primary font-monospace">{{ $p->part_no }}</span>
                                 </td>
@@ -315,7 +309,7 @@
                                     <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;">
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="1" style="min-width: 85px;">
+                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="0" min="0" style="min-width: 85px;">
                                 </td>
                             </tr>
                             @endforeach
@@ -324,7 +318,202 @@
                 </div>
             </div>
             <div class="modal-footer bg-light d-flex justify-content-between py-3">
-                <span class="fw-bold text-secondary" id="selectedCountText">0 parts selected</span>
+                <span class="fw-bold text-secondary" id="selectedCountText">0 items selected (Qty > 0)</span>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary me-2 px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4 fw-bold" id="btnAddSelectedParts">
+                        <i class="bx bx-plus me-1 fs-5"></i> Add Selected Items to Invoice
+<h5 class="card-title text-primary mb-0">Invoice Items (Parts)</h5>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectPartsModal">
+                            <i class="bx bx-search-alt me-1"></i> Browse & Add Parts (Modal)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered align-middle" id="itemsTable">
+                        <thead>
+                            <tr class="table-dark">
+                                <th style="width: 45%;">Part Name / Number <span class="text-danger">*</span></th>
+                                <th style="width: 15%; text-align: center;">Stock Available</th>
+                                <th style="width: 10%; text-align: center;">Qty <span class="text-danger">*</span></th>
+                                <th style="width: 15%;">Rate <span class="text-danger">*</span></th>
+                                <th style="width: 10%;">Total Amount</th>
+                                <th style="width: 5%; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsContainer">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4 empty-msg">
+                                    <i class="bx bx-package me-1 fs-4"></i> No parts selected yet. Click <strong>"Browse & Add Parts (Modal)"</strong> above to select items.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-4">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectPartsModal">
+                        <i class="bx bx-search-alt me-1"></i> Browse & Add Parts (Modal)
+                    </button>
+                </div>
+
+                <h5 class="card-title text-primary mb-3">Payment Summary</h5>
+                <div class="row g-3 mb-4 bg-light p-3 rounded border border-light-subtle">
+                    <div class="col-md-3">
+                        <label class="form-label">Subtotal Amount (INR)</label>
+                        <input type="text" id="summary_taxable" class="form-control bg-white" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Round Off (INR)</label>
+                        <input type="text" id="summary_round" class="form-control bg-white" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Grand Total (INR)</label>
+                        <input type="text" id="summary_grand" class="form-control bg-white fw-bold text-success" readonly value="0.00">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Previous Balance (INR)</label>
+                        <input type="number" step="0.01" name="previous_balance" id="previous_balance" class="form-control" value="0.00" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Received Amount (INR) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="received_amount" id="received_amount" class="form-control fw-bold" value="0.00" required min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-danger">Current Balance (INR)</label>
+                        <input type="text" id="summary_current_balance" class="form-control bg-white fw-bold text-danger" readonly value="0.00">
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="bx bx-check"></i> Generate Invoice</button>
+                    <a href="{{ route('admin.part-sales-invoices.index') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Customer Modal -->
+<div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="quickAddCustomerForm" method="POST" action="javascript:void(0);">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Quick Add New Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="modalErrorAlert"></div>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" id="modal_name" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Mobile Number</label>
+                            <input type="text" name="phone" id="modal_phone" class="form-control" maxlength="10" placeholder="10 digits">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Type</label>
+                            <select name="type" id="modal_type" class="form-select no-select2">
+                                <option value="individual">Individual</option>
+                                <option value="corporate">Corporate</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">GSTIN (Optional)</label>
+                            <input type="text" name="gstin" id="modal_gstin" class="form-control" maxlength="15">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">PAN No (Optional)</label>
+                            <input type="text" name="pan_no" id="modal_pan_no" class="form-control" maxlength="10">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Billing Address</label>
+                            <textarea name="address" id="modal_address" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveCustomer">Save Customer</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Select Parts Modal -->
+<div class="modal fade" id="selectPartsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 1100px;">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header py-3" style="background: linear-gradient(135deg, #1e293b, #0f172a) !important;">
+                <h5 class="modal-title fw-bold" style="color: #ffffff !important;"><i class="bx bx-package me-2 fs-4" style="color: #818cf8 !important;"></i>Select Spare Parts</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3 mb-3 align-items-center">
+                    <div class="col-md-7">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-search fs-5"></i></span>
+                            <input type="text" id="modalPartSearch" class="form-control form-control-lg" placeholder="Type Part No, Name, or HSN Code to search...">
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-end">
+                        <span class="badge bg-label-primary py-2 px-3 fs-6">
+                            <i class="bx bx-info-circle me-1"></i> Enter Qty (> 0) for items to select, then click Add
+                        </span>
+                    </div>
+                </div>
+
+                <div class="table-responsive rounded border" style="max-height: 480px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" id="modalPartsTable">
+                        <thead style="position: sticky; top: 0; z-index: 100; background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+                            <tr class="text-uppercase small fw-bold text-secondary">
+                                <th style="width: 160px;" class="bg-light">Part No.</th>
+                                <th class="bg-light">Part Name</th>
+                                <th style="width: 130px;" class="text-center bg-light">Stock Status</th>
+                                <th style="width: 130px;" class="bg-light">Rate (₹)</th>
+                                <th style="width: 110px;" class="text-center bg-light">Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalPartsList" class="bg-white">
+                            @foreach($spareParts as $p)
+                            <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ e($p->name) }}" data-partno="{{ e($p->part_no ?? '') }}" data-hsn="{{ e($p->hsn_sac_code ?? '') }}" data-price="{{ $p->selling_price }}" data-stock="{{ $p->qty_available }}">
+                                <td>
+                                    <span class="fw-bold text-primary font-monospace">{{ $p->part_no }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-dark">{{ $p->name }}</span>
+                                    @if(!empty($p->hsn_sac_code))
+                                        <br><small class="text-muted">HSN: {{ $p->hsn_sac_code }}</small>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($p->qty_available > 0)
+                                        <span class="badge bg-label-success px-3 py-2 fw-bold">{{ $p->qty_available }} available</span>
+                                    @else
+                                        <span class="badge bg-label-danger px-3 py-2 fw-bold">Out of Stock</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->selling_price, 2, '.', '') }}" min="0" style="min-width: 100px;">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="0" min="0" style="min-width: 85px;">
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between py-3">
+                <span class="fw-bold text-secondary" id="selectedCountText">0 items selected (Qty > 0)</span>
                 <div>
                     <button type="button" class="btn btn-outline-secondary me-2 px-4" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary px-4 fw-bold" id="btnAddSelectedParts">
@@ -556,61 +745,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Modal Check All Checkbox
-    var checkAllParts = document.getElementById('checkAllParts');
-    if (checkAllParts) {
-        checkAllParts.addEventListener('change', function() {
-            var isChecked = this.checked;
-            var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
-            rows.forEach(function(row) {
-                var isHidden = row.classList.contains('d-none') || row.style.display === 'none' || window.getComputedStyle(row).display === 'none';
-                if (!isHidden) {
-                    var cb = row.querySelector('.part-checkbox');
-                    if (cb && !cb.disabled) {
-                        cb.checked = isChecked;
-                    }
-                }
-            });
-            updateSelectedCount();
-        });
-    }
-
-    document.querySelectorAll('#modalPartsList .part-checkbox').forEach(function(cb) {
-        cb.addEventListener('change', updateSelectedCount);
-    });
-
+    // Modal update selected count based on Qty > 0
     function updateSelectedCount() {
-        var count = document.querySelectorAll('#modalPartsList .part-checkbox:checked').length;
+        var count = 0;
+        document.querySelectorAll('#modalPartsList .modal-part-row').forEach(function(row) {
+            var qtyInput = row.querySelector('.modal-qty-input');
+            var val = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+            if (val > 0) {
+                count++;
+                row.classList.add('table-primary');
+            } else {
+                row.classList.remove('table-primary');
+            }
+        });
         var textEl = document.getElementById('selectedCountText');
         if (textEl) {
-            textEl.textContent = count + ' part(s) selected';
+            textEl.textContent = count + ' item(s) selected (Qty > 0)';
         }
     }
 
-    // Transfer Selected Items from Modal to Invoice Table
+    $(document).on('input change keyup', '#modalPartsList .modal-qty-input', updateSelectedCount);
+
+    // Transfer Selected Items (Qty > 0) from Modal to Invoice Table
     var btnAddSelectedParts = document.getElementById('btnAddSelectedParts');
     if (btnAddSelectedParts) {
         btnAddSelectedParts.addEventListener('click', function() {
-            var selectedCheckboxes = document.querySelectorAll('#modalPartsList .part-checkbox:checked');
-            if (selectedCheckboxes.length === 0) {
-                alert('Please select at least one spare part from the list.');
+            var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
+            var addedCount = 0;
+
+            rows.forEach(function(modalRow) {
+                var qtyInput = modalRow.querySelector('.modal-qty-input');
+                var qtyVal = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+                if (qtyVal > 0) {
+                    var partId = modalRow.getAttribute('data-id');
+                    var partNo = modalRow.getAttribute('data-partno');
+                    var partName = modalRow.getAttribute('data-name');
+                    var rateVal = parseFloat(modalRow.querySelector('.modal-rate-input').value) || 0;
+                    var stockVal = parseInt(modalRow.getAttribute('data-stock')) || 0;
+
+                    addPartRowFromModal(partId, partNo, partName, stockVal, rateVal, qtyVal);
+                    qtyInput.value = 0;
+                    modalRow.classList.remove('table-primary');
+                    addedCount++;
+                }
+            });
+
+            if (addedCount === 0) {
+                alert('Please enter a quantity greater than 0 for at least one item.');
                 return;
             }
 
-            selectedCheckboxes.forEach(function(cb) {
-                var modalRow = cb.closest('.modal-part-row');
-                var partId = modalRow.getAttribute('data-id');
-                var partNo = modalRow.getAttribute('data-partno');
-                var partName = modalRow.getAttribute('data-name');
-                var rateVal = parseFloat(modalRow.querySelector('.modal-rate-input').value) || 0;
-                var qtyVal = parseInt(modalRow.querySelector('.modal-qty-input').value) || 1;
-                var stockVal = parseInt(modalRow.getAttribute('data-stock')) || 0;
-
-                addPartRowFromModal(partId, partNo, partName, stockVal, rateVal, qtyVal);
-                cb.checked = false;
-            });
-
-            if (checkAllParts) checkAllParts.checked = false;
             updateSelectedCount();
 
             // Close modal
