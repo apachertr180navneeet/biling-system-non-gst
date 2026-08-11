@@ -70,40 +70,6 @@
                         <textarea id="customer_address" name="customer_address" class="form-control @error('customer_address') is-invalid @enderror" rows="2">{{ old('customer_address', $partSalesInvoice->customer_address) }}</textarea>
                         @error('customer_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-
-                    <!-- Customer Ledger Auto Summary Card -->
-                    <div id="customer_ledger_card" class="col-md-12 mt-3" style="display: none;">
-                        <div class="card border border-primary bg-label-primary shadow-xs">
-                            <div class="card-body p-3">
-                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                    <div>
-                                        <h6 class="mb-1 text-primary fw-bold">
-                                            <i class="bx bx-user-check me-1"></i> Customer Ledger Summary: <span id="ledger_cust_name" class="text-dark"></span>
-                                        </h6>
-                                        <div class="d-flex flex-wrap gap-4 mt-2">
-                                            <div>
-                                                <small class="text-muted d-block fw-semibold">Total Amount Billed</small>
-                                                <strong class="text-dark fs-6" id="ledger_total_billed">₹0.00</strong>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block fw-semibold">Total Paid / Deposited</small>
-                                                <strong class="text-success fs-6" id="ledger_total_paid">₹0.00</strong>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block fw-semibold">Outstanding Balance</small>
-                                                <strong class="text-danger fs-6" id="ledger_outstanding">₹0.00</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#customerLedgerModal">
-                                            <i class="bx bx-history me-1"></i> View Complete Ledger History
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <h5 class="card-title text-primary mb-3">Invoice Details</h5>
@@ -198,6 +164,39 @@
 
                 <h5 class="card-title text-primary mb-3">Payment Summary</h5>
                 <div class="row g-3 mb-4 bg-light p-3 rounded border border-light-subtle">
+                    <!-- Customer Ledger Auto Summary Card -->
+                    <div id="customer_ledger_card" class="col-md-12 mb-3" style="display: none;">
+                        <div class="card border border-primary bg-label-primary shadow-xs">
+                            <div class="card-body p-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <h6 class="mb-1 text-primary fw-bold">
+                                            <i class="bx bx-user-check me-1"></i> Customer Ledger Summary: <span id="ledger_cust_name" class="text-dark"></span>
+                                        </h6>
+                                        <div class="d-flex flex-wrap gap-4 mt-2">
+                                            <div>
+                                                <small class="text-muted d-block fw-semibold">Total Amount Billed</small>
+                                                <strong class="text-dark fs-6" id="ledger_total_billed">₹0.00</strong>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block fw-semibold">Total Paid / Deposited</small>
+                                                <strong class="text-success fs-6" id="ledger_total_paid">₹0.00</strong>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block fw-semibold">Outstanding Balance</small>
+                                                <strong class="text-danger fs-6" id="ledger_outstanding">₹0.00</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#customerLedgerModal">
+                                            <i class="bx bx-history me-1"></i> View Complete Ledger History
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label">Subtotal Amount (INR)</label>
                         <input type="text" id="summary_taxable" class="form-control bg-white" readonly value="{{ number_format($partSalesInvoice->taxable_amount, 2, '.', '') }}">
