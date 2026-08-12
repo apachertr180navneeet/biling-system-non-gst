@@ -283,7 +283,7 @@
                 <span class="meta-label">Invoice No:</span> <span class="meta-value">{{ $partSalesInvoice->invoice_number }}</span>
             </td>
             <td style="width: 50%; text-align: right;">
-                <span class="meta-label">Invoice Date:</span> <span class="meta-value">{{ $partSalesInvoice->invoice_date->format('d/m/Y g:i A') }}</span>
+                <span class="meta-label">Invoice Date:</span> <span class="meta-value">{{ $partSalesInvoice->invoice_date->format('d/m/Y') }}{{ $partSalesInvoice->created_at ? ' ' . $partSalesInvoice->created_at->format('h:i A') : '' }}</span>
             </td>
         </tr>
     </table>
