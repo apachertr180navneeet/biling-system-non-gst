@@ -48,11 +48,9 @@
                     <input type="date" name="custom_to" value="{{ $customTo ?? '' }}" class="form-control">
                 </div>
 
-                <div class="col-md-2 d-flex gap-2">
+                <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1"><i class="bx bx-filter-alt me-1"></i> Filter</button>
-                    @if(!empty($search) || !empty($itemType) || $dateFilter !== 'this_month')
-                        <a href="{{ route('admin.reports.item-sales-purchase-summary') }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bx bx-refresh"></i></a>
-                    @endif
+                    <a href="{{ route('admin.reports.item-sales-purchase-summary') }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bx bx-refresh me-1"></i> Reset</a>
                 </div>
             </form>
         </div>

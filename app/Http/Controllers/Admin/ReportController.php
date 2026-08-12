@@ -868,9 +868,9 @@ class ReportController extends Controller
                 $escaped = '%' . addcslashes($search, '%_') . '%';
                 $vmQuery->where(function($q) use ($escaped) {
                     $q->where('variant_name', 'like', $escaped)
-                      ->orWhere('model_name', 'like', $escaped)
                       ->orWhere('color_name', 'like', $escaped)
-                      ->orWhere('fuel_type', 'like', $escaped);
+                      ->orWhere('fuel_type', 'like', $escaped)
+                      ->orWhere('transmission', 'like', $escaped);
                 });
             }
             $vehicleMasters = $vmQuery->get();
