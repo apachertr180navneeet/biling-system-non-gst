@@ -1,26 +1,6 @@
 @extends('admin.layouts.app')
 @section('style')
 <style>
-.cust-hero-card {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
-    color: #ffffff;
-}
-.cust-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    font-weight: 700;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
 .stat-card-premium {
     border: 1px solid #e2e8f0;
     border-radius: 14px;
@@ -29,8 +9,8 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
 }
 .stat-card-premium:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 .stat-icon-box {
     width: 52px;
@@ -64,7 +44,7 @@
 .info-value {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #0f172a;
 }
 
 .table-custom thead th {
@@ -83,61 +63,35 @@
 .table-custom tbody tr:hover {
     background-color: #f1f5f9;
 }
-.badge-pill-custom {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-}
 </style>
 @endsection
 
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <!-- Top Hero Card -->
-    <div class="card cust-hero-card mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="cust-avatar">
-                        {{ strtoupper(substr($customer->name, 0, 1)) }}
-                    </div>
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h3 class="text-white fw-bold mb-0">{{ $customer->name }}</h3>
-                            <span class="badge bg-primary bg-opacity-75 text-white">
-                                {{ ucfirst($customer->type) }}
-                            </span>
-                            <span class="badge {{ $customer->is_active ? 'bg-success' : 'bg-secondary' }} bg-opacity-75 text-white">
-                                <i class="bx bx-radio-circle-marked me-1"></i>{{ $customer->is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center gap-3 text-white-50 fs-6">
-                            @if($customer->company_name)
-                                <span><i class="bx bx-building-house me-1 text-info"></i> {{ $customer->company_name }}</span>
-                            @endif
-                            <span><i class="bx bx-phone me-1 text-success"></i> {{ $customer->phone ?? 'N/A' }}</span>
-                            @if($customer->email)
-                                <span><i class="bx bx-envelope me-1 text-warning"></i> {{ $customer->email }}</span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <a href="{{ route('admin.reports.party-statement', ['party_id' => 'customer_' . $customer->id]) }}" class="btn btn-warning shadow-sm fw-semibold">
-                        <i class="bx bx-receipt me-1"></i> Party Statement Report
-                    </a>
-                    <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-light shadow-sm fw-semibold">
-                        <i class="bx bx-edit me-1"></i> Edit
-                    </a>
-                    <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-light">
-                        <i class="bx bx-arrow-back me-1"></i> Back
-                    </a>
-                </div>
+    <!-- Top Action Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold mb-1 text-dark">
+                <span class="text-muted fw-light">Admin / Customers /</span> {{ $customer->name }}
+            </h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-label-primary">{{ ucfirst($customer->type) }}</span>
+                <span class="badge {{ $customer->is_active ? 'bg-label-success' : 'bg-label-secondary' }}">
+                    <i class="bx bx-radio-circle-marked me-1"></i>{{ $customer->is_active ? 'Active' : 'Inactive' }}
+                </span>
             </div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ route('admin.reports.party-statement', ['party_id' => 'customer_' . $customer->id]) }}" class="btn btn-warning shadow-sm fw-semibold">
+                <i class="bx bx-receipt me-1"></i> Party Statement Report
+            </a>
+            <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-primary shadow-sm fw-semibold">
+                <i class="bx bx-edit me-1"></i> Edit Customer
+            </a>
+            <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i> Back
+            </a>
         </div>
     </div>
 
@@ -196,85 +150,45 @@
         </div>
     </div>
 
-    <!-- Customer Detailed Profile Info -->
+    <!-- Customer Profile Info Box -->
     <div class="card info-card-box mb-4">
         <div class="card-header bg-transparent border-bottom p-3 d-flex align-items-center justify-content-between">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bx bx-id-card me-2 text-primary"></i> Customer Details</h5>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bx bx-user me-2 text-primary"></i> Customer Profile Information</h5>
             <span class="badge bg-label-secondary">ID: #{{ $customer->id }}</span>
         </div>
         <div class="card-body p-4">
             <div class="row g-4">
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-user text-primary fs-4"></i>
-                        <div>
-                            <div class="info-label">Full Name</div>
-                            <div class="info-value">{{ $customer->name }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value text-dark fw-bold fs-6">{{ $customer->name }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-building-house text-info fs-4"></i>
-                        <div>
-                            <div class="info-label">Company Name</div>
-                            <div class="info-value">{{ $customer->company_name ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">Company Name</div>
+                    <div class="info-value text-dark">{{ $customer->company_name ?? '-' }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-phone text-success fs-4"></i>
-                        <div>
-                            <div class="info-label">Phone Number</div>
-                            <div class="info-value">{{ $customer->phone ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">Phone Number</div>
+                    <div class="info-value text-dark"><i class="bx bx-phone me-1 text-primary"></i>{{ $customer->phone ?? '-' }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-envelope text-warning fs-4"></i>
-                        <div>
-                            <div class="info-label">Email Address</div>
-                            <div class="info-value">{{ $customer->email ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">Email Address</div>
+                    <div class="info-value text-dark"><i class="bx bx-envelope me-1 text-info"></i>{{ $customer->email ?? '-' }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-map-pin text-danger fs-4"></i>
-                        <div>
-                            <div class="info-label">State</div>
-                            <div class="info-value">{{ $customer->state ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">State</div>
+                    <div class="info-value text-dark">{{ $customer->state ?? '-' }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-credit-card text-purple fs-4" style="color: #8b5cf6;"></i>
-                        <div>
-                            <div class="info-label">PAN Number</div>
-                            <div class="info-value">{{ $customer->pan_no ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">PAN Number</div>
+                    <div class="info-value text-dark">{{ $customer->pan_no ?? '-' }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-card text-secondary fs-4"></i>
-                        <div>
-                            <div class="info-label">Aadhaar Number</div>
-                            <div class="info-value">{{ $customer->aadhaar_no ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">Aadhaar Number</div>
+                    <div class="info-value text-dark">{{ $customer->aadhaar_no ?? '-' }}</div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bx bx-home text-dark fs-4"></i>
-                        <div>
-                            <div class="info-label">Address</div>
-                            <div class="info-value">{{ $customer->address ?? '-' }}</div>
-                        </div>
-                    </div>
+                    <div class="info-label">Address</div>
+                    <div class="info-value text-dark">{{ $customer->address ?? '-' }}</div>
                 </div>
             </div>
         </div>
