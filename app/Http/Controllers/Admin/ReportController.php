@@ -1109,6 +1109,16 @@ class ReportController extends Controller
     public function partyStatement(Request $request)
     {
         $partySelect = $request->input('party_id');
+        if (!$partySelect && $request->has('customer_id')) {
+            $partySelect = 'customer_' . $request->input('customer_id');
+        }
+        if (!$partySelect && $request->has('supplier_id')) {
+            $partySelect = 'supplier_' . $request->input('supplier_id');
+        }
+        if ($partySelect && is_numeric($partySelect)) {
+            $partySelect = 'customer_' . $partySelect;
+        }
+
         $dateFilter = $request->input('date_filter', 'this_month');
         $customFrom = $request->input('custom_from');
         $customTo = $request->input('custom_to');
@@ -1117,8 +1127,8 @@ class ReportController extends Controller
         $fromDate = $dates['from'];
         $toDate = $dates['to'];
 
-        $customers = Customer::where('is_active', true)->orderBy('name')->get();
-        $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
+        $customers = Customer::orderBy('name')->get();
+        $suppliers = Supplier::orderBy('name')->get();
 
         $partyList = [];
         foreach ($customers as $c) {

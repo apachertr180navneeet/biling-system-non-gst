@@ -122,9 +122,16 @@ class CustomerController extends Controller
         }
     }
 
-    public function show(Customer $customer)
+    public function show(Request $request, Customer $customer)
     {
-        return view('admin.customers.show', compact('customer'));
+        $apiResponse = $this->ledgerApi($request, $customer);
+        $data = $apiResponse->getData(true);
+
+        return view('admin.customers.show', [
+            'customer' => $customer,
+            'summary' => $data['summary'] ?? [],
+            'history' => $data['history'] ?? [],
+        ]);
     }
 
     public function edit(Customer $customer)

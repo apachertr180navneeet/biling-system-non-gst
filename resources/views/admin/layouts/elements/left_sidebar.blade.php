@@ -214,12 +214,6 @@
 			</a>
 		</li>
 
-		<li class="menu-item {{ request()->routeIs('admin.reports.party-statement') ? 'active' : ''}}">
-			<a href="{{route('admin.reports.party-statement')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-book-open"></i>
-				<div data-i18n="Party Statement (Ledger)">Party Statement (Ledger)</div>
-			</a>
-		</li>
 
 		<li class="menu-item {{ request()->routeIs('admin.reports.party-wise-outstanding') ? 'active' : ''}}">
 			<a href="{{route('admin.reports.party-wise-outstanding')}}" class="menu-link">
