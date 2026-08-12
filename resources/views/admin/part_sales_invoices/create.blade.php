@@ -24,6 +24,7 @@
                                 <option value="">-- New Customer / Walk-in --</option>
                                 @foreach($customers as $c)
                                 <option value="{{ $c->id }}" 
+                                        {{ (request('customer_id') == $c->id || (isset($selectedCustomerId) && $selectedCustomerId == $c->id) || old('customer_id') == $c->id) ? 'selected' : '' }}
                                         data-name="{{ $c->name }}"
                                         data-mobile="{{ $c->phone }}"
                                         data-address="{{ $c->address }}"
@@ -361,6 +362,10 @@ document.addEventListener('DOMContentLoaded', function() {
             customerPanInput.value = '';
         }
     });
+
+    if (customerSelect && customerSelect.value) {
+        $(customerSelect).trigger('change');
+    }
 
     var itemsContainer = document.getElementById('itemsContainer');
     var itemIndex = 0;

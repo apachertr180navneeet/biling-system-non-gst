@@ -16,6 +16,7 @@
                                 <option value="">-- New Customer / Walk-in --</option>
                                 @foreach($customers as $c)
                                 <option value="{{ $c->id }}" 
+                                        {{ (request('customer_id') == $c->id || old('customer_id') == $c->id) ? 'selected' : '' }}
                                         data-name="{{ $c->name }}"
                                         data-mobile="{{ $c->phone }}"
                                         data-address="{{ $c->address }}">
@@ -284,38 +285,42 @@ document.addEventListener('DOMContentLoaded', function() {
     var customerMobileInput = document.getElementById('customer_mobile');
     var customerAddressInput = document.getElementById('customer_address');
 
+    if (customerSelect) {
+        $(customerSelect).on('change', function() {
+            var opt = this.options[this.selectedIndex];
+            if (opt && opt.value) {
+                customerNameInput.value = opt.getAttribute('data-name') || '';
+                customerMobileInput.value = opt.getAttribute('data-mobile') || '';
+                customerAddressInput.value = opt.getAttribute('data-address') || '';
+            }
+        });
+
+        if (customerSelect.value) {
+            $(customerSelect).trigger('change');
+        }
+    }
+
     var paymentModeSelect = document.getElementById('payment_mode');
     var financeNameDiv = document.getElementById('finance_name_div');
     var financeNameSelect = document.getElementById('finance_name');
 
-    paymentModeSelect.addEventListener('change', function() {
-        if (this.value === 'Finance') {
+    if (paymentModeSelect) {
+        paymentModeSelect.addEventListener('change', function() {
+            if (this.value === 'Finance') {
+                financeNameDiv.classList.remove('d-none');
+                financeNameSelect.setAttribute('required', 'required');
+            } else {
+                financeNameDiv.classList.add('d-none');
+                financeNameSelect.removeAttribute('required');
+                financeNameSelect.value = '';
+            }
+        });
+
+        if (paymentModeSelect.value === 'Finance') {
             financeNameDiv.classList.remove('d-none');
             financeNameSelect.setAttribute('required', 'required');
-        } else {
-            financeNameDiv.classList.add('d-none');
-            financeNameSelect.removeAttribute('required');
-            financeNameSelect.value = '';
         }
-    });
-
-    if (paymentModeSelect.value === 'Finance') {
-        financeNameDiv.classList.remove('d-none');
-        financeNameSelect.setAttribute('required', 'required');
     }
-    
-    $(customerSelect).on('change', function() {
-        var opt = this.options[this.selectedIndex];
-        if (opt && opt.value) {
-            customerNameInput.value = opt.getAttribute('data-name') || '';
-            customerMobileInput.value = opt.getAttribute('data-mobile') || '';
-            customerAddressInput.value = opt.getAttribute('data-address') || '';
-        } else {
-            customerNameInput.value = '';
-            customerMobileInput.value = '';
-            customerAddressInput.value = '';
-        }
-    });
 
     var vehicleSelect = document.getElementById('vehicle_select');
     var detailsCard = document.getElementById('vehicle_details_card');
@@ -330,53 +335,56 @@ document.addEventListener('DOMContentLoaded', function() {
     var lblManualNo = document.getElementById('lbl_manual_no');
     var lblBatteryType = document.getElementById('lbl_battery_type');
     var lblBatteryMake = document.getElementById('lbl_battery_make');
-    var rateInput = document.getElementById('rate');
-
-    $(vehicleSelect).on('change', function() {
-        var opt = this.options[this.selectedIndex];
-        if (opt && opt.value) {
-            lblDesc.textContent = opt.getAttribute('data-desc') || '-';
-            lblChassis.textContent = opt.getAttribute('data-chassis') || '-';
-            lblMotor.textContent = opt.getAttribute('data-motor') || '-';
-            lblBatteryNo.textContent = opt.getAttribute('data-battery-no') || '-';
-            lblChargerNo.textContent = opt.getAttribute('data-charger-no') || '-';
-            lblControllerNo.textContent = opt.getAttribute('data-controller-no') || '-';
-            lblConvertorNo.textContent = opt.getAttribute('data-convertor-no') || '-';
-            lblManualNo.textContent = opt.getAttribute('data-manual-no') || '-';
-            lblBatteryType.textContent = opt.getAttribute('data-battery-type') || '-';
-            lblBatteryMake.textContent = opt.getAttribute('data-battery-make') || '-';
-            rateInput.value = opt.getAttribute('data-rate') || '0';
-            rateInput.dataset.enteredRate = rateInput.value;
-            
-            detailsCard.classList.remove('d-none');
-        } else {
-            detailsCard.classList.add('d-none');
-            rateInput.value = '0';
-            rateInput.dataset.enteredRate = '0';
-        }
-        calculateInvoice();
-    });
-
     var rateInp = document.getElementById('rate');
+
+    if (vehicleSelect) {
+        $(vehicleSelect).on('change', function() {
+            var opt = this.options[this.selectedIndex];
+            if (opt && opt.value) {
+                if (lblDesc) lblDesc.textContent = opt.getAttribute('data-desc') || '-';
+                if (lblChassis) lblChassis.textContent = opt.getAttribute('data-chassis') || '-';
+                if (lblMotor) lblMotor.textContent = opt.getAttribute('data-motor') || '-';
+                if (lblBatteryNo) lblBatteryNo.textContent = opt.getAttribute('data-battery-no') || '-';
+                if (lblChargerNo) lblChargerNo.textContent = opt.getAttribute('data-charger-no') || '-';
+                if (lblControllerNo) lblControllerNo.textContent = opt.getAttribute('data-controller-no') || '-';
+                if (lblConvertorNo) lblConvertorNo.textContent = opt.getAttribute('data-convertor-no') || '-';
+                if (lblManualNo) lblManualNo.textContent = opt.getAttribute('data-manual-no') || '-';
+                if (lblBatteryType) lblBatteryType.textContent = opt.getAttribute('data-battery-type') || '-';
+                if (lblBatteryMake) lblBatteryMake.textContent = opt.getAttribute('data-battery-make') || '-';
+                if (rateInp) {
+                    rateInp.value = opt.getAttribute('data-rate') || '0';
+                    rateInp.dataset.enteredRate = rateInp.value;
+                }
+                if (detailsCard) detailsCard.classList.remove('d-none');
+            } else {
+                if (detailsCard) detailsCard.classList.add('d-none');
+                if (rateInp) {
+                    rateInp.value = '0';
+                    rateInp.dataset.enteredRate = '0';
+                }
+            }
+            if (typeof calculateInvoice === 'function') calculateInvoice();
+        });
+    }
+
     var nemmpInp = document.getElementById('nemmp_incentive');
     var discountInp = document.getElementById('discount');
-    
     var subtotalOut = document.getElementById('subtotal_incl_gst');
     var grandTotalOut = document.getElementById('grand_total');
 
     function calculateInvoice() {
-        var subtotal = parseFloat(rateInp.value) || 0;
-        var nemmp = parseFloat(nemmpInp.value) || 0;
-        var discount = parseFloat(discountInp.value) || 0;
+        var subtotal = parseFloat(rateInp ? rateInp.value : 0) || 0;
+        var nemmp = parseFloat(nemmpInp ? nemmpInp.value : 0) || 0;
+        var discount = parseFloat(discountInp ? discountInp.value : 0) || 0;
         var grand = subtotal - nemmp - discount;
 
-        subtotalOut.value = subtotal.toFixed(2);
-        grandTotalOut.value = grand.toFixed(2);
+        if (subtotalOut) subtotalOut.value = subtotal.toFixed(2);
+        if (grandTotalOut) grandTotalOut.value = grand.toFixed(2);
     }
 
-    rateInp.addEventListener('input', calculateInvoice);
-    nemmpInp.addEventListener('input', calculateInvoice);
-    discountInp.addEventListener('input', calculateInvoice);
+    if (rateInp) rateInp.addEventListener('input', calculateInvoice);
+    if (nemmpInp) nemmpInp.addEventListener('input', calculateInvoice);
+    if (discountInp) discountInp.addEventListener('input', calculateInvoice);
 
     var prevBalanceInp = document.getElementById('previous_balance');
     var receivedInp = document.getElementById('received_amount');
@@ -384,17 +392,17 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentBalanceOut = document.getElementById('current_balance');
 
     function calculatePayment() {
-        var grand = parseFloat(grandTotalOut.value) || 0;
-        var prev = parseFloat(prevBalanceInp.value) || 0;
-        var rec = parseFloat(receivedInp.value) || 0;
+        var grand = parseFloat(grandTotalOut ? grandTotalOut.value : 0) || 0;
+        var prev = parseFloat(prevBalanceInp ? prevBalanceInp.value : 0) || 0;
+        var rec = parseFloat(receivedInp ? receivedInp.value : 0) || 0;
         var bal = grand - rec;
         var curBal = prev + bal;
-        paymentBalanceOut.value = bal.toFixed(2);
-        currentBalanceOut.value = curBal.toFixed(2);
+        if (paymentBalanceOut) paymentBalanceOut.value = bal.toFixed(2);
+        if (currentBalanceOut) currentBalanceOut.value = curBal.toFixed(2);
     }
 
-    prevBalanceInp.addEventListener('input', calculatePayment);
-    receivedInp.addEventListener('input', calculatePayment);
+    if (prevBalanceInp) prevBalanceInp.addEventListener('input', calculatePayment);
+    if (receivedInp) receivedInp.addEventListener('input', calculatePayment);
 
     var origCalcInvoice = calculateInvoice;
     calculateInvoice = function() {
@@ -407,77 +415,79 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalErrorAlert = document.getElementById('modalErrorAlert');
     var saveCustomerBtn = document.getElementById('btnSaveCustomer');
     
-    quickAddForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        saveCustomerBtn.disabled = true;
-        saveCustomerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-        modalErrorAlert.classList.add('d-none');
-        
-        var formData = new FormData(this);
-        
-        fetch('{{ route("admin.customers.store") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json().then(data => ({ status: response.status, body: data })))
-        .then(res => {
-            saveCustomerBtn.disabled = false;
-            saveCustomerBtn.innerHTML = 'Save Customer';
+    if (quickAddForm) {
+        quickAddForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveCustomerBtn.disabled = true;
+            saveCustomerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            modalErrorAlert.classList.add('d-none');
             
-            if (res.status === 200 || res.status === 201) {
-                var customer = res.body.customer;
-                var fullName = customer.name;
-                
-                // Add new customer to select dropdown list
-                var option = document.createElement('option');
-                option.value = customer.id;
-                option.text = fullName + ' (' + customer.phone + ')';
-                option.setAttribute('data-name', fullName);
-                option.setAttribute('data-mobile', customer.phone);
-                option.setAttribute('data-address', customer.address || '');
-                
-                customerSelect.appendChild(option);
-                customerSelect.value = customer.id;
-                $(customerSelect).trigger('change.select2');
-                
-                // Trigger change event to populate input fields
-                var event = new Event('change');
-                customerSelect.dispatchEvent(event);
-                
-                // Close modal
-                var modalEl = document.getElementById('quickAddCustomerModal');
-                var modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (!modalInstance) {
-                    modalInstance = new bootstrap.Modal(modalEl);
+            var formData = new FormData(this);
+            
+            fetch('{{ route("admin.customers.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
-                modalInstance.hide();
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(res => {
+                saveCustomerBtn.disabled = false;
+                saveCustomerBtn.innerHTML = 'Save Customer';
                 
-                // Reset form
-                quickAddForm.reset();
-            } else {
-                var errorMsg = 'Error saving customer.';
-                if (res.body.errors) {
-                    errorMsg = Object.values(res.body.errors).flat().join('<br>');
-                } else if (res.body.message) {
-                    errorMsg = res.body.message;
+                if (res.status === 200 || res.status === 201) {
+                    var customer = res.body.customer;
+                    var fullName = customer.name;
+                    
+                    // Add new customer to select dropdown list
+                    var option = document.createElement('option');
+                    option.value = customer.id;
+                    option.text = fullName + ' (' + customer.phone + ')';
+                    option.setAttribute('data-name', fullName);
+                    option.setAttribute('data-mobile', customer.phone);
+                    option.setAttribute('data-address', customer.address || '');
+                    
+                    customerSelect.appendChild(option);
+                    customerSelect.value = customer.id;
+                    $(customerSelect).trigger('change.select2');
+                    
+                    // Trigger change event to populate input fields
+                    var event = new Event('change');
+                    customerSelect.dispatchEvent(event);
+                    
+                    // Close modal
+                    var modalEl = document.getElementById('quickAddCustomerModal');
+                    var modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (!modalInstance) {
+                        modalInstance = new bootstrap.Modal(modalEl);
+                    }
+                    modalInstance.hide();
+                    
+                    // Reset form
+                    quickAddForm.reset();
+                } else {
+                    var errorMsg = 'Error saving customer.';
+                    if (res.body.errors) {
+                        errorMsg = Object.values(res.body.errors).flat().join('<br>');
+                    } else if (res.body.message) {
+                        errorMsg = res.body.message;
+                    }
+                    modalErrorAlert.innerHTML = errorMsg;
+                    modalErrorAlert.classList.remove('d-none');
                 }
-                modalErrorAlert.innerHTML = errorMsg;
+            })
+            .catch(err => {
+                saveCustomerBtn.disabled = false;
+                saveCustomerBtn.innerHTML = 'Save Customer';
+                modalErrorAlert.textContent = 'Server connection error.';
                 modalErrorAlert.classList.remove('d-none');
-            }
-        })
-        .catch(err => {
-            saveCustomerBtn.disabled = false;
-            saveCustomerBtn.innerHTML = 'Save Customer';
-            modalErrorAlert.textContent = 'Server connection error.';
-            modalErrorAlert.classList.remove('d-none');
-            console.error(err);
+                console.error(err);
+            });
         });
-    });
+    }
 });
 </script>
 

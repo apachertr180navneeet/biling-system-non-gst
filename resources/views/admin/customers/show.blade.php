@@ -83,6 +83,12 @@
             </div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ route('admin.part-sales-invoices.create', ['customer_id' => $customer->id]) }}" class="btn btn-success shadow-sm fw-semibold">
+                <i class="bx bx-plus me-1"></i> Part Sales Invoice
+            </a>
+            <a href="{{ route('admin.vehicle-sales-invoices.create', ['customer_id' => $customer->id]) }}" class="btn btn-info shadow-sm fw-semibold">
+                <i class="bx bx-car me-1"></i> Vehicle Sales Invoice
+            </a>
             <a href="{{ route('admin.reports.party-statement', ['party_id' => 'customer_' . $customer->id]) }}" class="btn btn-warning shadow-sm fw-semibold">
                 <i class="bx bx-receipt me-1"></i> Party Statement Report
             </a>
