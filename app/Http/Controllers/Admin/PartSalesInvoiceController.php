@@ -642,30 +642,87 @@ class PartSalesInvoiceController extends Controller
         $customerId = $customer ? $customer->id : $invoice->customer_id;
 
         if ($customerId) {
-            $vInvoices = DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at');
-            $pInvoices = DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at');
-            
-            $vBilled = (float) $vInvoices->sum('grand_total');
-            $vPaid = (float) $vInvoices->sum('received_amount');
+            $vBilled = (float) DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('grand_total');
+            $vPaid = (float) DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('received_amount');
 
-            $pBilled = (float) $pInvoices->sum('total_amount');
-            $pPaid = (float) $pInvoices->sum('received_amount');
+            $pBilled = (float) DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('total_amount');
+            $pPaid = (float) DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('received_amount');
 
             $totalBilled = $vBilled + $pBilled;
             $totalPaid = $vPaid + $pPaid;
-            $outstanding = $totalBilled - $totalPaid;
+            $overallOutstanding = $totalBilled - $totalPaid;
+
+            $invDate = $invoice->invoice_date;
+            $invId = $invoice->id;
+
+            $vPriorBilled = (float) DB::table('vehicle_sales_invoices')
+                ->where('customer_id', $customerId)
+                ->whereNull('deleted_at')
+                ->where(function($q) use ($invDate, $invId) {
+                    $q->where('invoice_date', '<', $invDate)
+                      ->orWhere(function($q2) use ($invDate, $invId) {
+                          $q2->where('invoice_date', '=', $invDate)->where('id', '<', $invId);
+                      });
+                })->sum('grand_total');
+
+            $vPriorPaid = (float) DB::table('vehicle_sales_invoices')
+                ->where('customer_id', $customerId)
+                ->whereNull('deleted_at')
+                ->where(function($q) use ($invDate, $invId) {
+                    $q->where('invoice_date', '<', $invDate)
+                      ->orWhere(function($q2) use ($invDate, $invId) {
+                          $q2->where('invoice_date', '=', $invDate)->where('id', '<', $invId);
+                      });
+                })->sum('received_amount');
+
+            $pPriorBilled = (float) DB::table('part_sales_invoices')
+                ->where('customer_id', $customerId)
+                ->whereNull('deleted_at')
+                ->where(function($q) use ($invDate, $invId) {
+                    $q->where('invoice_date', '<', $invDate)
+                      ->orWhere(function($q2) use ($invDate, $invId) {
+                          $q2->where('invoice_date', '=', $invDate)->where('id', '<', $invId);
+                      });
+                })->sum('total_amount');
+
+            $pPriorPaid = (float) DB::table('part_sales_invoices')
+                ->where('customer_id', $customerId)
+                ->whereNull('deleted_at')
+                ->where(function($q) use ($invDate, $invId) {
+                    $q->where('invoice_date', '<', $invDate)
+                      ->orWhere(function($q2) use ($invDate, $invId) {
+                          $q2->where('invoice_date', '=', $invDate)->where('id', '<', $invId);
+                      });
+                })->sum('received_amount');
+
+            $priorOutstanding = max(0, ($vPriorBilled + $pPriorBilled) - ($vPriorPaid + $pPriorPaid));
         } else {
             $totalBilled = (float) $invoice->total_amount + (float) ($invoice->previous_balance ?? 0);
             $totalPaid = (float) $invoice->received_amount;
-            $outstanding = (float) ($invoice->current_balance ?? ($totalBilled - $totalPaid));
+            $overallOutstanding = (float) ($invoice->current_balance ?? ($totalBilled - $totalPaid));
+            $priorOutstanding = (float) ($invoice->previous_balance ?? 0);
         }
+
+        $previousBalance = (float) ($invoice->previous_balance ?? 0);
+        if ($previousBalance == 0 && $priorOutstanding > 0) {
+            $previousBalance = $priorOutstanding;
+        }
+
+        $currentInvAmount = (float) $invoice->total_amount;
+        $receivedAmount = (float) ($invoice->received_amount ?? 0);
+        $totalBillAmount = $currentInvAmount + $previousBalance;
+        $outstandingBalance = $totalBillAmount - $receivedAmount;
 
         return (object) [
             'customer_name' => $invoice->customer_name,
             'customer_id' => $customerId,
             'total_billed' => $totalBilled,
             'total_paid' => $totalPaid,
-            'outstanding_balance' => $outstanding,
+            'overall_outstanding' => $overallOutstanding,
+            'previous_balance' => $previousBalance,
+            'total_bill_amount' => $totalBillAmount,
+            'received_amount' => $receivedAmount,
+            'outstanding_balance' => $outstandingBalance,
         ];
     }
 }

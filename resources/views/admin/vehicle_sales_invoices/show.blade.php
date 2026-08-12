@@ -886,31 +886,35 @@
                         <table class="summary-table">
                             <tr>
                                 <td class="summary-label">Sub Total</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->sub_total, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="summary-label">Others</td>
-                                <td class="summary-value">0.00</td>
-                            </tr>
-                            <tr>
-                                <td class="summary-label">Total</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->total, 2) }}</td>
+                                <td class="summary-value">₹ {{ number_format($vehicleSalesInvoice->sub_total, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="summary-label" style="font-size: 11px;">Less :- NEMMP 2020</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->nemmp_incentive, 2) }}</td>
+                                <td class="summary-value">₹ {{ number_format($vehicleSalesInvoice->nemmp_incentive, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="summary-label">Discount</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->discount, 2) }}</td>
+                                <td class="summary-value">₹ {{ number_format($vehicleSalesInvoice->discount, 2) }}</td>
                             </tr>
                             <tr>
-                                <td class="summary-label">TOTAL DISC. (-)</td>
-                                <td class="summary-value">{{ number_format($vehicleSalesInvoice->nemmp_incentive + $vehicleSalesInvoice->discount, 2) }}</td>
+                                <td class="summary-label" style="font-weight: 600;">Current Invoice Grand Total</td>
+                                <td class="summary-value" style="font-weight: 600;">₹ {{ number_format($vehicleSalesInvoice->grand_total, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="summary-label">Previous Outstanding</td>
+                                <td class="summary-value">₹ {{ number_format($customerLedger->previous_balance ?? $vehicleSalesInvoice->previous_balance ?? 0, 2) }}</td>
                             </tr>
                             <tr class="summary-total-row">
-                                <td class="summary-total-label">G. Total</td>
-                                <td class="summary-total-value">{{ number_format($vehicleSalesInvoice->grand_total, 2) }}</td>
+                                <td class="summary-total-label">Total Bill Amount</td>
+                                <td class="summary-total-value">₹ {{ number_format($customerLedger->total_bill_amount ?? ($vehicleSalesInvoice->grand_total + ($vehicleSalesInvoice->previous_balance ?? 0)), 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="summary-label">Received Amount</td>
+                                <td class="summary-value" style="color: #059669; font-weight: 600;">₹ {{ number_format($customerLedger->received_amount ?? $vehicleSalesInvoice->received_amount ?? 0, 2) }}</td>
+                            </tr>
+                            <tr style="border-top: 1.5px solid #059669;">
+                                <td class="summary-total-label" style="color: #dc2626; padding-top: 5px;">Outstanding Balance</td>
+                                <td class="summary-total-value" style="color: #dc2626; padding-top: 5px;">₹ {{ number_format($customerLedger->outstanding_balance ?? $vehicleSalesInvoice->current_balance ?? (($vehicleSalesInvoice->previous_balance ?? 0) + $vehicleSalesInvoice->balance), 2) }}</td>
                             </tr>
                         </table>
                     </div>

@@ -734,41 +734,7 @@ if (!function_exists('getIndianRupeesInWords')) {
                     </div>
                 </div>
 
-                <!-- Customer Ledger Auto Summary Card -->
-                @if(isset($customerLedger))
-                <div class="card border border-primary bg-white shadow-xs mb-3">
-                    <div class="card-body p-3">
-                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <div>
-                                <h6 class="mb-1 text-primary fw-bold">
-                                    <i class="bx bx-user-check me-1"></i> Customer Ledger Summary: <span class="text-dark">{{ $customerLedger->customer_name }}</span>
-                                </h6>
-                                <div class="d-flex flex-wrap gap-4 mt-2">
-                                    <div>
-                                        <small class="text-muted d-block fw-semibold">Total Amount Billed</small>
-                                        <strong class="text-dark fs-6">₹{{ number_format($customerLedger->total_billed, 2) }}</strong>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block fw-semibold">Total Paid / Deposited</small>
-                                        <strong class="text-success fs-6">₹{{ number_format($customerLedger->total_paid, 2) }}</strong>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block fw-semibold">Outstanding Balance</small>
-                                        <strong class="text-danger fs-6">₹{{ number_format($customerLedger->outstanding_balance, 2) }}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            @if($customerLedger->customer_id)
-                            <div class="btn-print-group">
-                                <button type="button" class="btn btn-sm btn-primary shadow-sm" onclick="fetchCustomerLedger({{ $customerLedger->customer_id }}, false)" data-bs-toggle="modal" data-bs-target="#customerLedgerModal">
-                                    <i class="bx bx-history me-1"></i> View Complete Ledger History
-                                </button>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                @endif
+
 
                 <!-- Items Table -->
                 <table class="items-table">
@@ -852,19 +818,19 @@ if (!function_exists('getIndianRupeesInWords')) {
                                 </tr>
                                 <tr>
                                     <td class="summary-label">Previous Outstanding</td>
-                                    <td class="summary-value">₹ {{ number_format($partSalesInvoice->previous_balance ?? 0, 2) }}</td>
+                                    <td class="summary-value">₹ {{ number_format($customerLedger->previous_balance ?? $partSalesInvoice->previous_balance ?? 0, 2) }}</td>
                                 </tr>
                                 <tr class="summary-total-row">
                                     <td class="summary-total-label">Total Bill Amount</td>
-                                    <td class="summary-total-value">₹ {{ number_format($partSalesInvoice->total_amount + ($partSalesInvoice->previous_balance ?? 0), 2) }}</td>
+                                    <td class="summary-total-value">₹ {{ number_format($customerLedger->total_bill_amount ?? ($partSalesInvoice->total_amount + ($partSalesInvoice->previous_balance ?? 0)), 2) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="summary-label">Received Amount</td>
-                                    <td class="summary-value" style="color: #059669; font-weight: 600;">₹ {{ number_format($partSalesInvoice->received_amount ?? 0, 2) }}</td>
+                                    <td class="summary-value" style="color: #059669; font-weight: 600;">₹ {{ number_format($customerLedger->received_amount ?? $partSalesInvoice->received_amount ?? 0, 2) }}</td>
                                 </tr>
                                 <tr style="border-top: 1.5px solid #059669;">
                                     <td class="summary-total-label" style="color: #dc2626; padding-top: 5px;">Outstanding Balance</td>
-                                    <td class="summary-total-value" style="color: #dc2626; padding-top: 5px;">₹ {{ number_format($partSalesInvoice->current_balance ?? (($partSalesInvoice->previous_balance ?? 0) + $partSalesInvoice->balance), 2) }}</td>
+                                    <td class="summary-total-value" style="color: #dc2626; padding-top: 5px;">₹ {{ number_format($customerLedger->outstanding_balance ?? $partSalesInvoice->current_balance ?? (($partSalesInvoice->previous_balance ?? 0) + $partSalesInvoice->balance), 2) }}</td>
                                 </tr>
                             </table>
                         </div>
