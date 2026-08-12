@@ -1,19 +1,6 @@
 @extends('admin.layouts.app')
 @section('style')
 <style>
-.cust-avatar-sm {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: #ffffff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 15px;
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
-}
 .table-custom-index thead th {
     background-color: #f8fafc;
     color: #475569;
@@ -114,19 +101,12 @@
                     <tr>
                         <td class="fw-semibold text-muted">{{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}</td>
                         <td>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="cust-avatar-sm">
-                                    {{ strtoupper(substr($customer->name, 0, 1)) }}
-                                </div>
-                                <div>
-                                    <a href="{{ route('admin.customers.show', $customer) }}" class="fw-bold text-dark text-decoration-none hover-primary">
-                                        {{ $customer->name }}
-                                    </a>
-                                    @if($customer->company_name)
-                                        <div class="small text-muted"><i class="bx bx-building-house me-1"></i>{{ $customer->company_name }}</div>
-                                    @endif
-                                </div>
-                            </div>
+                            <a href="{{ route('admin.customers.show', $customer) }}" class="fw-semibold text-dark text-decoration-none">
+                                {{ $customer->name }}
+                            </a>
+                            @if($customer->company_name)
+                                <div class="small text-muted"><i class="bx bx-building-house me-1"></i>{{ $customer->company_name }}</div>
+                            @endif
                         </td>
                         <td>
                             <span class="badge {{ $customer->type === 'corporate' ? 'bg-label-info' : 'bg-label-secondary' }}">
@@ -145,9 +125,6 @@
                             <div class="d-inline-flex gap-1 action-btn-group">
                                 <a href="{{ route('admin.customers.show', $customer) }}" class="btn btn-sm btn-info" title="View Details">
                                     <i class="bx bx-show me-1"></i> View
-                                </a>
-                                <a href="{{ route('admin.reports.party-statement', ['party_id' => 'customer_' . $customer->id]) }}" class="btn btn-sm btn-warning" title="View Ledger Statement">
-                                    <i class="bx bx-receipt me-1"></i> Ledger
                                 </a>
                                 <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-primary" title="Edit Customer">
                                     <i class="bx bx-edit me-1"></i> Edit
