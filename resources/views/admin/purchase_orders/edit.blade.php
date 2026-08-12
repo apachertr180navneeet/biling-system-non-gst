@@ -174,7 +174,7 @@
                                     <input type="number" step="0.01" class="form-control form-control-sm modal-rate-input fw-semibold" value="{{ number_format($p->purchase_price, 2, '.', '') }}" min="0" style="min-width: 100px;">
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="0" min="0" style="min-width: 85px;">
+                                    <input type="number" class="form-control form-control-sm modal-qty-input text-center fw-bold" value="1" min="0" style="min-width: 85px;">
                                 </td>
                             </tr>
                             @endforeach
@@ -377,14 +377,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     var qtyInput = row.querySelector('.modal-qty-input');
                     if (cb && !cb.disabled) {
                         cb.checked = isChecked;
-                        if (qtyInput) {
-                            if (isChecked) {
-                                if ((parseInt(qtyInput.value) || 0) <= 0) {
-                                    qtyInput.value = 1;
-                                }
-                            } else {
-                                qtyInput.value = 0;
-                            }
+                        if (qtyInput && isChecked && (parseInt(qtyInput.value) || 0) <= 0) {
+                            qtyInput.value = 1;
                         }
                     }
                 }
@@ -400,10 +394,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.checked) {
             if (qtyInput && (parseInt(qtyInput.value) || 0) <= 0) {
                 qtyInput.value = 1;
-            }
-        } else {
-            if (qtyInput) {
-                qtyInput.value = 0;
             }
         }
         updateSelectedCount();
@@ -429,18 +419,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('#modalPartsList .modal-part-row').forEach(function(row) {
             var isHidden = row.classList.contains('d-none') || row.style.display === 'none';
             var cb = row.querySelector('.part-checkbox');
-            var qtyInput = row.querySelector('.modal-qty-input');
-            var val = parseInt(qtyInput ? qtyInput.value : 0) || 0;
 
             if (cb && cb.checked) {
                 count++;
                 row.classList.add('table-primary');
-            } else if (val > 0) {
-                if (cb) cb.checked = true;
-                count++;
-                row.classList.add('table-primary');
             } else {
-                if (cb) cb.checked = false;
                 row.classList.remove('table-primary');
             }
 
@@ -476,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var qtyVal = parseInt(qtyInput ? qtyInput.value : 0) || 0;
                 var isChecked = cb && cb.checked;
 
-                if (isChecked || qtyVal > 0) {
+                if (isChecked) {
                     if (qtyVal <= 0) qtyVal = 1;
                     var partId = modalRow.getAttribute('data-id');
                     var partNo = modalRow.getAttribute('data-partno');
@@ -484,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var priceVal = parseFloat(modalRow.querySelector('.modal-rate-input').value) || 0;
 
                     addPartRowFromModal(partId, partNo, partName, priceVal, qtyVal);
-                    if (qtyInput) qtyInput.value = 0;
+                    if (qtyInput) qtyInput.value = 1;
                     if (cb) cb.checked = false;
                     modalRow.classList.remove('table-primary');
                     addedCount++;
