@@ -812,79 +812,105 @@ class ReportController extends Controller
         $dateFilter = $request->input('date_filter', 'this_month');
         $customFrom = $request->input('custom_from');
         $customTo = $request->input('custom_to');
+        $search = trim($request->input('search', ''));
+        $itemType = $request->input('item_type');
 
         $dates = $this->getDateRange($dateFilter, $customFrom, $customTo);
         $fromDate = $dates['from'];
         $toDate = $dates['to'];
 
-        $parts = SparePart::where('is_active', true)->orderBy('name')->get();
         $summary = [];
 
-        foreach ($parts as $p) {
-            $salesQuery = \App\Models\PartSalesInvoiceItem::where('spare_part_id', $p->id)
-                ->whereHas('invoice', function($q) use ($fromDate, $toDate) {
-                    if ($fromDate) $q->whereDate('invoice_date', '>=', $fromDate);
-                    if ($toDate) $q->whereDate('invoice_date', '<=', $toDate);
+        if (empty($itemType) || $itemType === 'Spare Part') {
+            $partsQuery = SparePart::where('is_active', true)->orderBy('name');
+            if ($search !== '') {
+                $escaped = '%' . addcslashes($search, '%_') . '%';
+                $partsQuery->where(function($q) use ($escaped) {
+                    $q->where('name', 'like', $escaped)
+                      ->orWhere('part_no', 'like', $escaped);
                 });
-            $salesQty = (int)$salesQuery->sum('quantity');
-            $salesAmt = (float)$salesQuery->sum('amount');
+            }
+            $parts = $partsQuery->get();
 
-            $purQuery = \App\Models\PurchaseOrderItem::where('spare_part_id', $p->id)
-                ->whereHas('purchaseOrder', function($q) use ($fromDate, $toDate) {
-                    if ($fromDate) $q->whereDate('order_date', '>=', $fromDate);
-                    if ($toDate) $q->whereDate('order_date', '<=', $toDate);
-                });
-            $purQty = (int)$purQuery->sum('quantity');
-            $purAmt = (float)$purQuery->sum('total_price');
+            foreach ($parts as $p) {
+                $salesQuery = \App\Models\PartSalesInvoiceItem::where('spare_part_id', $p->id)
+                    ->whereHas('invoice', function($q) use ($fromDate, $toDate) {
+                        if ($fromDate) $q->whereDate('invoice_date', '>=', $fromDate);
+                        if ($toDate) $q->whereDate('invoice_date', '<=', $toDate);
+                    });
+                $salesQty = (int)$salesQuery->sum('quantity');
+                $salesAmt = (float)$salesQuery->sum('amount');
 
-            $summary[] = [
-                'type' => 'Spare Part',
-                'code' => $p->part_no ?? '-',
-                'name' => $p->name,
-                'sales_qty' => $salesQty,
-                'sales_amt' => $salesAmt,
-                'purchase_qty' => $purQty,
-                'purchase_amt' => $purAmt,
-                'net_qty' => $purQty - $salesQty,
-            ];
+                $purQuery = \App\Models\PurchaseOrderItem::where('spare_part_id', $p->id)
+                    ->whereHas('purchaseOrder', function($q) use ($fromDate, $toDate) {
+                        if ($fromDate) $q->whereDate('order_date', '>=', $fromDate);
+                        if ($toDate) $q->whereDate('order_date', '<=', $toDate);
+                    });
+                $purQty = (int)$purQuery->sum('quantity');
+                $purAmt = (float)$purQuery->sum('total_price');
+
+                $summary[] = [
+                    'type' => 'Spare Part',
+                    'code' => $p->part_no ?? '-',
+                    'name' => $p->name,
+                    'sales_qty' => $salesQty,
+                    'sales_amt' => $salesAmt,
+                    'purchase_qty' => $purQty,
+                    'purchase_amt' => $purAmt,
+                    'net_qty' => $purQty - $salesQty,
+                ];
+            }
         }
 
-        $vehicleMasters = VehicleMaster::where('is_active', true)->orderBy('variant_name')->get();
-        foreach ($vehicleMasters as $vm) {
-            $desc = $vm->variant_name . ($vm->color_name ? ' (' . $vm->color_name . ')' : '');
-
-            $vSalesQuery = VehicleSalesInvoice::whereHas('vehicleInventory', function($q) use ($vm) {
-                $q->where('vehicle_master_id', $vm->id)
-                  ->orWhere('vehicle_description', 'like', '%' . addcslashes($vm->variant_name, '%_') . '%');
-            });
-            if ($fromDate) $vSalesQuery->whereDate('invoice_date', '>=', $fromDate);
-            if ($toDate) $vSalesQuery->whereDate('invoice_date', '<=', $toDate);
-
-            $salesQty = (int)$vSalesQuery->count();
-            $salesAmt = (float)$vSalesQuery->sum('grand_total');
-
-            $vPoItems = \App\Models\VehiclePoItem::where('vehicle_master_id', $vm->id)
-                ->whereHas('vehiclePurchaseOrder', function($q) use ($fromDate, $toDate) {
-                    if ($fromDate) $q->whereDate('order_date', '>=', $fromDate);
-                    if ($toDate) $q->whereDate('order_date', '<=', $toDate);
+        if (empty($itemType) || $itemType === 'Vehicle') {
+            $vmQuery = VehicleMaster::where('is_active', true)->orderBy('variant_name');
+            if ($search !== '') {
+                $escaped = '%' . addcslashes($search, '%_') . '%';
+                $vmQuery->where(function($q) use ($escaped) {
+                    $q->where('variant_name', 'like', $escaped)
+                      ->orWhere('model_name', 'like', $escaped)
+                      ->orWhere('color_name', 'like', $escaped)
+                      ->orWhere('fuel_type', 'like', $escaped);
                 });
-            $purQty = (int)$vPoItems->sum('quantity');
-            $purAmt = (float)$vPoItems->sum('total_price');
+            }
+            $vehicleMasters = $vmQuery->get();
 
-            $summary[] = [
-                'type' => 'Vehicle',
-                'code' => $vm->fuel_type,
-                'name' => $desc,
-                'sales_qty' => $salesQty,
-                'sales_amt' => $salesAmt,
-                'purchase_qty' => $purQty,
-                'purchase_amt' => $purAmt,
-                'net_qty' => $purQty - $salesQty,
-            ];
+            foreach ($vehicleMasters as $vm) {
+                $desc = $vm->variant_name . ($vm->color_name ? ' (' . $vm->color_name . ')' : '');
+
+                $vSalesQuery = VehicleSalesInvoice::whereHas('vehicleInventory', function($q) use ($vm) {
+                    $q->where('vehicle_master_id', $vm->id)
+                      ->orWhere('vehicle_description', 'like', '%' . addcslashes($vm->variant_name, '%_') . '%');
+                });
+                if ($fromDate) $vSalesQuery->whereDate('invoice_date', '>=', $fromDate);
+                if ($toDate) $vSalesQuery->whereDate('invoice_date', '<=', $toDate);
+
+                $salesQty = (int)$vSalesQuery->count();
+                $salesAmt = (float)$vSalesQuery->sum('grand_total');
+
+                $vPoItems = \App\Models\VehiclePoItem::where('vehicle_description', 'like', '%' . addcslashes($vm->variant_name, '%_') . '%')
+                    ->whereHas('purchaseOrder', function($q) use ($fromDate, $toDate) {
+                        if ($fromDate) $q->whereDate('order_date', '>=', $fromDate);
+                        if ($toDate) $q->whereDate('order_date', '<=', $toDate);
+                    });
+                $purQty = (int)$vPoItems->sum('quantity');
+                $purAmt = (float)$vPoItems->sum('total_price');
+
+                $summary[] = [
+                    'type' => 'Vehicle',
+                    'code' => $vm->fuel_type,
+                    'name' => $desc,
+                    'sales_qty' => $salesQty,
+                    'sales_amt' => $salesAmt,
+                    'purchase_qty' => $purQty,
+                    'purchase_amt' => $purAmt,
+                    'net_qty' => $purQty - $salesQty,
+                ];
+            }
         }
 
         return view('admin.reports.item_sales_purchase_summary', compact(
-            'summary', 'dateFilter', 'customFrom', 'customTo'
+            'summary', 'dateFilter', 'customFrom', 'customTo', 'search', 'itemType'
         ));
     }
 
