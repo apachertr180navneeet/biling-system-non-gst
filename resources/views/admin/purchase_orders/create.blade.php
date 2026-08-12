@@ -117,7 +117,7 @@
                     </div>
                     <div class="col-md-5 text-end">
                         <span class="badge bg-label-primary py-2 px-3 fs-6">
-                            <i class="bx bx-info-circle me-1"></i> Enter Qty (> 0) for items to select, then click Add
+                            <i class="bx bx-info-circle me-1"></i> Select items using checkbox or enter Qty (> 0), then click Add
                         </span>
                     </div>
                 </div>
@@ -126,6 +126,9 @@
                     <table class="table table-hover align-middle mb-0" id="modalPartsTable">
                         <thead style="position: sticky; top: 0; z-index: 100; background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
                             <tr class="text-uppercase small fw-bold text-secondary">
+                                <th style="width: 45px;" class="text-center bg-light">
+                                    <input type="checkbox" id="checkAllParts" class="form-check-input" title="Select All Visible">
+                                </th>
                                 <th style="width: 160px;" class="bg-light">Part No.</th>
                                 <th class="bg-light">Part Name</th>
                                 <th style="width: 130px;" class="text-center bg-light">Current Stock</th>
@@ -136,6 +139,9 @@
                         <tbody id="modalPartsList" class="bg-white">
                             @foreach($spareParts as $p)
                             <tr class="modal-part-row" data-id="{{ $p->id }}" data-name="{{ e($p->name) }}" data-partno="{{ e($p->part_no ?? '') }}" data-hsn="{{ e($p->hsn_sac_code ?? '') }}" data-price="{{ $p->purchase_price }}">
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input part-checkbox">
+                                </td>
                                 <td>
                                     <span class="fw-bold text-primary font-monospace">{{ $p->part_no }}</span>
                                 </td>
@@ -322,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.setProperty('display', 'none', 'important');
             }
         });
+        updateSelectedCount();
     }
 
     $(document).on('input keyup search change clear', '#modalPartSearch', filterModalParts);
@@ -334,28 +341,106 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Modal update selected count based on Qty > 0
+    // Check All Checkbox Handler
+    var checkAllParts = document.getElementById('checkAllParts');
+    if (checkAllParts) {
+        checkAllParts.addEventListener('change', function() {
+            var isChecked = this.checked;
+            var rows = document.querySelectorAll('#modalPartsList .modal-part-row');
+            rows.forEach(function(row) {
+                var isHidden = row.classList.contains('d-none') || row.style.display === 'none';
+                if (!isHidden) {
+                    var cb = row.querySelector('.part-checkbox');
+                    var qtyInput = row.querySelector('.modal-qty-input');
+                    if (cb && !cb.disabled) {
+                        cb.checked = isChecked;
+                        if (qtyInput) {
+                            if (isChecked) {
+                                if ((parseInt(qtyInput.value) || 0) <= 0) {
+                                    qtyInput.value = 1;
+                                }
+                            } else {
+                                qtyInput.value = 0;
+                            }
+                        }
+                    }
+                }
+            });
+            updateSelectedCount();
+        });
+    }
+
+    // Individual Row Checkbox Change Handler
+    $(document).on('change', '#modalPartsList .part-checkbox', function() {
+        var row = this.closest('.modal-part-row');
+        var qtyInput = row.querySelector('.modal-qty-input');
+        if (this.checked) {
+            if (qtyInput && (parseInt(qtyInput.value) || 0) <= 0) {
+                qtyInput.value = 1;
+            }
+        } else {
+            if (qtyInput) {
+                qtyInput.value = 0;
+            }
+        }
+        updateSelectedCount();
+    });
+
+    // Individual Qty Input Change Handler
+    $(document).on('input change keyup', '#modalPartsList .modal-qty-input', function() {
+        var row = this.closest('.modal-part-row');
+        var cb = row.querySelector('.part-checkbox');
+        var val = parseInt(this.value || 0) || 0;
+        if (cb) {
+            cb.checked = (val > 0);
+        }
+        updateSelectedCount();
+    });
+
+    // Update Selected Count & Select All Checkbox Status
     function updateSelectedCount() {
         var count = 0;
+        var totalVisible = 0;
+        var checkedVisible = 0;
+
         document.querySelectorAll('#modalPartsList .modal-part-row').forEach(function(row) {
+            var isHidden = row.classList.contains('d-none') || row.style.display === 'none';
+            var cb = row.querySelector('.part-checkbox');
             var qtyInput = row.querySelector('.modal-qty-input');
             var val = parseInt(qtyInput ? qtyInput.value : 0) || 0;
-            if (val > 0) {
+
+            if (cb && cb.checked) {
+                count++;
+                row.classList.add('table-primary');
+            } else if (val > 0) {
+                if (cb) cb.checked = true;
                 count++;
                 row.classList.add('table-primary');
             } else {
+                if (cb) cb.checked = false;
                 row.classList.remove('table-primary');
             }
+
+            if (!isHidden) {
+                totalVisible++;
+                if (cb && cb.checked) {
+                    checkedVisible++;
+                }
+            }
         });
+
         var textEl = document.getElementById('selectedCountText');
         if (textEl) {
-            textEl.textContent = count + ' item(s) selected (Qty > 0)';
+            textEl.textContent = count + ' item(s) selected';
+        }
+
+        var checkAll = document.getElementById('checkAllParts');
+        if (checkAll) {
+            checkAll.checked = (totalVisible > 0 && checkedVisible === totalVisible);
         }
     }
 
-    $(document).on('input change keyup', '#modalPartsList .modal-qty-input', updateSelectedCount);
-
-    // Transfer Selected Items (Qty > 0) from Modal to Items Table
+    // Transfer Selected Items from Modal to Items Table
     var btnAddSelectedParts = document.getElementById('btnAddSelectedParts');
     if (btnAddSelectedParts) {
         btnAddSelectedParts.addEventListener('click', function() {
@@ -363,25 +448,33 @@ document.addEventListener('DOMContentLoaded', function() {
             var addedCount = 0;
 
             rows.forEach(function(modalRow) {
+                var cb = modalRow.querySelector('.part-checkbox');
                 var qtyInput = modalRow.querySelector('.modal-qty-input');
                 var qtyVal = parseInt(qtyInput ? qtyInput.value : 0) || 0;
-                if (qtyVal > 0) {
+                var isChecked = cb && cb.checked;
+
+                if (isChecked || qtyVal > 0) {
+                    if (qtyVal <= 0) qtyVal = 1;
                     var partId = modalRow.getAttribute('data-id');
                     var partNo = modalRow.getAttribute('data-partno');
                     var partName = modalRow.getAttribute('data-name');
                     var priceVal = parseFloat(modalRow.querySelector('.modal-rate-input').value) || 0;
 
                     addPartRowFromModal(partId, partNo, partName, priceVal, qtyVal);
-                    qtyInput.value = 0;
+                    if (qtyInput) qtyInput.value = 0;
+                    if (cb) cb.checked = false;
                     modalRow.classList.remove('table-primary');
                     addedCount++;
                 }
             });
 
             if (addedCount === 0) {
-                alert('Please enter a quantity greater than 0 for at least one item.');
+                alert('Please select at least one item using checkbox or enter a quantity greater than 0.');
                 return;
             }
+
+            var checkAll = document.getElementById('checkAllParts');
+            if (checkAll) checkAll.checked = false;
 
             updateSelectedCount();
 
