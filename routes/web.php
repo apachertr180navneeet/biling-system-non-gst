@@ -16,6 +16,9 @@ use App\Http\Controllers\Admin\VehicleMasterController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\FinanceMasterController;
 use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\SalarySlipController;
 
 
 /*
@@ -183,8 +186,24 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::get('reports/outstanding-ledger', [ReportController::class, 'outstandingLedger'])->name('reports.outstanding-ledger');
             Route::get('reports/party-report-by-item', [ReportController::class, 'partyReportByItem'])->name('reports.party-report-by-item');
             Route::get('reports/party-report-by-item/export-excel', [ReportController::class, 'exportPartyReportExcel'])->name('reports.party-report-by-item.export-excel');
-            Route::post('reports/party-report-by-item/email-excel', [ReportController::class, 'emailPartyReportExcel'])->name('reports.party-report-by-item.email-excel');
+            Route::get('reports/party-report-by-item/email-excel', [ReportController::class, 'emailPartyReportExcel'])->name('reports.party-report-by-item.email-excel');
             Route::get('reports/party-report-by-item/print-pdf', [ReportController::class, 'printPartyReportPdf'])->name('reports.party-report-by-item.print-pdf');
+
+            // Employee Master
+            Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+            Route::post('employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
+            Route::resource('employees', EmployeeController::class);
+
+            // Attendance Master
+            Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
+            Route::get('attendances/monthly-report', [AttendanceController::class, 'monthlyReport'])->name('attendances.monthly-report');
+            Route::post('attendances/save-bulk', [AttendanceController::class, 'saveBulk'])->name('attendances.save-bulk');
+            Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+
+            // Salary Slips
+            Route::get('salary-slips/calculate-api', [SalarySlipController::class, 'calculateApi'])->name('salary-slips.calculate-api');
+            Route::get('salary-slips/{salary_slip}/pdf', [SalarySlipController::class, 'pdf'])->name('salary-slips.pdf');
+            Route::resource('salary-slips', SalarySlipController::class)->except(['edit', 'update']);
     });
 });
 

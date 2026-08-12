@@ -105,6 +105,36 @@
 			</a>
 		</li>
 
+		<li class="menu-header small text-uppercase"><span class="menu-header-text">HR & Payroll</span></li>
+
+		<li class="menu-item {{ request()->routeIs('admin.employees.*') ? 'active' : ''}}">
+			<a href="{{route('admin.employees.index')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-id-card"></i>
+				<div data-i18n="Employee Master">Employee Master</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.attendances.index') ? 'active' : ''}}">
+			<a href="{{route('admin.attendances.index')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-calendar-check"></i>
+				<div data-i18n="Attendance Master">Attendance Master</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.attendances.monthly-report') ? 'active' : ''}}">
+			<a href="{{route('admin.attendances.monthly-report')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-calendar-event"></i>
+				<div data-i18n="Monthly Attendance">Monthly Attendance</div>
+			</a>
+		</li>
+
+		<li class="menu-item {{ request()->routeIs('admin.salary-slips.*') ? 'active' : ''}}">
+			<a href="{{route('admin.salary-slips.index')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-wallet"></i>
+				<div data-i18n="Salary Slips">Salary Slips</div>
+			</a>
+		</li>
+
 		<li class="menu-header small text-uppercase"><span class="menu-header-text">Inventory</span></li>
 
 		<li class="menu-item {{ request()->routeIs('admin.purchase-orders.*') ? 'active' : ''}}">

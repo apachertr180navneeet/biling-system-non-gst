@@ -64,6 +64,7 @@ class AdminAuthController extends Controller
             ]);
             $user = User::where('role','admin')->where('email',$request->email)->first();
             if($user && Auth::attempt($request->only("email", "password"))){
+                $this->markAutoAttendance(Auth::user());
                 return redirect()->route("admin.dashboard")->with("success", "Welcome to your dashboard.");
             }
             return back()->with("error","Invalid credentials");
@@ -410,6 +411,8 @@ class AdminAuthController extends Controller
             'total_sales' => $totalSalesData,
         ];
 
+        $this->markAutoAttendance(Auth::user());
+
         return view("admin.dashboard.index", compact(
             'totalCustomers',
             'vehicleInventoryCount', 'pendingVehiclePOs', 'lowStockCount', 'lowStockVehicleCount',
@@ -418,5 +421,39 @@ class AdminAuthController extends Controller
         ));
     }
 
+    private function markAutoAttendance($user)
+    {
+        try {
+            if (!$user) return;
 
+            $employee = \App\Models\Employee::where('user_id', $user->id)
+                ->orWhere(function ($q) use ($user) {
+                    if (!empty($user->email)) {
+                        $q->where('email', $user->email);
+                    }
+                })
+                ->where('is_active', true)
+                ->first();
+
+            if ($employee) {
+                $today = \Carbon\Carbon::today()->format('Y-m-d');
+                $exists = \App\Models\Attendance::where('employee_id', $employee->id)
+                    ->where('date', $today)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\Attendance::create([
+                        'employee_id' => $employee->id,
+                        'date' => $today,
+                        'status' => 'present',
+                        'check_in_time' => \Carbon\Carbon::now()->format('H:i:s'),
+                        'remarks' => 'Auto-marked on login',
+                        'created_by' => $user->id,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Auto attendance failed: ' . $e->getMessage());
+        }
+    }
 }
