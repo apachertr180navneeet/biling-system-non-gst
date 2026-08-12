@@ -345,7 +345,8 @@ class PartSalesInvoiceController extends Controller
     public function show(PartSalesInvoice $partSalesInvoice)
     {
         $partSalesInvoice->load('customer', 'items.sparePart');
-        return view('admin.part_sales_invoices.show', compact('partSalesInvoice'));
+        $customerLedger = $this->getCustomerLedgerSummary($partSalesInvoice);
+        return view('admin.part_sales_invoices.show', compact('partSalesInvoice', 'customerLedger'));
     }
 
     public function destroy(PartSalesInvoice $partSalesInvoice)
@@ -608,9 +609,11 @@ class PartSalesInvoiceController extends Controller
     public function generatePdf(Request $request, PartSalesInvoice $partSalesInvoice)
     {
         $partSalesInvoice->load('customer', 'items.sparePart');
+        $customerLedger = $this->getCustomerLedgerSummary($partSalesInvoice);
 
         $pdf = Pdf::loadView('admin.part_sales_invoices.pdf', [
             'partSalesInvoice' => $partSalesInvoice,
+            'customerLedger' => $customerLedger,
         ]);
         $pdf->setPaper('a4');
         $pdf->setOption('isRemoteEnabled', true);
@@ -627,5 +630,42 @@ class PartSalesInvoiceController extends Controller
         }
 
         return $pdf->download('Part-Invoice-' . $partSalesInvoice->invoice_number . '.pdf');
+    }
+
+    private function getCustomerLedgerSummary(PartSalesInvoice $invoice)
+    {
+        $customer = $invoice->customer;
+        if (!$customer && $invoice->customer_mobile) {
+            $customer = Customer::where('phone', $invoice->customer_mobile)->first();
+        }
+
+        $customerId = $customer ? $customer->id : $invoice->customer_id;
+
+        if ($customerId) {
+            $vInvoices = DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at');
+            $pInvoices = DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at');
+            
+            $vBilled = (float) $vInvoices->sum('grand_total');
+            $vPaid = (float) $vInvoices->sum('received_amount');
+
+            $pBilled = (float) $pInvoices->sum('total_amount');
+            $pPaid = (float) $pInvoices->sum('received_amount');
+
+            $totalBilled = $vBilled + $pBilled;
+            $totalPaid = $vPaid + $pPaid;
+            $outstanding = $totalBilled - $totalPaid;
+        } else {
+            $totalBilled = (float) $invoice->total_amount + (float) ($invoice->previous_balance ?? 0);
+            $totalPaid = (float) $invoice->received_amount;
+            $outstanding = (float) ($invoice->current_balance ?? ($totalBilled - $totalPaid));
+        }
+
+        return (object) [
+            'customer_name' => $invoice->customer_name,
+            'customer_id' => $customerId,
+            'total_billed' => $totalBilled,
+            'total_paid' => $totalPaid,
+            'outstanding_balance' => $outstanding,
+        ];
     }
 }

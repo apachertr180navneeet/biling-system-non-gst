@@ -206,19 +206,23 @@
                         <input type="text" id="summary_round" class="form-control bg-white" readonly value="{{ number_format($partSalesInvoice->round_off, 2, '.', '') }}">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Grand Total (INR)</label>
+                        <label class="form-label fw-bold">Current Invoice Total (INR)</label>
                         <input type="text" id="summary_grand" class="form-control bg-white fw-bold text-success" readonly value="{{ number_format($partSalesInvoice->total_amount, 2, '.', '') }}">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Previous Balance (INR)</label>
+                        <label class="form-label">Previous Outstanding (INR)</label>
                         <input type="number" step="0.01" name="previous_balance" id="previous_balance" class="form-control" value="{{ number_format($partSalesInvoice->previous_balance, 2, '.', '') }}" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-primary">Total Bill Amount (INR)</label>
+                        <input type="text" id="summary_total_bill" class="form-control bg-white fw-bold text-primary" readonly value="{{ number_format($partSalesInvoice->total_amount + $partSalesInvoice->previous_balance, 2, '.', '') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Received Amount (INR) <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" name="received_amount" id="received_amount" class="form-control fw-bold" value="{{ number_format($partSalesInvoice->received_amount, 2, '.', '') }}" required min="0">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold text-danger">Current Balance (INR)</label>
+                        <label class="form-label fw-bold text-danger">Outstanding Balance (INR)</label>
                         <input type="text" id="summary_current_balance" class="form-control bg-white fw-bold text-danger" readonly value="{{ number_format($partSalesInvoice->current_balance, 2, '.', '') }}">
                     </div>
                 </div>
@@ -500,6 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var summaryRound = document.getElementById('summary_round');
     var summaryGrand = document.getElementById('summary_grand');
     var prevBalanceInput = document.getElementById('previous_balance');
+    var summaryTotalBill = document.getElementById('summary_total_bill');
     var receivedAmountInput = document.getElementById('received_amount');
     var summaryCurrentBalance = document.getElementById('summary_current_balance');
 
@@ -526,8 +531,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var prevBal = parseFloat(prevBalanceInput.value) || 0;
         var received = parseFloat(receivedAmountInput.value) || 0;
-        var currentBal = prevBal + (grandTotalRounded - received);
+        var totalBill = grandTotalRounded + prevBal;
+        var currentBal = totalBill - received;
 
+        if (summaryTotalBill) {
+            summaryTotalBill.value = totalBill.toFixed(2);
+        }
         summaryCurrentBalance.value = currentBal.toFixed(2);
     }
 

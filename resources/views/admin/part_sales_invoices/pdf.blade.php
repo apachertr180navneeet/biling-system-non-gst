@@ -314,6 +314,30 @@
         </tr>
     </table>
 
+    @if(isset($customerLedger))
+    <div style="border: 1px solid #93c5fd; background-color: #eff6ff; padding: 6px 10px; margin-bottom: 12px; border-radius: 4px;">
+        <div style="font-size: 9.5px; font-weight: bold; color: #1d4ed8; margin-bottom: 4px; text-transform: uppercase;">
+            Customer Ledger Summary: <span style="color: #0f172a;">{{ $customerLedger->customer_name }}</span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+            <tr>
+                <td style="width: 33%;">
+                    <span style="color: #64748b; display: block; font-size: 8px; font-weight: bold;">TOTAL AMOUNT BILLED</span>
+                    <strong style="color: #0f172a; font-size: 10px;">₹ {{ number_format($customerLedger->total_billed, 2) }}</strong>
+                </td>
+                <td style="width: 33%;">
+                    <span style="color: #64748b; display: block; font-size: 8px; font-weight: bold;">TOTAL PAID / DEPOSITED</span>
+                    <strong style="color: #059669; font-size: 10px;">₹ {{ number_format($customerLedger->total_paid, 2) }}</strong>
+                </td>
+                <td style="width: 34%;">
+                    <span style="color: #64748b; display: block; font-size: 8px; font-weight: bold;">OUTSTANDING BALANCE</span>
+                    <strong style="color: #dc2626; font-size: 10px;">₹ {{ number_format($customerLedger->outstanding_balance, 2) }}</strong>
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+
     <table class="items-table">
         <thead>
             <tr>
@@ -372,9 +396,25 @@
                             <td class="summary-label">Round Off</td>
                             <td class="summary-value">₹ {{ number_format($partSalesInvoice->round_off, 2) }}</td>
                         </tr>
+                        <tr>
+                            <td class="summary-label" style="font-weight: bold;">Current Invoice Total</td>
+                            <td class="summary-value" style="font-weight: bold;">₹ {{ number_format($partSalesInvoice->total_amount, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="summary-label">Previous Outstanding</td>
+                            <td class="summary-value">₹ {{ number_format($partSalesInvoice->previous_balance ?? 0, 2) }}</td>
+                        </tr>
                         <tr class="summary-total-row">
-                            <td class="summary-label" style="font-weight: bold;">Total Amount</td>
-                            <td class="summary-value">₹ {{ number_format($partSalesInvoice->total_amount, 0) }}</td>
+                            <td class="summary-total-label" style="font-weight: bold;">Total Bill Amount</td>
+                            <td class="summary-value" style="font-weight: bold; font-size: 11px; text-align: right; color: #047857;">₹ {{ number_format($partSalesInvoice->total_amount + ($partSalesInvoice->previous_balance ?? 0), 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="summary-label">Received Amount</td>
+                            <td class="summary-value" style="color: #059669; font-weight: bold;">₹ {{ number_format($partSalesInvoice->received_amount ?? 0, 2) }}</td>
+                        </tr>
+                        <tr style="border-top: 1.5px solid #059669;">
+                            <td class="summary-label" style="font-weight: bold; color: #dc2626; padding-top: 3px;">Outstanding Balance</td>
+                            <td class="summary-value" style="font-weight: bold; font-size: 11px; color: #dc2626; padding-top: 3px;">₹ {{ number_format($partSalesInvoice->current_balance ?? (($partSalesInvoice->previous_balance ?? 0) + $partSalesInvoice->balance), 2) }}</td>
                         </tr>
                     </table>
                 </div>
