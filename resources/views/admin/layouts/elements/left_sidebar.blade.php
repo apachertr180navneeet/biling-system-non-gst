@@ -230,13 +230,6 @@
 			</a>
 		</li>
 
-		<li class="menu-item {{ request()->routeIs('admin.reports.receivable-ageing') ? 'active' : ''}}">
-			<a href="{{route('admin.reports.receivable-ageing')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-time-five"></i>
-				<div data-i18n="Receivable Ageing Report">Receivable Ageing Report</div>
-			</a>
-		</li>
-
 		<li class="menu-item {{ request()->routeIs('admin.reports.party-report-by-item') ? 'active' : ''}}">
 			<a href="{{route('admin.reports.party-report-by-item')}}" class="menu-link">
 				<i class="menu-icon tf-icons bx bx-group"></i>

@@ -119,7 +119,6 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::get('reports/rate-list', [ReportController::class, 'rateList'])->name('reports.rate-list');
             Route::get('reports/stock-detail-report', [ReportController::class, 'stockDetailReport'])->name('reports.stock-detail-report');
             Route::get('reports/stock-summary', [ReportController::class, 'stockSummary'])->name('reports.stock-summary');
-            Route::get('reports/receivable-ageing', [ReportController::class, 'receivableAgeing'])->name('reports.receivable-ageing');
             Route::get('reports/party-statement', [ReportController::class, 'partyStatement'])->name('reports.party-statement');
             Route::get('reports/party-wise-outstanding', [ReportController::class, 'partyWiseOutstanding'])->name('reports.party-wise-outstanding');
             Route::get('reports/sales-summary-category-wise', [ReportController::class, 'salesSummaryCategoryWise'])->name('reports.sales-summary-category-wise');

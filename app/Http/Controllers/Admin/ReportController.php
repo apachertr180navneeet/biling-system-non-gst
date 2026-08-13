@@ -999,68 +999,6 @@ class ReportController extends Controller
         ));
     }
 
-    public function receivableAgeing(Request $request)
-    {
-        $search = $request->input('search');
-
-        $vInvoices = VehicleSalesInvoice::with('customer')
-            ->where('balance', '>', 0)
-            ->orderBy('invoice_date', 'desc')
-            ->get();
-
-        $pInvoices = PartSalesInvoice::with('customer')
-            ->where('balance', '>', 0)
-            ->orderBy('invoice_date', 'desc')
-            ->get();
-
-        $ageingList = [];
-        $today = new \DateTime();
-
-        foreach ($vInvoices as $v) {
-            $invDate = new \DateTime($v->invoice_date->format('Y-m-d'));
-            $days = $today->diff($invDate)->days;
-            $bal = (float)$v->balance;
-
-            $ageingList[] = [
-                'type' => 'Vehicle Invoice',
-                'doc_no' => $v->invoice_number,
-                'date' => $v->invoice_date->format('d-m-Y'),
-                'party_name' => $v->customer_name,
-                'total_amount' => (float)$v->grand_total,
-                'received' => (float)$v->received_amount,
-                'balance' => $bal,
-                'days' => $days,
-                'b_0_30' => $days <= 30 ? $bal : 0,
-                'b_31_60' => ($days > 30 && $days <= 60) ? $bal : 0,
-                'b_61_90' => ($days > 60 && $days <= 90) ? $bal : 0,
-                'b_90_plus' => $days > 90 ? $bal : 0,
-            ];
-        }
-
-        foreach ($pInvoices as $p) {
-            $invDate = new \DateTime($p->invoice_date->format('Y-m-d'));
-            $days = $today->diff($invDate)->days;
-            $bal = (float)$p->balance;
-
-            $ageingList[] = [
-                'type' => 'Part Invoice',
-                'doc_no' => $p->invoice_number,
-                'date' => $p->invoice_date->format('d-m-Y'),
-                'party_name' => $p->customer_name,
-                'total_amount' => (float)$p->total_amount,
-                'received' => (float)$p->received_amount,
-                'balance' => $bal,
-                'days' => $days,
-                'b_0_30' => $days <= 30 ? $bal : 0,
-                'b_31_60' => ($days > 30 && $days <= 60) ? $bal : 0,
-                'b_61_90' => ($days > 60 && $days <= 90) ? $bal : 0,
-                'b_90_plus' => $days > 90 ? $bal : 0,
-            ];
-        }
-
-        return view('admin.reports.receivable_ageing', compact('ageingList', 'search'));
-    }
-
     public function partyStatement(Request $request)
     {
         $partySelect = $request->input('party_id');
