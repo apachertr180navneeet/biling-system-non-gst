@@ -244,14 +244,6 @@
 			</a>
 		</li>
 
-
-		<li class="menu-item {{ request()->routeIs('admin.reports.party-wise-outstanding') ? 'active' : ''}}">
-			<a href="{{route('admin.reports.party-wise-outstanding')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-user-voice"></i>
-				<div data-i18n="Party Wise Outstanding">Party Wise Outstanding</div>
-			</a>
-		</li>
-
 		<li class="menu-item {{ request()->routeIs('admin.reports.sales-summary-category-wise') ? 'active' : ''}}">
 			<a href="{{route('admin.reports.sales-summary-category-wise')}}" class="menu-link">
 				<i class="menu-icon tf-icons bx bx-bar-chart-square"></i>
