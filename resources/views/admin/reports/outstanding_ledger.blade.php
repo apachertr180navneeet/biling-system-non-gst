@@ -131,7 +131,27 @@
                                 @endif
                             </td>
                             <td>
-                                <strong>{{ $item->doc_number }}</strong>
+                                @if($tab === 'sales')
+                                    @if($item->sub_type === 'vehicle')
+                                        <a href="{{ route('admin.vehicle-sales-invoices.show', $item->id) }}" class="fw-bold text-primary">
+                                            {{ $item->doc_number }}
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.part-sales-invoices.show', $item->id) }}" class="fw-bold text-primary">
+                                            {{ $item->doc_number }}
+                                        </a>
+                                    @endif
+                                @else
+                                    @if($item->sub_type === 'vehicle')
+                                        <a href="{{ route('admin.vehicle-purchase-orders.show', $item->id) }}" class="fw-bold text-primary">
+                                            {{ $item->doc_number }}
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.purchase-orders.show', $item->id) }}" class="fw-bold text-primary">
+                                            {{ $item->doc_number }}
+                                        </a>
+                                    @endif
+                                @endif
                             </td>
                             <td>
                                 <span class="badge bg-label-{{ $item->sub_type === 'vehicle' ? 'info' : 'warning' }}">
