@@ -5,13 +5,34 @@
         text-align: center;
         font-weight: bold;
         font-size: 0.8rem;
-        padding: 4px !important;
-        min-width: 28px;
+        padding: 4px 2px !important;
+        min-width: 30px;
+        vertical-align: middle;
     }
-    .badge-P { background-color: #28a745; color: white; }
-    .badge-A { background-color: #dc3545; color: white; }
-    .badge-HD { background-color: #ffc107; color: black; }
-    .badge-L { background-color: #17a2b8; color: white; }
+    .att-cell.badge-P {
+        background-color: #28a745 !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+    }
+    .att-cell.badge-A {
+        background-color: #dc3545 !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+    }
+    .att-cell.badge-HD {
+        background-color: #ffc107 !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+    }
+    .att-cell.badge-L {
+        background-color: #17a2b8 !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+    }
+    .table th.bg-success { background-color: #28a745 !important; color: #ffffff !important; box-shadow: none !important; }
+    .table th.bg-danger { background-color: #dc3545 !important; color: #ffffff !important; box-shadow: none !important; }
+    .table th.bg-warning { background-color: #ffc107 !important; color: #000000 !important; box-shadow: none !important; }
+    .table th.bg-info { background-color: #17a2b8 !important; color: #ffffff !important; box-shadow: none !important; }
 </style>
 @endsection
 
@@ -88,7 +109,7 @@
                     <tr>
                         <td>
                             <strong>{{ $emp->full_name }}</strong>
-                            <div class="text-muted small">{{ $emp->employee_code }}</div>
+                            <div class="text-secondary small fw-semibold">{{ $emp->employee_code }}</div>
                         </td>
                         @for($d = 1; $d <= $daysInMonth; $d++)
                             @php
