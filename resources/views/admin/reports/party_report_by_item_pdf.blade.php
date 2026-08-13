@@ -97,37 +97,32 @@
         <thead>
             <tr>
                 <th>Party Name</th>
+                <th>Invoice No.</th>
                 <th class="text-center">Sales Qty</th>
                 <th class="text-right">Sales Amount</th>
-                <th class="text-center">Purchase Qty</th>
-                <th class="text-right">Purchase Amount</th>
             </tr>
         </thead>
         <tbody>
             @php
                 $totalSalesQty = 0;
                 $totalSalesAmt = 0;
-                $totalPurchaseQty = 0;
-                $totalPurchaseAmt = 0;
             @endphp
 
             @forelse($partyData as $row)
                 @php
                     $totalSalesQty += $row['sales_qty'];
                     $totalSalesAmt += $row['sales_amount'];
-                    $totalPurchaseQty += $row['purchase_qty'];
-                    $totalPurchaseAmt += $row['purchase_amount'];
+                    $invNumbers = !empty($row['invoices']) ? implode(', ', array_column($row['invoices'], 'number')) : '-';
                 @endphp
                 <tr>
                     <td><strong>{{ $row['party_name'] }}</strong></td>
+                    <td>{{ $invNumbers }}</td>
                     <td class="text-center">{{ $row['sales_qty'] > 0 ? $row['sales_qty'] : '-' }}</td>
                     <td class="text-right">{{ $row['sales_amount'] > 0 ? '₹' . number_format($row['sales_amount'], 2) : '-' }}</td>
-                    <td class="text-center">{{ $row['purchase_qty'] > 0 ? $row['purchase_qty'] : '-' }}</td>
-                    <td class="text-right">{{ $row['purchase_amount'] > 0 ? '₹' . number_format($row['purchase_amount'], 2) : '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center" style="padding: 20px; color: #777;">
+                    <td colspan="4" class="text-center" style="padding: 20px; color: #777;">
                         No transactions found for the selected item.
                     </td>
                 </tr>
@@ -136,11 +131,9 @@
         @if(count($partyData) > 0)
             <tfoot>
                 <tr style="background-color: #f1f3f5; font-weight: bold;">
-                    <td>Total</td>
+                    <td colspan="2">Total</td>
                     <td class="text-center">{{ $totalSalesQty }}</td>
                     <td class="text-right">₹{{ number_format($totalSalesAmt, 2) }}</td>
-                    <td class="text-center">{{ $totalPurchaseQty }}</td>
-                    <td class="text-right">₹{{ number_format($totalPurchaseAmt, 2) }}</td>
                 </tr>
             </tfoot>
         @endif

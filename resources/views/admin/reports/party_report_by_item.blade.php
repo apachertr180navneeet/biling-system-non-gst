@@ -129,41 +129,43 @@
                 <thead class="table-light">
                     <tr>
                         <th>Party Name</th>
+                        <th>Invoice No.</th>
                         <th class="text-center">Sales Qty</th>
                         <th class="text-end">Sales Amount</th>
-                        <th class="text-center">Purchase Qty</th>
-                        <th class="text-end">Purchase Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     @php
                         $totalSalesQty = 0;
                         $totalSalesAmt = 0;
-                        $totalPurchaseQty = 0;
-                        $totalPurchaseAmt = 0;
                     @endphp
 
                     @forelse($partyData as $row)
                         @php
                             $totalSalesQty += $row['sales_qty'];
                             $totalSalesAmt += $row['sales_amount'];
-                            $totalPurchaseQty += $row['purchase_qty'];
-                            $totalPurchaseAmt += $row['purchase_amount'];
                         @endphp
                         <tr>
                             <td class="fw-bold text-dark">{{ $row['party_name'] }}</td>
+                            <td>
+                                @if(!empty($row['invoices']))
+                                    @foreach($row['invoices'] as $inv)
+                                        <a href="{{ $inv['url'] }}" target="_blank" class="badge bg-label-primary text-decoration-none me-1 mb-1" title="View Sales Invoice">
+                                            <i class="bx bx-file me-1"></i>{{ $inv['number'] }}
+                                        </a>
+                                    @endforeach
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td class="text-center">{{ $row['sales_qty'] > 0 ? $row['sales_qty'] : '-' }}</td>
                             <td class="text-end fw-semibold {{ $row['sales_amount'] > 0 ? 'text-success' : '' }}">
                                 {{ $row['sales_amount'] > 0 ? '₹' . number_format($row['sales_amount'], 2) : '-' }}
                             </td>
-                            <td class="text-center">{{ $row['purchase_qty'] > 0 ? $row['purchase_qty'] : '-' }}</td>
-                            <td class="text-end fw-semibold {{ $row['purchase_amount'] > 0 ? 'text-danger' : '' }}">
-                                {{ $row['purchase_amount'] > 0 ? '₹' . number_format($row['purchase_amount'], 2) : '-' }}
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
+                            <td colspan="4" class="text-center py-4 text-muted">
                                 <i class="bx bx-info-circle fs-3 d-block mb-1"></i>
                                 No transactions found for the selected item and date range.
                             </td>
@@ -173,11 +175,9 @@
                 @if(count($partyData) > 0)
                     <tfoot class="table-light border-top border-2">
                         <tr class="fw-bold fs-6">
-                            <td>Total</td>
+                            <td colspan="2">Total</td>
                             <td class="text-center">{{ $totalSalesQty }}</td>
                             <td class="text-end text-success">₹{{ number_format($totalSalesAmt, 2) }}</td>
-                            <td class="text-center">{{ $totalPurchaseQty }}</td>
-                            <td class="text-end text-danger">₹{{ number_format($totalPurchaseAmt, 2) }}</td>
                         </tr>
                     </tfoot>
                 @endif

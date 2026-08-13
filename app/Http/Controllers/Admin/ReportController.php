@@ -384,39 +384,16 @@ class ReportController extends Controller
                                 'party_name' => $inv->customer_name,
                                 'sales_qty' => 0,
                                 'sales_amount' => 0,
-                                'purchase_qty' => 0,
-                                'purchase_amount' => 0,
+                                'invoices' => [],
                             ];
                         }
                         $partyData[$party]['sales_qty'] += 1;
                         $partyData[$party]['sales_amount'] += (float)$inv->grand_total;
-                    }
-
-                    // Fetch Purchases
-                    $poQuery = VehiclePurchaseOrder::with(['items', 'supplier']);
-                    if ($fromDate) $poQuery->whereDate('order_date', '>=', $fromDate);
-                    if ($toDate) $poQuery->whereDate('order_date', '<=', $toDate);
-                    $poOrders = $poQuery->get();
-
-                    foreach ($poOrders as $po) {
-                        $supplierName = $po->supplier->name ?? 'SUPPLIER #' . $po->supplier_id;
-                        $party = strtoupper(trim($supplierName));
-
-                        foreach ($po->items as $item) {
-                            if ($item->vehicle_master_id == $vMaster->id) {
-                                if (!isset($partyData[$party])) {
-                                    $partyData[$party] = [
-                                        'party_name' => $supplierName,
-                                        'sales_qty' => 0,
-                                        'sales_amount' => 0,
-                                        'purchase_qty' => 0,
-                                        'purchase_amount' => 0,
-                                    ];
-                                }
-                                $partyData[$party]['purchase_qty'] += (int)$item->ordered_quantity;
-                                $partyData[$party]['purchase_amount'] += (float)$item->total_amount;
-                            }
-                        }
+                        $partyData[$party]['invoices'][$inv->id] = [
+                            'id' => $inv->id,
+                            'number' => $inv->invoice_number ?? ('#' . $inv->id),
+                            'url' => route('admin.vehicle-sales-invoices.show', $inv->id),
+                        ];
                     }
                 }
             } else {
@@ -439,45 +416,23 @@ class ReportController extends Controller
                     $salesItems = $partSalesQuery->get();
                     foreach ($salesItems as $sItem) {
                         if ($sItem->invoice) {
-                            $party = strtoupper(trim($sItem->invoice->customer_name));
+                            $inv = $sItem->invoice;
+                            $party = strtoupper(trim($inv->customer_name));
                             if (!isset($partyData[$party])) {
                                 $partyData[$party] = [
-                                    'party_name' => $sItem->invoice->customer_name,
+                                    'party_name' => $inv->customer_name,
                                     'sales_qty' => 0,
                                     'sales_amount' => 0,
-                                    'purchase_qty' => 0,
-                                    'purchase_amount' => 0,
+                                    'invoices' => [],
                                 ];
                             }
                             $partyData[$party]['sales_qty'] += (int)$sItem->quantity;
                             $partyData[$party]['sales_amount'] += (float)$sItem->amount;
-                        }
-                    }
-
-                    // Fetch Purchases (PurchaseOrderItem)
-                    $poItemsQuery = \App\Models\PurchaseOrderItem::with(['purchaseOrder.supplier'])
-                        ->where('spare_part_id', $spPart->id)
-                        ->whereHas('purchaseOrder', function($q) use ($fromDate, $toDate) {
-                            if ($fromDate) $q->whereDate('order_date', '>=', $fromDate);
-                            if ($toDate) $q->whereDate('order_date', '<=', $toDate);
-                        });
-
-                    $poItems = $poItemsQuery->get();
-                    foreach ($poItems as $pItem) {
-                        if ($pItem->purchaseOrder) {
-                            $supplierName = $pItem->purchaseOrder->supplier->name ?? 'SUPPLIER #' . $pItem->purchaseOrder->supplier_id;
-                            $party = strtoupper(trim($supplierName));
-                            if (!isset($partyData[$party])) {
-                                $partyData[$party] = [
-                                    'party_name' => $supplierName,
-                                    'sales_qty' => 0,
-                                    'sales_amount' => 0,
-                                    'purchase_qty' => 0,
-                                    'purchase_amount' => 0,
-                                ];
-                            }
-                            $partyData[$party]['purchase_qty'] += (int)$pItem->quantity;
-                            $partyData[$party]['purchase_amount'] += (float)$pItem->total_amount;
+                            $partyData[$party]['invoices'][$inv->id] = [
+                                'id' => $inv->id,
+                                'number' => $inv->invoice_number ?? ('#' . $inv->id),
+                                'url' => route('admin.part-sales-invoices.show', $inv->id),
+                            ];
                         }
                     }
                 }
@@ -538,15 +493,15 @@ class ReportController extends Controller
             fputcsv($file, ['Item:', $data['selectedItemData']['name'] ?? 'N/A']);
             fputcsv($file, ['Date Filter:', ucfirst(str_replace('_', ' ', $data['dateFilter']))]);
             fputcsv($file, []);
-            fputcsv($file, ['Party Name', 'Sales Qty', 'Sales Amount', 'Purchase Qty', 'Purchase Amount']);
+            fputcsv($file, ['Party Name', 'Invoice No.', 'Sales Qty', 'Sales Amount']);
 
             foreach ($data['partyData'] as $row) {
+                $invNumbers = !empty($row['invoices']) ? implode(', ', array_column($row['invoices'], 'number')) : '-';
                 fputcsv($file, [
                     $row['party_name'],
+                    $invNumbers,
                     $row['sales_qty'] > 0 ? $row['sales_qty'] : '-',
                     $row['sales_amount'] > 0 ? '₹' . number_format($row['sales_amount'], 2) : '-',
-                    $row['purchase_qty'] > 0 ? $row['purchase_qty'] : '-',
-                    $row['purchase_amount'] > 0 ? '₹' . number_format($row['purchase_amount'], 2) : '-',
                 ]);
             }
             fclose($file);
