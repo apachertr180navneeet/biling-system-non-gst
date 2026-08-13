@@ -36,6 +36,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
+                        <th>Actions</th>
                         <th>#</th>
                         <th>Invoice No</th>
                         <th>Date</th>
@@ -45,12 +46,43 @@
                         <th>Received</th>
                         <th>Balance</th>
                         <th>Payment Mode</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($invoices as $inv)
                     <tr>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Action
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="dropdown-item">
+                                            <i class="bx bx-show me-1 text-info"></i> View Invoice
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.part-sales-invoices.pdf', $inv) }}" class="dropdown-item">
+                                            <i class="bx bxs-file-pdf me-1 text-danger"></i> Download PDF
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $inv) }}')">
+                                            <i class="bx bx-printer me-1 text-dark"></i> Print PDF
+                                        </a>
+                                    </li>
+                                    @if($inv->balance > 0)
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item text-success receive-payment-btn" data-url="{{ route('admin.part-sales-invoices.receive-payment', $inv) }}" data-balance="{{ $inv->balance }}">
+                                            <i class="bx bx-wallet me-1"></i> Receive Payment
+                                        </a>
+                                    </li>
+                                    @endif
+                                </ul>
+                            </div>
+                        </td>
                         <td>{{ $loop->iteration }}</td>
                         <td><a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="fw-bold">{{ $inv->invoice_number }}</a></td>
                         <td>{{ $inv->invoice_date->format('d-m-Y') }}</td>
@@ -63,15 +95,6 @@
                         <td>{{ number_format($inv->received_amount, 2) }}</td>
                         <td><span class="badge bg-danger">{{ number_format($inv->balance, 2) }}</span></td>
                         <td>{{ $inv->payment_mode ?? '-' }}</td>
-                        <td>
-                            <a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info me-1" title="View Invoice"><i class="bx bx-show"></i></a>
-                            <a href="{{ route('admin.part-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger me-1" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
-                            <button type="button" class="btn btn-sm btn-dark me-1" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $inv) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
-                            @if($inv->balance > 0)
-                            <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.part-sales-invoices.receive-payment', $inv) }}" data-balance="{{ $inv->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i></button>
-                            @endif
-                        </td>
-
                     </tr>
                     @empty
                     <tr><td colspan="10" class="text-center text-muted">No outstanding part sales invoices found.</td></tr>
@@ -87,7 +110,8 @@
 @section('script')
 <script>
 $(function(){
-    $('.receive-payment-btn').click(function(){
+    $(document).on('click', '.receive-payment-btn', function(e){
+        e.preventDefault();
         var url = $(this).data('url');
         var balance = $(this).data('balance');
         

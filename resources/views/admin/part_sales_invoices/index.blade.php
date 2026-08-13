@@ -34,6 +34,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
+                        <th>Actions</th>
                         <th>Invoice No</th>
                         <th>Date</th>
                         <th>Customer</th>
@@ -43,12 +44,51 @@
                         <th>GST (CGST+SGST)</th>
                         <th>Grand Total</th>
                         <th>Payment Mode</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($invoices as $inv)
                     <tr>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Action
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="dropdown-item">
+                                            <i class="bx bx-show me-1 text-info"></i> View Invoice
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.part-sales-invoices.pdf', $inv) }}" class="dropdown-item">
+                                            <i class="bx bxs-file-pdf me-1 text-danger"></i> Download PDF
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $inv) }}')">
+                                            <i class="bx bx-printer me-1 text-dark"></i> Print PDF
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.part-sales-invoices.edit', $inv) }}" class="dropdown-item">
+                                            <i class="bx bx-edit me-1 text-primary"></i> Edit Invoice
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item quick-date-btn" data-id="{{ $inv->id }}" data-url="{{ route('admin.part-sales-invoices.quick-update-date', $inv) }}" data-number="{{ $inv->invoice_number }}" data-date="{{ $inv->invoice_date->format('Y-m-d') }}">
+                                            <i class="bx bx-calendar-edit me-1 text-warning"></i> Quick Edit Date & No
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item text-danger delete-btn" data-id="{{ $inv->id }}" data-url="{{ route('admin.part-sales-invoices.destroy', $inv) }}">
+                                            <i class="bx bx-trash me-1"></i> Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
                         <td><a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="fw-bold">{{ $inv->invoice_number }}</a></td>
                         <td>{{ $inv->invoice_date->format('d-m-Y') }}</td>
                         <td>
@@ -61,15 +101,6 @@
                         <td>{{ number_format($inv->cgst_amount + $inv->sgst_amount, 2) }}</td>
                         <td><strong>{{ number_format($inv->total_amount, 2) }}</strong></td>
                         <td>{{ $inv->payment_mode }}</td>
-                        <td>
-                            <a href="{{ route('admin.part-sales-invoices.show', $inv) }}" class="btn btn-sm btn-info me-1" title="View Invoice"><i class="bx bx-show"></i></a>
-                            <a href="{{ route('admin.part-sales-invoices.pdf', $inv) }}" class="btn btn-sm btn-danger me-1" title="Download PDF"><i class="bx bxs-file-pdf"></i></a>
-                            <button type="button" class="btn btn-sm btn-dark me-1" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $inv) }}')" title="Direct Print PDF"><i class="bx bx-printer"></i></button>
-                            <a href="{{ route('admin.part-sales-invoices.edit', $inv) }}" class="btn btn-sm btn-primary me-1" title="Edit Invoice"><i class="bx bx-edit"></i></a>
-                            <button class="btn btn-sm btn-warning quick-date-btn me-1" data-id="{{ $inv->id }}" data-url="{{ route('admin.part-sales-invoices.quick-update-date', $inv) }}" data-number="{{ $inv->invoice_number }}" data-date="{{ $inv->invoice_date->format('Y-m-d') }}" title="Edit Date & Invoice No"><i class="bx bx-calendar-edit"></i></button>
-                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ $inv->id }}" data-url="{{ route('admin.part-sales-invoices.destroy', $inv) }}" title="Delete"><i class="bx bx-trash"></i></button>
-                        </td>
-
                     </tr>
                     @empty
                     <tr><td colspan="10" class="text-center text-muted">No parts sales invoices recorded.</td></tr>
@@ -120,7 +151,8 @@ $(function(){
     var quickModal = new bootstrap.Modal(document.getElementById('quickDateModal'));
     var quickForm = $('#quickDateForm');
 
-    $('.quick-date-btn').click(function(){
+    $(document).on('click', '.quick-date-btn', function(e){
+        e.preventDefault();
         var btn = $(this);
         quickForm.attr('action', btn.data('url'));
         $('#quick_invoice_number').val(btn.data('number'));
@@ -156,7 +188,8 @@ $(function(){
         });
     });
 
-    $('.delete-btn').click(function(){
+    $(document).on('click', '.delete-btn', function(e){
+        e.preventDefault();
         var form=$('#deleteForm'), url=$(this).data('url');
         Swal.fire({
             title: 'Are you sure?',
