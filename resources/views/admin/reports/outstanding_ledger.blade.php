@@ -174,18 +174,12 @@
                                 <div class="d-flex justify-content-center gap-1">
                                     @if($tab === 'sales')
                                         @if($item->sub_type === 'vehicle')
-                                            <a href="{{ route('admin.vehicle-sales-invoices.show', $item->id) }}" class="btn btn-sm btn-outline-primary" title="View">
-                                                <i class="bx bx-show"></i>
-                                            </a>
                                             @if($item->balance > 0)
                                                 <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.vehicle-sales-invoices.receive-payment', $item->id) }}" data-balance="{{ $item->balance }}" data-title="Receive Payment" title="Receive Payment">
                                                     <i class="bx bx-wallet"></i>
                                                 </button>
                                             @endif
                                         @else
-                                            <a href="{{ route('admin.part-sales-invoices.show', $item->id) }}" class="btn btn-sm btn-outline-primary" title="View">
-                                                <i class="bx bx-show"></i>
-                                            </a>
                                             @if($item->balance > 0)
                                                 <button class="btn btn-sm btn-success receive-payment-btn" data-url="{{ route('admin.part-sales-invoices.receive-payment', $item->id) }}" data-balance="{{ $item->balance }}" data-title="Receive Payment" title="Receive Payment">
                                                     <i class="bx bx-wallet"></i>
@@ -194,18 +188,12 @@
                                         @endif
                                     @else
                                         @if($item->sub_type === 'vehicle')
-                                            <a href="{{ route('admin.vehicle-purchase-orders.show', $item->id) }}" class="btn btn-sm btn-outline-danger" title="View">
-                                                <i class="bx bx-show"></i>
-                                            </a>
                                             @if($item->balance > 0)
                                                 <button class="btn btn-sm btn-danger receive-payment-btn" data-url="{{ route('admin.vehicle-purchase-orders.receive-payment', $item->id) }}" data-balance="{{ $item->balance }}" data-title="Pay Amount" title="Pay Amount">
                                                     <i class="bx bx-wallet"></i>
                                                 </button>
                                             @endif
                                         @else
-                                            <a href="{{ route('admin.purchase-orders.show', $item->id) }}" class="btn btn-sm btn-outline-danger" title="View">
-                                                <i class="bx bx-show"></i>
-                                            </a>
                                             @if($item->balance > 0)
                                                 <button class="btn btn-sm btn-danger receive-payment-btn" data-url="{{ route('admin.purchase-orders.receive-payment', $item->id) }}" data-balance="{{ $item->balance }}" data-title="Pay Amount" title="Pay Amount">
                                                     <i class="bx bx-wallet"></i>
