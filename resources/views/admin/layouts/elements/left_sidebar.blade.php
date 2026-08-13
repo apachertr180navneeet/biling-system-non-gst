@@ -135,6 +135,13 @@
 			</a>
 		</li>
 
+		<li class="menu-item {{ request()->routeIs('admin.employee-advances.*') ? 'active' : ''}}">
+			<a href="{{route('admin.employee-advances.index')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-money"></i>
+				<div data-i18n="Employee Advances">Employee Advances</div>
+			</a>
+		</li>
+
 		<li class="menu-header small text-uppercase"><span class="menu-header-text">Inventory</span></li>
 
 		<li class="menu-item {{ request()->routeIs('admin.purchase-orders.*') ? 'active' : ''}}">

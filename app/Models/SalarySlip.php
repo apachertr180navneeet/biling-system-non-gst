@@ -23,6 +23,7 @@ class SalarySlip extends Model
         'earned_salary',
         'allowances',
         'deductions',
+        'advance_deduction',
         'net_salary',
         'payment_status',
         'payment_date',
@@ -37,6 +38,7 @@ class SalarySlip extends Model
         'earned_salary' => 'decimal:2',
         'allowances' => 'decimal:2',
         'deductions' => 'decimal:2',
+        'advance_deduction' => 'decimal:2',
         'net_salary' => 'decimal:2',
         'present_days' => 'float',
         'absent_days' => 'float',
@@ -51,5 +53,10 @@ class SalarySlip extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function advanceDeductions()
+    {
+        return $this->hasMany(SalarySlipAdvanceDeduction::class, 'salary_slip_id');
     }
 }

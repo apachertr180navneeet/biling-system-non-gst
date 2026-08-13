@@ -105,8 +105,16 @@
                             <div class="card-header bg-label-danger py-2 fw-bold">Deductions</div>
                             <div class="card-body mt-3">
                                 <div class="mb-3">
-                                    <label class="form-label">Deductions / Advance / Penalty (₹)</label>
+                                    <label class="form-label">Other Deductions / Penalties (₹)</label>
                                     <input type="number" step="0.01" name="deductions" id="deductions" class="form-control text-danger" value="{{ old('deductions', '0.00') }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label mb-0">Advance Recovery Deduction (₹)</label>
+                                        <small class="text-muted">Outstanding: <strong class="text-danger" id="outstanding_advance_display">₹0.00</strong></small>
+                                    </div>
+                                    <input type="number" step="0.01" min="0" name="advance_deduction" id="advance_deduction" class="form-control text-danger" value="{{ old('advance_deduction', '0.00') }}">
+                                    <small class="text-muted">Amount to recover from employee's advance balance</small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Payment Status</label>
@@ -182,6 +190,10 @@
                         $('#basic_salary').val(d.basic_salary);
                         $('#earned_salary').val(d.earned_salary);
 
+                        var outAdv = parseFloat(d.outstanding_advance) || 0;
+                        $('#outstanding_advance_display').text('₹' + outAdv.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                        $('#advance_deduction').attr('max', outAdv);
+
                         recalculateNet();
                     }
                 }
@@ -192,8 +204,9 @@
             var earned = parseFloat($('#earned_salary').val()) || 0;
             var allowances = parseFloat($('#allowances').val()) || 0;
             var deductions = parseFloat($('#deductions').val()) || 0;
+            var advanceDeduction = parseFloat($('#advance_deduction').val()) || 0;
 
-            var net = earned + allowances - deductions;
+            var net = earned + allowances - deductions - advanceDeduction;
             if (net < 0) net = 0;
 
             $('#net_salary').val(net.toFixed(2));
@@ -201,7 +214,7 @@
         }
 
         $('#employee_id, #month, #year').on('change', fetchCalculation);
-        $('#earned_salary, #allowances, #deductions').on('input change', recalculateNet);
+        $('#earned_salary, #allowances, #deductions, #advance_deduction').on('input change', recalculateNet);
 
         if ($('#employee_id').val()) {
             fetchCalculation();

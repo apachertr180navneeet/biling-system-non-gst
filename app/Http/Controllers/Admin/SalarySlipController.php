@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\EmployeeAdvance;
 use App\Models\SalarySlip;
+use App\Models\SalarySlipAdvanceDeduction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SalarySlipController extends Controller
 {
@@ -93,6 +96,8 @@ class SalarySlipController extends Controller
             $earnedSalary = round($perDayRate * $effectiveDays, 2);
         }
 
+        $outstandingAdvance = $employee->outstandingAdvanceBalance();
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -105,6 +110,7 @@ class SalarySlipController extends Controller
                 'salary_type' => $employee->salary_type,
                 'basic_salary' => $basicSalary,
                 'earned_salary' => $earnedSalary,
+                'outstanding_advance' => $outstandingAdvance,
             ]
         ]);
     }
@@ -124,12 +130,15 @@ class SalarySlipController extends Controller
             'earned_salary' => 'required|numeric|min:0',
             'allowances' => 'required|numeric|min:0',
             'deductions' => 'required|numeric|min:0',
+            'advance_deduction' => 'nullable|numeric|min:0',
             'net_salary' => 'required|numeric|min:0',
             'payment_status' => 'required|in:unpaid,paid',
             'payment_date' => 'nullable|date',
             'payment_mode' => 'nullable|string|max:100',
             'remarks' => 'nullable|string',
         ]);
+
+        $validated['advance_deduction'] = (float) ($validated['advance_deduction'] ?? 0);
 
         // Check if salary slip already exists for this employee and month/year
         $existing = SalarySlip::where('employee_id', $validated['employee_id'])
@@ -149,28 +158,86 @@ class SalarySlipController extends Controller
         $validated['slip_number'] = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
         $validated['created_by'] = auth()->id();
 
-        $salarySlip = SalarySlip::create($validated);
+        DB::beginTransaction();
+        try {
+            $salarySlip = SalarySlip::create($validated);
 
-        return redirect()->route('admin.salary-slips.show', $salarySlip->id)
-            ->withSuccess('Salary slip created successfully.');
+            // Deduct advance if advance_deduction > 0
+            if ($validated['advance_deduction'] > 0) {
+                $remToDeduct = $validated['advance_deduction'];
+                $activeAdvances = EmployeeAdvance::where('employee_id', $validated['employee_id'])
+                    ->whereIn('status', ['pending', 'partially_deducted'])
+                    ->orderBy('advance_date', 'asc')
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                foreach ($activeAdvances as $adv) {
+                    if ($remToDeduct <= 0) break;
+
+                    $deductFromThis = min($remToDeduct, (float) $adv->remaining_amount);
+                    if ($deductFromThis > 0) {
+                        SalarySlipAdvanceDeduction::create([
+                            'salary_slip_id' => $salarySlip->id,
+                            'employee_advance_id' => $adv->id,
+                            'amount' => $deductFromThis,
+                        ]);
+
+                        $adv->deducted_amount += $deductFromThis;
+                        $adv->remaining_amount -= $deductFromThis;
+                        $adv->status = $adv->remaining_amount <= 0 ? 'fully_deducted' : 'partially_deducted';
+                        $adv->save();
+
+                        $remToDeduct -= $deductFromThis;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.salary-slips.show', $salarySlip->id)
+                ->withSuccess('Salary slip created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Error generating salary slip: ' . $e->getMessage());
+        }
     }
 
     public function show(SalarySlip $salarySlip)
     {
-        $salarySlip->load('employee', 'creator');
+        $salarySlip->load('employee', 'creator', 'advanceDeductions.employeeAdvance');
         return view('admin.salary_slips.show', compact('salarySlip'));
     }
 
     public function pdf(SalarySlip $salarySlip)
     {
-        $salarySlip->load('employee', 'creator');
+        $salarySlip->load('employee', 'creator', 'advanceDeductions.employeeAdvance');
         return view('admin.salary_slips.pdf', compact('salarySlip'));
     }
 
     public function destroy(SalarySlip $salarySlip)
     {
-        $salarySlip->delete();
-        return response()->json(['success' => true, 'message' => 'Salary slip deleted successfully.']);
+        DB::beginTransaction();
+        try {
+            $advanceDeductions = SalarySlipAdvanceDeduction::where('salary_slip_id', $salarySlip->id)->get();
+            foreach ($advanceDeductions as $deduction) {
+                $adv = EmployeeAdvance::find($deduction->employee_advance_id);
+                if ($adv) {
+                    $adv->deducted_amount -= $deduction->amount;
+                    $adv->remaining_amount += $deduction->amount;
+                    $adv->status = $adv->deducted_amount <= 0 ? 'pending' : 'partially_deducted';
+                    $adv->save();
+                }
+                $deduction->delete();
+            }
+
+            $salarySlip->delete();
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Salary slip deleted successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to delete salary slip: ' . $e->getMessage()], 500);
+        }
     }
 
     /**

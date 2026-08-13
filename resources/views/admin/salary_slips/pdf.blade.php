@@ -207,8 +207,12 @@
                     <td style="padding: 0; vertical-align: top;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
-                                <td style="border: none;">Deductions / Advance / Penalty:</td>
+                                <td style="border: none;">Other Deductions / Penalties:</td>
                                 <td class="text-right" style="border: none; color: red;">₹{{ number_format($salarySlip->deductions, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: none;">Advance Recovery Deduction:</td>
+                                <td class="text-right" style="border: none; color: red;">₹{{ number_format($salarySlip->advance_deduction ?? 0, 2) }}</td>
                             </tr>
                         </table>
                     </td>
@@ -226,7 +230,7 @@
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="border: none;">Total Deductions:</td>
-                                <td class="text-right" style="border: none; color: red;">₹{{ number_format($salarySlip->deductions, 2) }}</td>
+                                <td class="text-right" style="border: none; color: red;">₹{{ number_format($salarySlip->deductions + ($salarySlip->advance_deduction ?? 0), 2) }}</td>
                             </tr>
                         </table>
                     </td>

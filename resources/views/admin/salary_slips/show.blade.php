@@ -146,18 +146,19 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Absence / Late / Advance Deductions</td>
+                                <td>Other Deductions / Penalties</td>
                                 <td class="text-end text-danger">₹{{ number_format($salarySlip->deductions, 2) }}</td>
                             </tr>
                             <tr>
-                                <td colspan="2">&nbsp;</td>
+                                <td>Employee Advance Recovery</td>
+                                <td class="text-end text-danger">₹{{ number_format($salarySlip->advance_deduction ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td colspan="2">&nbsp;</td>
                             </tr>
                             <tr class="table-light fw-bold">
                                 <td>Total Deductions</td>
-                                <td class="text-end text-danger">₹{{ number_format($salarySlip->deductions, 2) }}</td>
+                                <td class="text-end text-danger">₹{{ number_format($salarySlip->deductions + ($salarySlip->advance_deduction ?? 0), 2) }}</td>
                             </tr>
                         </tbody>
                     </table>

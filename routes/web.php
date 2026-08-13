@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\SalarySlipController;
+use App\Http\Controllers\Admin\EmployeeAdvanceController;
 
 
 /*
@@ -203,6 +204,9 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::get('salary-slips/calculate-api', [SalarySlipController::class, 'calculateApi'])->name('salary-slips.calculate-api');
             Route::get('salary-slips/{salary_slip}/pdf', [SalarySlipController::class, 'pdf'])->name('salary-slips.pdf');
             Route::resource('salary-slips', SalarySlipController::class)->except(['edit', 'update']);
+
+            // Employee Advances
+            Route::resource('employee-advances', EmployeeAdvanceController::class)->except(['edit', 'update']);
     });
 });
 

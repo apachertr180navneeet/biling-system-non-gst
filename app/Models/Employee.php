@@ -50,4 +50,16 @@ class Employee extends Model
     {
         return $this->hasMany(SalarySlip::class);
     }
+
+    public function advances()
+    {
+        return $this->hasMany(EmployeeAdvance::class);
+    }
+
+    public function outstandingAdvanceBalance()
+    {
+        return (float) $this->advances()
+            ->whereIn('status', ['pending', 'partially_deducted'])
+            ->sum('remaining_amount');
+    }
 }
