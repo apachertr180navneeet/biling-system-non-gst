@@ -74,6 +74,10 @@
                                         <input type="number" step="0.5" name="paid_leaves" id="paid_leaves" class="form-control form-control-sm bg-white" value="{{ old('paid_leaves', '0') }}">
                                     </div>
                                     <div class="col-md-2 col-6">
+                                        <label class="form-label small text-muted">Holidays</label>
+                                        <input type="number" step="0.5" name="holiday_days" id="holiday_days" class="form-control form-control-sm bg-white" value="0" readonly>
+                                    </div>
+                                    <div class="col-md-2 col-6">
                                         <label class="form-label small text-muted">Basic Salary (₹)</label>
                                         <input type="number" step="0.01" name="basic_salary" id="basic_salary" class="form-control form-control-sm bg-white" value="{{ old('basic_salary', '0.00') }}" readonly>
                                     </div>
@@ -187,6 +191,7 @@
                         $('#absent_days').val(d.absent_days);
                         $('#half_days').val(d.half_days);
                         $('#paid_leaves').val(d.paid_leaves);
+                        $('#holiday_days').val(d.holiday_days || 0);
                         $('#basic_salary').val(d.basic_salary);
                         $('#earned_salary').val(d.earned_salary);
 

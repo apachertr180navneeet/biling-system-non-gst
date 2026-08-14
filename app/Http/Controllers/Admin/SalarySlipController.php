@@ -77,9 +77,10 @@ class SalarySlipController extends Controller
         $absentDays = $attendances->where('status', 'absent')->count();
         $halfDays = $attendances->where('status', 'half_day')->count();
         $paidLeaves = $attendances->where('status', 'leave')->count();
+        $holidayDays = $attendances->where('status', 'holiday')->count();
 
-        // Effective days = present + (half_days * 0.5) + paid_leaves
-        $effectiveDays = $presentDays + ($halfDays * 0.5) + $paidLeaves;
+        // Effective days = present + (half_days * 0.5) + paid_leaves + holidays
+        $effectiveDays = $presentDays + ($halfDays * 0.5) + $paidLeaves + $holidayDays;
 
         // If no attendance records were marked for the month at all, default to full month (or 0 if un-marked)
         if ($attendances->count() == 0) {
@@ -106,6 +107,7 @@ class SalarySlipController extends Controller
                 'absent_days' => $absentDays,
                 'half_days' => $halfDays,
                 'paid_leaves' => $paidLeaves,
+                'holiday_days' => $holidayDays,
                 'effective_days' => $effectiveDays,
                 'salary_type' => $employee->salary_type,
                 'basic_salary' => $basicSalary,

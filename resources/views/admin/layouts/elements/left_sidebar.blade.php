@@ -128,6 +128,13 @@
 			</a>
 		</li>
 
+		<li class="menu-item {{ request()->routeIs('admin.holidays.*') ? 'active' : ''}}">
+			<a href="{{route('admin.holidays.index')}}" class="menu-link">
+				<i class="menu-icon tf-icons bx bx-calendar-star"></i>
+				<div data-i18n="Holiday Master">Holiday Master</div>
+			</a>
+		</li>
+
 		<li class="menu-item {{ request()->routeIs('admin.salary-slips.*') ? 'active' : ''}}">
 			<a href="{{route('admin.salary-slips.index')}}" class="menu-link">
 				<i class="menu-icon tf-icons bx bx-wallet"></i>

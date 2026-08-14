@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\FinanceMasterController;
 use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\SalarySlipController;
 use App\Http\Controllers\Admin\EmployeeAdvanceController;
 
@@ -199,6 +200,9 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::get('attendances/monthly-report', [AttendanceController::class, 'monthlyReport'])->name('attendances.monthly-report');
             Route::post('attendances/save-bulk', [AttendanceController::class, 'saveBulk'])->name('attendances.save-bulk');
             Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+
+            // Holiday Master
+            Route::resource('holidays', HolidayController::class);
 
             // Salary Slips
             Route::get('salary-slips/calculate-api', [SalarySlipController::class, 'calculateApi'])->name('salary-slips.calculate-api');

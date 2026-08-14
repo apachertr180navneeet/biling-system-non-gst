@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Holiday;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -21,7 +22,9 @@ class AttendanceController extends Controller
             ->get()
             ->keyBy('employee_id');
 
-        return view('admin.attendances.index', compact('date', 'employees', 'existingAttendances'));
+        $holiday = Holiday::getHolidayForDate($date);
+
+        return view('admin.attendances.index', compact('date', 'employees', 'existingAttendances', 'holiday'));
     }
 
     public function saveBulk(Request $request)
@@ -29,7 +32,7 @@ class AttendanceController extends Controller
         $request->validate([
             'date' => 'required|date',
             'attendances' => 'required|array',
-            'attendances.*.status' => 'required|in:present,absent,half_day,leave',
+            'attendances.*.status' => 'required|in:present,absent,half_day,leave,holiday',
             'attendances.*.check_in_time' => 'nullable',
             'attendances.*.check_out_time' => 'nullable',
             'attendances.*.remarks' => 'nullable|string',
@@ -78,12 +81,17 @@ class AttendanceController extends Controller
             $attendanceMap[$att->employee_id][$dayNum] = $att->status;
         }
 
+        $holidayDaysMap = Holiday::getHolidayDaysMapForMonth($year, $month);
+        $holidays = Holiday::getHolidaysForMonth($year, $month);
+
         return view('admin.attendances.monthly_report', compact(
             'month',
             'year',
             'daysInMonth',
             'employees',
             'attendanceMap',
+            'holidayDaysMap',
+            'holidays',
             'startDate'
         ));
     }
