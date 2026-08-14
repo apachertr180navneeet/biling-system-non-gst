@@ -159,6 +159,21 @@ class HolidayController extends Controller
             ->with('success', 'Holiday updated successfully.');
     }
 
+    public function loadDefaults(Request $request)
+    {
+        $year = (int) $request->input('year', Carbon::now()->year);
+        Holiday::seedDefaultHolidaysForYear($year, auth()->id());
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Default national holidays loaded successfully for ' . $year . '.',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Default national holidays loaded successfully for ' . $year . '.');
+    }
+
     public function destroy(Holiday $holiday)
     {
         $holiday->delete();

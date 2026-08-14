@@ -96,6 +96,90 @@ class AttendanceController extends Controller
         ));
     }
 
+    public function markHolidayFromMonthly(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:public,national,company,optional',
+            'description' => 'nullable|string',
+        ]);
+
+        $date = Carbon::parse($request->input('date'))->format('Y-m-d');
+        $name = $request->input('name');
+        $type = $request->input('type');
+        $description = $request->input('description');
+        $userId = auth()->id();
+
+        // 1. Create or update Holiday
+        $holiday = Holiday::where('from_date', '<=', $date)
+            ->where('to_date', '>=', $date)
+            ->first();
+
+        if ($holiday) {
+            $holiday->update([
+                'name' => $name,
+                'type' => $type,
+                'description' => $description,
+            ]);
+        } else {
+            Holiday::create([
+                'name' => $name,
+                'from_date' => $date,
+                'to_date' => $date,
+                'total_days' => 1,
+                'type' => $type,
+                'description' => $description,
+                'created_by' => $userId,
+            ]);
+        }
+
+        // 2. Mark attendance for all active employees as holiday
+        $employees = Employee::where('is_active', true)->get();
+        foreach ($employees as $emp) {
+            Attendance::updateOrCreate(
+                [
+                    'employee_id' => $emp->id,
+                    'date' => $date,
+                ],
+                [
+                    'status' => 'holiday',
+                    'remarks' => $name . ' (' . ucfirst($type) . ' Holiday)',
+                    'created_by' => $userId,
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Holiday marked successfully and attendance updated for all employees.',
+        ]);
+    }
+
+    public function unmarkHolidayFromMonthly(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $date = Carbon::parse($request->input('date'))->format('Y-m-d');
+
+        // Remove holiday for that date
+        Holiday::where('from_date', '<=', $date)
+            ->where('to_date', '>=', $date)
+            ->delete();
+
+        // Remove holiday attendances for that date
+        Attendance::where('date', $date)
+            ->where('status', 'holiday')
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Holiday unmarked and attendance cleared for ' . $date . '.',
+        ]);
+    }
+
     public function export(Request $request)
     {
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));

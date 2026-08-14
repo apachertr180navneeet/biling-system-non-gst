@@ -198,10 +198,13 @@ Route::name('admin.')->prefix('admin')->group(function () {
             // Attendance Master
             Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
             Route::get('attendances/monthly-report', [AttendanceController::class, 'monthlyReport'])->name('attendances.monthly-report');
+            Route::post('attendances/mark-holiday', [AttendanceController::class, 'markHolidayFromMonthly'])->name('attendances.mark-holiday');
+            Route::post('attendances/unmark-holiday', [AttendanceController::class, 'unmarkHolidayFromMonthly'])->name('attendances.unmark-holiday');
             Route::post('attendances/save-bulk', [AttendanceController::class, 'saveBulk'])->name('attendances.save-bulk');
             Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
 
             // Holiday Master
+            Route::post('holidays/load-defaults', [HolidayController::class, 'loadDefaults'])->name('holidays.load-defaults');
             Route::resource('holidays', HolidayController::class);
 
             // Salary Slips
