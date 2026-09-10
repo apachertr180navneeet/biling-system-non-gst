@@ -114,7 +114,16 @@ class EmployeeController extends Controller
     public function toggleStatus(Employee $employee)
     {
         $employee->update(['is_active' => !$employee->is_active]);
-        return response()->json(['success' => true, 'is_active' => $employee->fresh()->is_active]);
+        $isActive = $employee->fresh()->is_active;
+        $message = $isActive 
+            ? 'Employee activated! Attendance & Payroll enabled.' 
+            : 'Employee deactivated! Attendance & Payroll auto-disabled.';
+
+        return response()->json([
+            'success' => true, 
+            'is_active' => $isActive,
+            'message' => $message
+        ]);
     }
 
     public function export(Request $request)

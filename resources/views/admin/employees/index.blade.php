@@ -71,15 +71,16 @@
                         <td class="fw-bold">₹{{ number_format($emp->basic_salary, 2) }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <div class="form-check form-switch mb-0">
-                                    <input class="form-check-input status-toggle" type="checkbox" data-id="{{ $emp->id }}" id="status_switch_{{ $emp->id }}" {{ $emp->is_active ? 'checked' : '' }}>
-                                </div>
-                                <span class="badge {{ $emp->is_active ? 'bg-label-success' : 'bg-label-secondary' }}" id="status_badge_{{ $emp->id }}">
+                                <label class="switch switch-success mb-0">
+                                    <input type="checkbox" class="toggle-status" data-url="{{ route('admin.employees.toggle-status', $emp) }}" {{ $emp->is_active ? 'checked' : '' }}>
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="badge {{ $emp->is_active ? 'bg-label-success' : 'bg-label-secondary' }}">
                                     {{ $emp->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </div>
                             @if(!$emp->is_active)
-                                <div class="text-danger small" style="font-size: 0.72rem;"><i class="bx bx-info-circle"></i> Payroll & Attendance disabled</div>
+                                <div class="text-danger small mt-1" style="font-size: 0.72rem;"><i class="bx bx-info-circle"></i> Payroll & Attendance disabled</div>
                             @endif
                         </td>
                         <td>
@@ -92,7 +93,7 @@
                                     @else
                                         <span class="dropdown-item text-muted disabled" title="Cannot generate salary slip for deactivated employee"><i class="bx bx-block me-1"></i> Payroll Disabled</span>
                                     @endif
-                                    <button type="button" class="dropdown-item text-danger delete-btn" data-id="{{ $emp->id }}"><i class="bx bx-trash me-1"></i> Delete</button>
+                                    <button type="button" class="dropdown-item text-danger btn-delete" data-url="{{ route('admin.employees.destroy', $emp) }}"><i class="bx bx-trash me-1"></i> Delete</button>
                                 </div>
                             </div>
                         </td>
@@ -114,59 +115,47 @@
 
 @section('script')
 <script>
-    $(document).ready(function() {
-        $('.status-toggle').on('change', function() {
-            var empId = $(this).data('id');
-            var isChecked = $(this).is(':checked');
-            var switchElem = $(this);
-
-            $.ajax({
-                url: '/admin/employees/' + empId + '/toggle-status',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        var badge = $('#status_badge_' + empId);
-                        if (response.is_active) {
-                            badge.removeClass('bg-label-secondary').addClass('bg-label-success').text('Active');
-                            toastr.success('Employee activated! Attendance & Payroll enabled.');
-                        } else {
-                            badge.removeClass('bg-label-success').addClass('bg-label-secondary').text('Inactive');
-                            toastr.info('Employee deactivated! Attendance & Payroll auto-disabled.');
-                        }
-                        setTimeout(function() {
-                            location.reload();
-                        }, 800);
-                    }
-                },
-                error: function() {
-                    switchElem.prop('checked', !isChecked);
-                    toastr.error('Failed to update status.');
-                }
-            });
+    $(function() {
+        $(document).ajaxSuccess(function(event, xhr, settings) {
+            if (settings.url && settings.url.indexOf('toggle-status') !== -1) {
+                setTimeout(function() { location.reload(); }, 700);
+            }
         });
 
-        $('.delete-btn').on('click', function() {
-            var empId = $(this).data('id');
-            if (confirm('Are you sure you want to delete this employee?')) {
-                $.ajax({
-                    url: '/admin/employees/' + empId,
-                    type: 'DELETE',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            location.reload();
+        $('.btn-delete').click(function() {
+            var url = $(this).data('url');
+            var btn = $(this);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This employee record will be deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#8592a3'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            _method: 'DELETE'
+                        },
+                        success: function(resp) {
+                            if (resp.success) {
+                                btn.closest('tr').remove();
+                                setFlash('success', resp.message || 'Employee deleted successfully.');
+                            } else {
+                                setFlash('error', resp.message || 'Failed to delete employee.');
+                            }
+                        },
+                        error: function() {
+                            setFlash('error', 'Failed to delete employee.');
                         }
-                    },
-                    error: function() {
-                        toastr.error('Failed to delete employee.');
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     });
 </script>
