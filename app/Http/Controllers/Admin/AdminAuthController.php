@@ -426,13 +426,13 @@ class AdminAuthController extends Controller
         try {
             if (!$user) return;
 
-            $employee = \App\Models\Employee::where('user_id', $user->id)
-                ->orWhere(function ($q) use ($user) {
+            $employee = \App\Models\Employee::where('is_active', true)
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
                     if (!empty($user->email)) {
-                        $q->where('email', $user->email);
+                        $q->orWhere('email', $user->email);
                     }
                 })
-                ->where('is_active', true)
                 ->first();
 
             if ($employee) {

@@ -50,7 +50,7 @@ class EmployeeAdvanceController extends Controller
         $totalAdvancesOutstanding = (float) (clone $baseQuery)->where('status', '!=', 'cancelled')->sum('remaining_amount');
 
         $advances = $query->paginate(20)->withQueryString();
-        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+        $employees = Employee::active()->orderBy('full_name')->get();
 
         return view('admin.employee_advances.index', compact(
             'advances',
@@ -68,8 +68,15 @@ class EmployeeAdvanceController extends Controller
 
     public function create(Request $request)
     {
-        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+        $employees = Employee::active()->orderBy('full_name')->get();
         $selectedEmployeeId = $request->input('employee_id');
+        if ($selectedEmployeeId) {
+            $isEmpActive = Employee::active()->where('id', $selectedEmployeeId)->exists();
+            if (!$isEmpActive) {
+                $selectedEmployeeId = null;
+                session()->flash('error', 'Selected employee is deactivated.');
+            }
+        }
 
         return view('admin.employee_advances.create', compact('employees', 'selectedEmployeeId'));
     }
@@ -83,6 +90,11 @@ class EmployeeAdvanceController extends Controller
             'payment_mode' => 'required|string|max:100',
             'remarks' => 'nullable|string',
         ]);
+
+        $employee = Employee::where('id', $validated['employee_id'])->where('is_active', true)->first();
+        if (!$employee) {
+            return back()->withInput()->with('error', 'Cannot give advance. The employee is deactivated or not found.');
+        }
 
         $date = Carbon::parse($validated['advance_date']);
         $prefix = 'ADV-' . $date->format('Ym') . '-';

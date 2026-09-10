@@ -42,8 +42,15 @@ class SalarySlipController extends Controller
 
     public function create(Request $request)
     {
-        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+        $employees = Employee::active()->orderBy('full_name')->get();
         $selectedEmployeeId = $request->input('employee_id');
+        if ($selectedEmployeeId) {
+            $isEmpActive = Employee::active()->where('id', $selectedEmployeeId)->exists();
+            if (!$isEmpActive) {
+                $selectedEmployeeId = null;
+                session()->flash('error', 'Selected employee is deactivated. Payroll is disabled for inactive employees.');
+            }
+        }
         $selectedMonth = (int) $request->input('month', Carbon::now()->month);
         $selectedYear = (int) $request->input('year', Carbon::now()->year);
 
@@ -63,6 +70,10 @@ class SalarySlipController extends Controller
         $employee = Employee::find($employeeId);
         if (!$employee) {
             return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
+        }
+
+        if (!$employee->is_active) {
+            return response()->json(['success' => false, 'message' => 'Employee is deactivated. Payroll is disabled for inactive employees.'], 422);
         }
 
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
@@ -139,6 +150,12 @@ class SalarySlipController extends Controller
             'payment_mode' => 'nullable|string|max:100',
             'remarks' => 'nullable|string',
         ]);
+
+        // Check if employee is active
+        $employee = Employee::where('id', $validated['employee_id'])->where('is_active', true)->first();
+        if (!$employee) {
+            return back()->withInput()->with('error', 'Cannot generate salary slip. The employee is deactivated or not found.');
+        }
 
         $validated['advance_deduction'] = (float) ($validated['advance_deduction'] ?? 0);
 

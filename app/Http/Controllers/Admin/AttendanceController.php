@@ -16,7 +16,7 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
-        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+        $employees = Employee::active()->orderBy('full_name')->get();
 
         $existingAttendances = Attendance::where('date', $date)
             ->get()
@@ -40,8 +40,14 @@ class AttendanceController extends Controller
 
         $date = $request->input('date');
         $userId = auth()->id();
+        $activeEmpIds = Employee::active()->pluck('id')->toArray();
 
         foreach ($request->input('attendances') as $empId => $data) {
+            // Disallow recording attendance for deactivated employees
+            if (!in_array((int)$empId, $activeEmpIds)) {
+                continue;
+            }
+
             Attendance::updateOrCreate(
                 [
                     'employee_id' => $empId,
@@ -70,7 +76,7 @@ class AttendanceController extends Controller
         $endDate = $startDate->copy()->endOfMonth();
         $daysInMonth = $startDate->daysInMonth;
 
-        $employees = Employee::orderBy('full_name')->get();
+        $employees = Employee::active()->orderBy('full_name')->get();
 
         $attendancesRaw = Attendance::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get();
@@ -135,7 +141,7 @@ class AttendanceController extends Controller
         }
 
         // 2. Mark attendance for all active employees as holiday
-        $employees = Employee::where('is_active', true)->get();
+        $employees = Employee::active()->get();
         foreach ($employees as $emp) {
             Attendance::updateOrCreate(
                 [
@@ -183,7 +189,7 @@ class AttendanceController extends Controller
     public function export(Request $request)
     {
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
-        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+        $employees = Employee::active()->orderBy('full_name')->get();
         $existingAttendances = Attendance::where('date', $date)->get()->keyBy('employee_id');
 
         $spreadsheet = new Spreadsheet();
