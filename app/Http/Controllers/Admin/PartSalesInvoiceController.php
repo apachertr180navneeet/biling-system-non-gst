@@ -193,20 +193,23 @@ class PartSalesInvoiceController extends Controller
     {
         $dateStr = $invoiceDate ? date('Ymd', strtotime($invoiceDate)) : date('Ymd');
         
-        $vInvoices = DB::table('vehicle_sales_invoices')->whereNull('deleted_at')->pluck('invoice_number');
         $pInvoices = DB::table('part_sales_invoices')->whereNull('deleted_at')->pluck('invoice_number');
-        $allInvoices = $vInvoices->concat($pInvoices);
 
         $maxNum = 550;
-        foreach ($allInvoices as $invNum) {
+        foreach ($pInvoices as $invNum) {
             if (preg_match('/(\d+)$/', $invNum, $matches)) {
                 $num = (int)$matches[1];
-                if ($num >= 550 && $num < 850 && $num > $maxNum) {
+                if ($num > $maxNum) {
                     $maxNum = $num;
                 }
             }
         }
         $nextNum = $maxNum + 1;
+
+        while (!$this->isLastFourDigitsUnique('INV-' . $dateStr . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT))) {
+            $nextNum++;
+        }
+
         return 'INV-' . $dateStr . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
     }
 

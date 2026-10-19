@@ -205,6 +205,9 @@ class VehicleSalesInvoiceController extends Controller
             }
         }
         $nextNum = $maxNum + 1;
+        while (!$this->isLastFourDigitsUnique('INV-' . $dateStr . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT))) {
+            $nextNum++;
+        }
         return 'INV-' . $dateStr . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
     }
 
