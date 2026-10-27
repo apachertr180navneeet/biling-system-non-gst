@@ -11,7 +11,7 @@ class PurchaseOrder extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['order_number', 'supplier_id', 'order_date', 'expected_date', 'status', 'total_amount', 'received_amount', 'balance', 'notes', 'created_by', 'is_active'];
+    protected $fillable = ['order_number', 'supplier_id', 'order_date', 'expected_date', 'status', 'total_amount', 'received_amount', 'payment_discount', 'balance', 'notes', 'created_by', 'is_active'];
 
     protected function casts(): array
     {

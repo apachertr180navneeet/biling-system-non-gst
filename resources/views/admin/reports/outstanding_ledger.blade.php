@@ -228,58 +228,5 @@
 @endsection
 
 @section('script')
-<script>
-$(function(){
-    $('.receive-payment-btn').click(function(){
-        var url = $(this).data('url');
-        var balance = $(this).data('balance');
-        var titleText = $(this).data('title') || 'Receive Payment';
-        var promptText = titleText === 'Receive Payment' 
-            ? 'Enter the amount received. Outstanding Balance: ₹' + balance 
-            : 'Enter the amount paid. Outstanding Balance: ₹' + balance;
-        
-        Swal.fire({
-            title: titleText,
-            text: promptText,
-            input: 'number',
-            inputAttributes: {
-                min: 0.01,
-                max: balance,
-                step: 0.01
-            },
-            showCancelButton: true,
-            confirmButtonText: 'Submit',
-            showLoaderOnConfirm: true,
-            preConfirm: (amount) => {
-                if (!amount || amount <= 0) {
-                    Swal.showValidationMessage('Please enter a valid amount');
-                    return false;
-                }
-                if (parseFloat(amount) > parseFloat(balance)) {
-                    Swal.showValidationMessage('Amount cannot exceed the balance of ₹' + balance);
-                    return false;
-                }
-                return $.post(url, {
-                    _token: '{{ csrf_token() }}',
-                    amount: amount
-                }).done(function(r) {
-                    if (!r.success) {
-                        Swal.showValidationMessage(r.message);
-                    }
-                    return r;
-                }).fail(function() {
-                    Swal.showValidationMessage('Request failed');
-                });
-            },
-            allowOutsideClick: () => !Swal.isLoading()
-        }).then((result) => {
-            if (result.isConfirmed && result.value.success) {
-                Swal.fire('Success', titleText === 'Receive Payment' ? 'Payment received successfully!' : 'Payment processed successfully!', 'success').then(() => {
-                    location.reload();
-                });
-            }
-        });
-    });
-});
-</script>
+@include('admin.layouts.elements.receive_payment_modal')
 @endsection

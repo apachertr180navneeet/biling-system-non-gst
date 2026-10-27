@@ -717,20 +717,42 @@ class VehiclePurchaseOrderController extends Controller
     public function receivePayment(Request $request, VehiclePurchaseOrder $vehiclePurchaseOrder)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
             'payment_mode' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'payment_date' => 'nullable|date',
         ]);
 
-        $amount = floatval($request->input('amount'));
+        $amount = round(floatval($request->input('amount', 0)), 2);
+        $discount = round(floatval($request->input('discount', 0)), 2);
         $paymentMode = $request->input('payment_mode', 'Cash');
+        $notes = $request->input('notes');
+        $paymentDate = $request->input('payment_date', date('Y-m-d'));
+        $balance = round(floatval($vehiclePurchaseOrder->balance), 2);
 
-        if ($amount > $vehiclePurchaseOrder->balance) {
-            return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($vehiclePurchaseOrder->balance, 2) . ')']);
+        if ($discount < 0) {
+            return response()->json(['success' => false, 'message' => 'Discount cannot be negative.']);
         }
 
-        DB::transaction(function () use ($vehiclePurchaseOrder, $amount, $paymentMode) {
+        if ($discount > $balance) {
+            return response()->json(['success' => false, 'message' => 'Discount (₹' . number_format($discount, 2) . ') cannot exceed the outstanding balance (₹' . number_format($balance, 2) . ').']);
+        }
+
+        if ($amount <= 0 && $discount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Please enter a valid amount or discount.']);
+        }
+
+        $totalSettled = round($amount + $discount, 2);
+
+        if ($totalSettled > $balance) {
+            return response()->json(['success' => false, 'message' => 'Total settled amount (Paid: ₹' . number_format($amount, 2) . ' + Discount: ₹' . number_format($discount, 2) . ' = ₹' . number_format($totalSettled, 2) . ') cannot exceed the outstanding balance (₹' . number_format($balance, 2) . ').']);
+        }
+
+        DB::transaction(function () use ($vehiclePurchaseOrder, $amount, $discount, $totalSettled, $paymentMode, $notes, $paymentDate) {
             $vehiclePurchaseOrder->received_amount += $amount;
-            $vehiclePurchaseOrder->balance -= $amount;
+            $vehiclePurchaseOrder->payment_discount = ($vehiclePurchaseOrder->payment_discount ?? 0) + $discount;
+            $vehiclePurchaseOrder->balance = max(0, $vehiclePurchaseOrder->balance - $totalSettled);
             $vehiclePurchaseOrder->save();
 
             PaymentTransaction::create([
@@ -740,10 +762,12 @@ class VehiclePurchaseOrderController extends Controller
                 'party_type' => 'supplier',
                 'party_id' => $vehiclePurchaseOrder->supplier_id,
                 'party_name' => $vehiclePurchaseOrder->supplier->name ?? 'Supplier #' . $vehiclePurchaseOrder->supplier_id,
-                'payment_date' => date('Y-m-d'),
+                'payment_date' => $paymentDate,
                 'amount' => $amount,
+                'discount' => $discount,
                 'payment_mode' => $paymentMode,
                 'type' => 'payment',
+                'notes' => $notes,
                 'created_by' => auth()->id() ?? null,
             ]);
         });
@@ -766,10 +790,13 @@ class VehiclePurchaseOrderController extends Controller
         }
 
         $rollbackAmount = (float)$paymentTransaction->amount;
+        $rollbackDiscount = (float)($paymentTransaction->discount ?? 0);
+        $totalRollback = $rollbackAmount + $rollbackDiscount;
 
-        DB::transaction(function () use ($vehiclePurchaseOrder, $paymentTransaction, $rollbackAmount, $request) {
+        DB::transaction(function () use ($vehiclePurchaseOrder, $paymentTransaction, $rollbackAmount, $rollbackDiscount, $totalRollback, $request) {
             $vehiclePurchaseOrder->received_amount = max(0, $vehiclePurchaseOrder->received_amount - $rollbackAmount);
-            $vehiclePurchaseOrder->balance += $rollbackAmount;
+            $vehiclePurchaseOrder->payment_discount = max(0, ($vehiclePurchaseOrder->payment_discount ?? 0) - $rollbackDiscount);
+            $vehiclePurchaseOrder->balance += $totalRollback;
             $vehiclePurchaseOrder->save();
 
             PaymentTransaction::create([
@@ -781,10 +808,12 @@ class VehiclePurchaseOrderController extends Controller
                 'party_name' => $vehiclePurchaseOrder->supplier->name ?? 'Supplier #' . $vehiclePurchaseOrder->supplier_id,
                 'payment_date' => date('Y-m-d'),
                 'amount' => -$rollbackAmount,
+                'discount' => -$rollbackDiscount,
                 'payment_mode' => $paymentTransaction->payment_mode,
                 'type' => 'rollback',
                 'rollback_reason' => $request->input('rollback_reason'),
                 'reversed_payment_id' => $paymentTransaction->id,
+                'notes' => 'Rollback of payment #' . $paymentTransaction->id . ': ' . $request->input('rollback_reason'),
                 'created_by' => auth()->id() ?? null,
             ]);
         });

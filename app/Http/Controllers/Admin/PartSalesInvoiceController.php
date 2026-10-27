@@ -383,21 +383,43 @@ class PartSalesInvoiceController extends Controller
     public function receivePayment(Request $request, PartSalesInvoice $partSalesInvoice)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
             'payment_mode' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'payment_date' => 'nullable|date',
         ]);
 
-        $amount = floatval($request->input('amount'));
+        $amount = round(floatval($request->input('amount', 0)), 2);
+        $discount = round(floatval($request->input('discount', 0)), 2);
         $paymentMode = $request->input('payment_mode', $partSalesInvoice->payment_mode ?? 'Cash');
+        $notes = $request->input('notes');
+        $paymentDate = $request->input('payment_date', date('Y-m-d'));
+        $balance = round(floatval($partSalesInvoice->balance), 2);
 
-        if ($amount > $partSalesInvoice->balance) {
-            return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($partSalesInvoice->balance, 2) . ')']);
+        if ($discount < 0) {
+            return response()->json(['success' => false, 'message' => 'Discount cannot be negative.']);
         }
 
-        DB::transaction(function () use ($partSalesInvoice, $amount, $paymentMode) {
+        if ($discount > $balance) {
+            return response()->json(['success' => false, 'message' => 'Discount (₹' . number_format($discount, 2) . ') cannot exceed the outstanding balance (₹' . number_format($balance, 2) . ').']);
+        }
+
+        if ($amount <= 0 && $discount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Please enter a valid amount or discount.']);
+        }
+
+        $totalSettled = round($amount + $discount, 2);
+
+        if ($totalSettled > $balance) {
+            return response()->json(['success' => false, 'message' => 'Total settled amount (Received: ₹' . number_format($amount, 2) . ' + Discount: ₹' . number_format($discount, 2) . ' = ₹' . number_format($totalSettled, 2) . ') cannot exceed the outstanding balance (₹' . number_format($balance, 2) . ').']);
+        }
+
+        DB::transaction(function () use ($partSalesInvoice, $amount, $discount, $totalSettled, $paymentMode, $notes, $paymentDate) {
             $partSalesInvoice->received_amount += $amount;
-            $partSalesInvoice->balance -= $amount;
-            $partSalesInvoice->current_balance -= $amount;
+            $partSalesInvoice->payment_discount = ($partSalesInvoice->payment_discount ?? 0) + $discount;
+            $partSalesInvoice->balance = max(0, $partSalesInvoice->balance - $totalSettled);
+            $partSalesInvoice->current_balance = max(0, $partSalesInvoice->current_balance - $totalSettled);
             $partSalesInvoice->save();
 
             PaymentTransaction::create([
@@ -407,10 +429,12 @@ class PartSalesInvoiceController extends Controller
                 'party_type' => 'customer',
                 'party_id' => $partSalesInvoice->customer_id,
                 'party_name' => $partSalesInvoice->customer_name,
-                'payment_date' => date('Y-m-d'),
+                'payment_date' => $paymentDate,
                 'amount' => $amount,
+                'discount' => $discount,
                 'payment_mode' => $paymentMode,
                 'type' => 'payment',
+                'notes' => $notes,
                 'created_by' => auth()->id() ?? null,
             ]);
         });
@@ -433,11 +457,14 @@ class PartSalesInvoiceController extends Controller
         }
 
         $rollbackAmount = (float)$paymentTransaction->amount;
+        $rollbackDiscount = (float)($paymentTransaction->discount ?? 0);
+        $totalRollback = $rollbackAmount + $rollbackDiscount;
 
-        DB::transaction(function () use ($partSalesInvoice, $paymentTransaction, $rollbackAmount, $request) {
+        DB::transaction(function () use ($partSalesInvoice, $paymentTransaction, $rollbackAmount, $rollbackDiscount, $totalRollback, $request) {
             $partSalesInvoice->received_amount = max(0, $partSalesInvoice->received_amount - $rollbackAmount);
-            $partSalesInvoice->balance += $rollbackAmount;
-            $partSalesInvoice->current_balance += $rollbackAmount;
+            $partSalesInvoice->payment_discount = max(0, ($partSalesInvoice->payment_discount ?? 0) - $rollbackDiscount);
+            $partSalesInvoice->balance += $totalRollback;
+            $partSalesInvoice->current_balance += $totalRollback;
             $partSalesInvoice->save();
 
             PaymentTransaction::create([
@@ -449,10 +476,12 @@ class PartSalesInvoiceController extends Controller
                 'party_name' => $partSalesInvoice->customer_name,
                 'payment_date' => date('Y-m-d'),
                 'amount' => -$rollbackAmount,
+                'discount' => -$rollbackDiscount,
                 'payment_mode' => $paymentTransaction->payment_mode,
                 'type' => 'rollback',
                 'rollback_reason' => $request->input('rollback_reason'),
                 'reversed_payment_id' => $paymentTransaction->id,
+                'notes' => 'Rollback of payment #' . $paymentTransaction->id . ': ' . $request->input('rollback_reason'),
                 'created_by' => auth()->id() ?? null,
             ]);
         });
@@ -646,10 +675,10 @@ class PartSalesInvoiceController extends Controller
 
         if ($customerId) {
             $vBilled = (float) DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('grand_total');
-            $vPaid = (float) DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('received_amount');
+            $vPaid = (float) DB::table('vehicle_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum(DB::raw('received_amount + COALESCE(payment_discount, 0)'));
 
             $pBilled = (float) DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('total_amount');
-            $pPaid = (float) DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum('received_amount');
+            $pPaid = (float) DB::table('part_sales_invoices')->where('customer_id', $customerId)->whereNull('deleted_at')->sum(DB::raw('received_amount + COALESCE(payment_discount, 0)'));
 
             $totalBilled = $vBilled + $pBilled;
             $totalPaid = $vPaid + $pPaid;
@@ -676,7 +705,7 @@ class PartSalesInvoiceController extends Controller
                       ->orWhere(function($q2) use ($invDate, $invId) {
                           $q2->where('invoice_date', '=', $invDate)->where('id', '<', $invId);
                       });
-                })->sum('received_amount');
+                })->sum(DB::raw('received_amount + COALESCE(payment_discount, 0)'));
 
             $pPriorBilled = (float) DB::table('part_sales_invoices')
                 ->where('customer_id', $customerId)
@@ -696,12 +725,12 @@ class PartSalesInvoiceController extends Controller
                       ->orWhere(function($q2) use ($invDate, $invId) {
                           $q2->where('invoice_date', '=', $invDate)->where('id', '<', $invId);
                       });
-                })->sum('received_amount');
+                })->sum(DB::raw('received_amount + COALESCE(payment_discount, 0)'));
 
             $priorOutstanding = max(0, ($vPriorBilled + $pPriorBilled) - ($vPriorPaid + $pPriorPaid));
         } else {
             $totalBilled = (float) $invoice->total_amount + (float) ($invoice->previous_balance ?? 0);
-            $totalPaid = (float) $invoice->received_amount;
+            $totalPaid = (float) $invoice->received_amount + (float) ($invoice->payment_discount ?? 0);
             $overallOutstanding = (float) ($invoice->current_balance ?? ($totalBilled - $totalPaid));
             $priorOutstanding = (float) ($invoice->previous_balance ?? 0);
         }
@@ -714,7 +743,7 @@ class PartSalesInvoiceController extends Controller
         $currentInvAmount = (float) $invoice->total_amount;
         $receivedAmount = (float) ($invoice->received_amount ?? 0);
         $totalBillAmount = $currentInvAmount + $previousBalance;
-        $outstandingBalance = $totalBillAmount - $receivedAmount;
+        $outstandingBalance = $totalBillAmount - $receivedAmount - (float) ($invoice->payment_discount ?? 0);
 
         return (object) [
             'customer_name' => $invoice->customer_name,

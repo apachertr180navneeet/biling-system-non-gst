@@ -11,7 +11,7 @@ class VehiclePurchaseOrder extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['po_number', 'supplier_id', 'order_date', 'expected_date', 'notes', 'status', 'total_amount', 'received_amount', 'balance', 'is_active'];
+    protected $fillable = ['po_number', 'supplier_id', 'order_date', 'expected_date', 'notes', 'status', 'total_amount', 'received_amount', 'payment_discount', 'balance', 'is_active'];
 
     protected function casts(): array
     {

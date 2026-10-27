@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\SalarySlipController;
 use App\Http\Controllers\Admin\EmployeeAdvanceController;
+use App\Http\Controllers\Admin\PaymentTransactionController;
 
 
 /*
@@ -105,6 +106,11 @@ Route::name('admin.')->prefix('admin')->group(function () {
             Route::post('part-sales-invoices/{part_sales_invoice}/rollback-payment/{payment_transaction}', [PartSalesInvoiceController::class, 'rollbackPayment'])->name('part-sales-invoices.rollback-payment');
             Route::post('vehicle-purchase-orders/{vehicle_purchase_order}/rollback-payment/{payment_transaction}', [VehiclePurchaseOrderController::class, 'rollbackPayment'])->name('vehicle-purchase-orders.rollback-payment');
             Route::post('purchase-orders/{purchase_order}/rollback-payment/{payment_transaction}', [PurchaseOrderController::class, 'rollbackPayment'])->name('purchase-orders.rollback-payment');
+
+            // Payment Transactions: Notes update and Receipt
+            Route::post('payment-transactions/{payment_transaction}/update-notes', [PaymentTransactionController::class, 'updateNotes'])->name('payment-transactions.update-notes');
+            Route::get('payment-transactions/{payment_transaction}/receipt', [PaymentTransactionController::class, 'printReceipt'])->name('payment-transactions.receipt');
+            Route::get('payment-transactions/{payment_transaction}/print-receipt', [PaymentTransactionController::class, 'printReceipt'])->name('payment-transactions.print-receipt');
 
             Route::get('reports/vehicle-ledger', [ReportController::class, 'vehicleLedger'])->name('reports.vehicle-ledger');
             Route::get('reports/part-ledger', [ReportController::class, 'partLedger'])->name('reports.part-ledger');

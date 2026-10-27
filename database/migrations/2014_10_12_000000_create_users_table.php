@@ -33,8 +33,8 @@ return new class extends Migration
             $table->string('latitude')->default('');
             $table->string('longitude')->default('');
             $table->string('timezone')->default('Australia/Sydney');
-            $table->text('avatar')->default('');
-            $table->text('bio')->default('');
+            $table->text('avatar')->nullable();
+            $table->text('bio')->nullable();
             $table->string('device_token')->default('');
             $table->enum('device_type',['android','ios'])->default('ios');
             $table->enum('status',['active','inactive'])->default('active');

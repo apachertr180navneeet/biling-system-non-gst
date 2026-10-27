@@ -721,6 +721,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4 btn-print-group">
         <h4 class="fw-bold mb-0">Invoice Detail</h4>
         <div>
+            @if($vehicleSalesInvoice->balance > 0)
+            <button type="button" class="btn btn-success me-1 receive-payment-btn" data-url="{{ route('admin.vehicle-sales-invoices.receive-payment', $vehicleSalesInvoice) }}" data-balance="{{ $vehicleSalesInvoice->balance }}" title="Receive Payment"><i class="bx bx-wallet"></i> Receive Payment</button>
+            @endif
             <a href="{{ route('admin.vehicle-sales-invoices.edit', $vehicleSalesInvoice) }}" class="btn btn-warning me-1"><i class="bx bx-edit"></i> Edit Invoice</a>
             <button type="button" onclick="directPrintPdf('{{ route('admin.vehicle-sales-invoices.pdf', $vehicleSalesInvoice) }}')" class="btn btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
             <a href="{{ route('admin.vehicle-sales-invoices.pdf', $vehicleSalesInvoice) }}" class="btn btn-danger me-1"><i class="bx bxs-file-pdf"></i> Download PDF</a>
@@ -912,6 +915,12 @@
                                 <td class="summary-label">Received Amount</td>
                                 <td class="summary-value" style="color: #059669; font-weight: 600;">₹ {{ number_format($customerLedger->received_amount ?? $vehicleSalesInvoice->received_amount ?? 0, 2) }}</td>
                             </tr>
+                            @if(($vehicleSalesInvoice->payment_discount ?? 0) > 0)
+                            <tr>
+                                <td class="summary-label">Payment Discount</td>
+                                <td class="summary-value" style="color: #d97706; font-weight: 600;">₹ {{ number_format($vehicleSalesInvoice->payment_discount, 2) }}</td>
+                            </tr>
+                            @endif
                             <tr style="border-top: 1.5px solid #059669;">
                                 <td class="summary-total-label" style="color: #dc2626; padding-top: 5px;">Outstanding Balance</td>
                                 <td class="summary-total-value" style="color: #dc2626; padding-top: 5px;">₹ {{ number_format($customerLedger->outstanding_balance ?? $vehicleSalesInvoice->current_balance ?? (($vehicleSalesInvoice->previous_balance ?? 0) + $vehicleSalesInvoice->balance), 2) }}</td>
@@ -933,4 +942,5 @@
         </div>
     </div>
 </div>
+@include('admin.layouts.elements.receive_payment_modal')
 @endsection

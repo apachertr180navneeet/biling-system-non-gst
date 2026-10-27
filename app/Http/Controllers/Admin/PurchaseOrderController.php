@@ -456,20 +456,42 @@ class PurchaseOrderController extends Controller
     public function receivePayment(Request $request, PurchaseOrder $purchaseOrder)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
             'payment_mode' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'payment_date' => 'nullable|date',
         ]);
 
-        $amount = floatval($request->input('amount'));
+        $amount = round(floatval($request->input('amount', 0)), 2);
+        $discount = round(floatval($request->input('discount', 0)), 2);
         $paymentMode = $request->input('payment_mode', 'Cash');
+        $notes = $request->input('notes');
+        $paymentDate = $request->input('payment_date', date('Y-m-d'));
+        $balance = round(floatval($purchaseOrder->balance), 2);
 
-        if ($amount > $purchaseOrder->balance) {
-            return response()->json(['success' => false, 'message' => 'Amount cannot exceed the balance (' . number_format($purchaseOrder->balance, 2) . ')']);
+        if ($discount < 0) {
+            return response()->json(['success' => false, 'message' => 'Discount cannot be negative.']);
         }
 
-        DB::transaction(function () use ($purchaseOrder, $amount, $paymentMode) {
+        if ($discount > $balance) {
+            return response()->json(['success' => false, 'message' => 'Discount (₹' . number_format($discount, 2) . ') cannot exceed the outstanding balance (₹' . number_format($balance, 2) . ').']);
+        }
+
+        if ($amount <= 0 && $discount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Please enter a valid amount or discount.']);
+        }
+
+        $totalSettled = round($amount + $discount, 2);
+
+        if ($totalSettled > $balance) {
+            return response()->json(['success' => false, 'message' => 'Total settled amount (Paid: ₹' . number_format($amount, 2) . ' + Discount: ₹' . number_format($discount, 2) . ' = ₹' . number_format($totalSettled, 2) . ') cannot exceed the outstanding balance (₹' . number_format($balance, 2) . ').']);
+        }
+
+        DB::transaction(function () use ($purchaseOrder, $amount, $discount, $totalSettled, $paymentMode, $notes, $paymentDate) {
             $purchaseOrder->received_amount += $amount;
-            $purchaseOrder->balance -= $amount;
+            $purchaseOrder->payment_discount = ($purchaseOrder->payment_discount ?? 0) + $discount;
+            $purchaseOrder->balance = max(0, $purchaseOrder->balance - $totalSettled);
             $purchaseOrder->save();
 
             PaymentTransaction::create([
@@ -479,10 +501,12 @@ class PurchaseOrderController extends Controller
                 'party_type' => 'supplier',
                 'party_id' => $purchaseOrder->supplier_id,
                 'party_name' => $purchaseOrder->supplier->name ?? 'Supplier #' . $purchaseOrder->supplier_id,
-                'payment_date' => date('Y-m-d'),
+                'payment_date' => $paymentDate,
                 'amount' => $amount,
+                'discount' => $discount,
                 'payment_mode' => $paymentMode,
                 'type' => 'payment',
+                'notes' => $notes,
                 'created_by' => auth()->id() ?? null,
             ]);
         });
@@ -505,10 +529,13 @@ class PurchaseOrderController extends Controller
         }
 
         $rollbackAmount = (float)$paymentTransaction->amount;
+        $rollbackDiscount = (float)($paymentTransaction->discount ?? 0);
+        $totalRollback = $rollbackAmount + $rollbackDiscount;
 
-        DB::transaction(function () use ($purchaseOrder, $paymentTransaction, $rollbackAmount, $request) {
+        DB::transaction(function () use ($purchaseOrder, $paymentTransaction, $rollbackAmount, $rollbackDiscount, $totalRollback, $request) {
             $purchaseOrder->received_amount = max(0, $purchaseOrder->received_amount - $rollbackAmount);
-            $purchaseOrder->balance += $rollbackAmount;
+            $purchaseOrder->payment_discount = max(0, ($purchaseOrder->payment_discount ?? 0) - $rollbackDiscount);
+            $purchaseOrder->balance += $totalRollback;
             $purchaseOrder->save();
 
             PaymentTransaction::create([
@@ -520,10 +547,12 @@ class PurchaseOrderController extends Controller
                 'party_name' => $purchaseOrder->supplier->name ?? 'Supplier #' . $purchaseOrder->supplier_id,
                 'payment_date' => date('Y-m-d'),
                 'amount' => -$rollbackAmount,
+                'discount' => -$rollbackDiscount,
                 'payment_mode' => $paymentTransaction->payment_mode,
                 'type' => 'rollback',
                 'rollback_reason' => $request->input('rollback_reason'),
                 'reversed_payment_id' => $paymentTransaction->id,
+                'notes' => 'Rollback of payment #' . $paymentTransaction->id . ': ' . $request->input('rollback_reason'),
                 'created_by' => auth()->id() ?? null,
             ]);
         });

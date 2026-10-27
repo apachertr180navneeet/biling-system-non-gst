@@ -18,9 +18,11 @@ class PaymentTransaction extends Model
         'party_name',
         'payment_date',
         'amount',
+        'discount',
         'payment_mode',
         'type',
         'rollback_reason',
+        'notes',
         'reversed_payment_id',
         'created_by',
     ];
@@ -28,6 +30,7 @@ class PaymentTransaction extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:2',
+        'discount' => 'decimal:2',
     ];
 
     public function customer()

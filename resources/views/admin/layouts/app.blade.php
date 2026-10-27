@@ -5,15 +5,18 @@
         <meta charset="utf-8" />
         <script>
             (function() {
-                const storedTheme = localStorage.getItem('admin-theme') || 'light';
-                document.documentElement.setAttribute('data-theme', storedTheme);
-                if (storedTheme === 'dark') {
-                    document.documentElement.classList.add('dark-style');
-                    document.documentElement.classList.remove('light-style');
-                } else {
-                    document.documentElement.classList.add('light-style');
-                    document.documentElement.classList.remove('dark-style');
-                }
+                try {
+                    const storedTheme = localStorage.getItem('admin-theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', storedTheme);
+                    document.documentElement.style.colorScheme = storedTheme;
+                    if (storedTheme === 'dark') {
+                        document.documentElement.classList.add('dark-style');
+                        document.documentElement.classList.remove('light-style');
+                    } else {
+                        document.documentElement.classList.add('light-style');
+                        document.documentElement.classList.remove('dark-style');
+                    }
+                } catch(e) {}
             })();
         </script>
         <title>{{ config('app.name') }}</title>

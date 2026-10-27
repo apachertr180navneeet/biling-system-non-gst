@@ -26,6 +26,7 @@ class PartSalesInvoice extends Model
         'round_off',
         'total_amount',
         'received_amount',
+        'payment_discount',
         'balance',
         'payment_mode',
         'previous_balance',

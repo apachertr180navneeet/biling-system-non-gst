@@ -79,32 +79,13 @@
 		</ul>
 	</div>
 	<script>
-	document.addEventListener('DOMContentLoaded', function() {
-		const themeBtn = document.getElementById('theme-toggle-btn');
-		const themeIcon = document.getElementById('theme-toggle-icon');
-		
-		function updateIcon(theme) {
+	(function() {
+		function applyTheme(theme) {
+			localStorage.setItem('admin-theme', theme);
+			document.documentElement.setAttribute('data-theme', theme);
+			document.documentElement.style.colorScheme = theme;
+			
 			if (theme === 'dark') {
-				themeIcon.className = 'bx bx-sun fs-4 text-warning';
-				themeIcon.style.transform = 'rotate(180deg)';
-			} else {
-				themeIcon.className = 'bx bx-moon fs-4 text-secondary';
-				themeIcon.style.transform = 'rotate(0deg)';
-			}
-		}
-		
-		// Initial state
-		const currentTheme = localStorage.getItem('admin-theme') || 'light';
-		updateIcon(currentTheme);
-		
-		themeBtn.addEventListener('click', function() {
-			const theme = localStorage.getItem('admin-theme') || 'light';
-			const newTheme = theme === 'light' ? 'dark' : 'light';
-			
-			localStorage.setItem('admin-theme', newTheme);
-			document.documentElement.setAttribute('data-theme', newTheme);
-			
-			if (newTheme === 'dark') {
 				document.documentElement.classList.add('dark-style');
 				document.documentElement.classList.remove('light-style');
 			} else {
@@ -112,8 +93,37 @@
 				document.documentElement.classList.remove('dark-style');
 			}
 			
-			updateIcon(newTheme);
+			const themeIcon = document.getElementById('theme-toggle-icon');
+			const themeBtn = document.getElementById('theme-toggle-btn');
+			if (themeIcon) {
+				if (theme === 'dark') {
+					themeIcon.className = 'bx bx-sun fs-4 text-warning';
+					themeIcon.style.transform = 'rotate(180deg)';
+					if (themeBtn) themeBtn.setAttribute('title', 'Switch to Light Mode');
+				} else {
+					themeIcon.className = 'bx bx-moon fs-4 text-secondary';
+					themeIcon.style.transform = 'rotate(0deg)';
+					if (themeBtn) themeBtn.setAttribute('title', 'Switch to Dark Mode');
+				}
+			}
+			
+			window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: theme } }));
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			const currentTheme = localStorage.getItem('admin-theme') || 'light';
+			applyTheme(currentTheme);
+			
+			const themeBtn = document.getElementById('theme-toggle-btn');
+			if (themeBtn) {
+				themeBtn.addEventListener('click', function(e) {
+					e.preventDefault();
+					const theme = localStorage.getItem('admin-theme') || 'light';
+					const newTheme = theme === 'light' ? 'dark' : 'light';
+					applyTheme(newTheme);
+				});
+			}
 		});
-	});
+	})();
 	</script>
 </nav>

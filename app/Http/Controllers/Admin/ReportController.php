@@ -1080,14 +1080,26 @@ class ReportController extends Controller
                     if ($fromDate) $payQuery->whereDate('payment_date', '>=', $fromDate);
                     if ($toDate) $payQuery->whereDate('payment_date', '<=', $toDate);
                     foreach ($payQuery->get() as $pay) {
+                        $pAmt = (float)$pay->amount;
+                        $pDisc = (float)($pay->discount ?? 0);
+                        $totalCredit = $pAmt + $pDisc;
+                        $desc = $pay->type === 'rollback' ? 'Rollback: ' . ($pay->rollback_reason ?? 'Reversal') : 'Payment via ' . ($pay->payment_mode ?? 'Cash');
+                        if ($pDisc > 0) {
+                            $desc .= ' (Discount: ₹' . number_format($pDisc, 2) . ')';
+                        }
+                        if (!empty($pay->notes)) {
+                            $desc .= ' - ' . $pay->notes;
+                        }
+
                         $ledgerEntries[] = [
                             'date' => $pay->payment_date->format('Y-m-d'),
                             'display_date' => $pay->payment_date->format('d-m-Y'),
                             'doc_no' => 'PAY-' . $pay->id,
                             'type' => $pay->type === 'rollback' ? 'Payment Rollback' : 'Payment Received',
-                            'debit' => $pay->type === 'rollback' ? (float)abs($pay->amount) : 0,
-                            'credit' => $pay->type === 'rollback' ? 0 : (float)$pay->amount,
+                            'debit' => $pay->type === 'rollback' ? (float)abs($pAmt) : 0,
+                            'credit' => $pay->type === 'rollback' ? 0 : $totalCredit,
                             'mode' => $pay->payment_mode,
+                            'notes' => $desc,
                         ];
                     }
                 }
@@ -1183,23 +1195,25 @@ class ReportController extends Controller
             $paymentsReceived = (float) PaymentTransaction::where('party_type', 'customer')
                 ->where('party_id', $c->id)
                 ->where('type', 'payment')
-                ->sum('amount');
+                ->selectRaw('SUM(amount + COALESCE(discount, 0)) as total')
+                ->value('total');
 
             $paymentsRollback = (float) PaymentTransaction::where('party_type', 'customer')
                 ->where('party_id', $c->id)
                 ->where('type', 'rollback')
-                ->sum('amount');
+                ->selectRaw('SUM(ABS(amount) + COALESCE(ABS(discount), 0)) as total')
+                ->value('total');
 
             // Initial invoice received_amounts if payment transactions were not created or only partially logged
             $vPaid = (float) VehicleSalesInvoice::where('customer_id', $c->id)
                 ->orWhere(function($q) use ($c) {
                     $q->whereNull('customer_id')->where('customer_name', $c->name);
-                })->sum('received_amount');
+                })->selectRaw('SUM(received_amount + COALESCE(payment_discount, 0)) as total')->value('total');
 
             $pPaid = (float) PartSalesInvoice::where('customer_id', $c->id)
                 ->orWhere(function($q) use ($c) {
                     $q->whereNull('customer_id')->where('customer_name', $c->name);
-                })->sum('received_amount');
+                })->selectRaw('SUM(received_amount + COALESCE(payment_discount, 0)) as total')->value('total');
 
             $totalBilled = $vBilled + $pBilled;
             $totalPaid = max($vPaid + $pPaid, $paymentsReceived - $paymentsRollback);

@@ -374,12 +374,12 @@ class CustomerController extends Controller
 
         foreach ($vehicleInvoices as $v) {
             $totalBilled += (float)($v->grand_total ?? 0);
-            $totalPaid += (float)($v->received_amount ?? 0);
+            $totalPaid += (float)($v->received_amount ?? 0) + (float)($v->payment_discount ?? 0);
         }
 
         foreach ($partInvoices as $p) {
             $totalBilled += (float)($p->total_amount ?? 0);
-            $totalPaid += (float)($p->received_amount ?? 0);
+            $totalPaid += (float)($p->received_amount ?? 0) + (float)($p->payment_discount ?? 0);
         }
 
         $outstandingBalance = $totalBilled - $totalPaid;
@@ -422,18 +422,39 @@ class CustomerController extends Controller
 
         foreach ($payments as $pay) {
             $payDate = !empty($pay->payment_date) ? (is_a($pay->payment_date, '\DateTimeInterface') ? $pay->payment_date : \Carbon\Carbon::parse($pay->payment_date)) : null;
+            $payAmt = (float)($pay->amount ?? 0);
+            $payDisc = (float)($pay->discount ?? 0);
+            $totalCredit = $payAmt + $payDisc;
+
+            $notesText = '';
+            if ($pay->type === 'rollback') {
+                $notesText = 'Rollback: ' . ($pay->rollback_reason ?? 'Reversal');
+            } else {
+                $parts = [];
+                $parts[] = 'Payment via ' . ($pay->payment_mode ?? 'Cash');
+                if ($payDisc > 0) {
+                    $parts[] = 'Discount: ₹' . number_format($payDisc, 2);
+                }
+                if (!empty($pay->notes)) {
+                    $parts[] = 'Notes: ' . $pay->notes;
+                }
+                $notesText = implode(' | ', $parts);
+            }
+
             $history[] = [
                 'date' => $payDate ? $payDate->format('Y-m-d') : '',
                 'display_date' => $payDate ? $payDate->format('d-m-Y') : '',
                 'type' => $pay->type === 'rollback' ? 'Payment Rollback' : 'Payment Received',
                 'doc_no' => 'PAY-' . $pay->id,
-                'debit' => $pay->type === 'rollback' ? (float)abs($pay->amount ?? 0) : 0,
-                'credit' => $pay->type === 'rollback' ? 0 : (float)($pay->amount ?? 0),
-                'received' => (float)($pay->amount ?? 0),
+                'debit' => $pay->type === 'rollback' ? (float)abs($payAmt) : 0,
+                'credit' => $pay->type === 'rollback' ? 0 : $totalCredit,
+                'received' => $payAmt,
+                'discount' => $payDisc,
                 'balance' => 0,
                 'payment_mode' => $pay->payment_mode ?? '',
-                'notes' => $pay->type === 'rollback' ? 'Rollback: ' . ($pay->rollback_reason ?? 'Reversal') : 'Payment via ' . ($pay->payment_mode ?? 'Cash'),
-                'view_url' => '#',
+                'notes' => $notesText,
+                'raw_notes' => $pay->notes ?? '',
+                'view_url' => route('admin.payment-transactions.print-receipt', $pay->id),
             ];
         }
 

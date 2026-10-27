@@ -445,6 +445,12 @@
                             <td class="summary-label">Received Amount</td>
                             <td class="summary-value" style="color: #059669; font-weight: bold;">₹ {{ number_format($customerLedger->received_amount ?? $vehicleSalesInvoice->received_amount ?? 0, 2) }}</td>
                         </tr>
+                        @if(($vehicleSalesInvoice->payment_discount ?? 0) > 0)
+                        <tr>
+                            <td class="summary-label">Payment Discount</td>
+                            <td class="summary-value" style="color: #d97706; font-weight: bold;">₹ {{ number_format($vehicleSalesInvoice->payment_discount, 2) }}</td>
+                        </tr>
+                        @endif
                         <tr style="border-top: 1.5px solid #059669;">
                             <td class="summary-label" style="font-weight: bold; color: #dc2626; padding-top: 3px;">Outstanding Balance</td>
                             <td class="summary-value" style="font-weight: bold; font-size: 11px; color: #dc2626; padding-top: 3px;">₹ {{ number_format($customerLedger->outstanding_balance ?? $vehicleSalesInvoice->current_balance ?? (($vehicleSalesInvoice->previous_balance ?? 0) + $vehicleSalesInvoice->balance), 2) }}</td>

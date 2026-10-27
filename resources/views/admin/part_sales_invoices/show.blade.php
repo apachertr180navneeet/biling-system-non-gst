@@ -664,11 +664,20 @@ if (!function_exists('getIndianRupeesInWords')) {
     <div class="d-flex justify-content-between align-items-center mb-4 btn-print-group">
         <h4 class="fw-bold mb-0">Parts Sales Invoice Detail</h4>
         <div>
+            @if($partSalesInvoice->balance > 0)
+                <button type="button" class="btn btn-success me-1 btn-receive-payment" 
+                    data-id="{{ $partSalesInvoice->id }}" 
+                    data-type="part_sales" 
+                    data-number="{{ $partSalesInvoice->invoice_number }}" 
+                    data-balance="{{ $partSalesInvoice->balance }}" 
+                    data-party="{{ $partSalesInvoice->customer->name ?? 'Customer' }}">
+                    <i class="bx bx-rupee"></i> Receive Payment
+                </button>
+            @endif
             <a href="{{ route('admin.part-sales-invoices.edit', $partSalesInvoice) }}" class="btn btn-warning me-1"><i class="bx bx-edit"></i> Edit Invoice</a>
             <button type="button" onclick="directPrintPdf('{{ route('admin.part-sales-invoices.pdf', $partSalesInvoice) }}')" class="btn btn-dark me-1"><i class="bx bx-printer"></i> Print PDF</button>
             <a href="{{ route('admin.part-sales-invoices.pdf', $partSalesInvoice) }}" class="btn btn-danger me-1"><i class="bx bxs-file-pdf"></i> Download PDF</a>
             <a href="{{ route('admin.part-sales-invoices.index') }}" class="btn btn-secondary">Back to List</a>
-
         </div>
     </div>
 
@@ -828,6 +837,12 @@ if (!function_exists('getIndianRupeesInWords')) {
                                     <td class="summary-label">Received Amount</td>
                                     <td class="summary-value" style="color: #059669; font-weight: 600;">₹ {{ number_format($customerLedger->received_amount ?? $partSalesInvoice->received_amount ?? 0, 2) }}</td>
                                 </tr>
+                                @if(($partSalesInvoice->payment_discount ?? 0) > 0)
+                                <tr>
+                                    <td class="summary-label">Payment Discount</td>
+                                    <td class="summary-value" style="color: #d97706; font-weight: 600;">₹ {{ number_format($partSalesInvoice->payment_discount, 2) }}</td>
+                                </tr>
+                                @endif
                                 <tr style="border-top: 1.5px solid #059669;">
                                     <td class="summary-total-label" style="color: #dc2626; padding-top: 5px;">Outstanding Balance</td>
                                     <td class="summary-total-value" style="color: #dc2626; padding-top: 5px;">₹ {{ number_format($customerLedger->outstanding_balance ?? $partSalesInvoice->current_balance ?? (($partSalesInvoice->previous_balance ?? 0) + $partSalesInvoice->balance), 2) }}</td>
@@ -856,5 +871,6 @@ if (!function_exists('getIndianRupeesInWords')) {
         </div>
     </div>
 </div>
+@include('admin.layouts.elements.receive_payment_modal')
 @include('admin.layouts.elements.customer_ledger_modal')
 @endsection

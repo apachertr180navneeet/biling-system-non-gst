@@ -32,6 +32,7 @@ class VehicleSalesInvoice extends Model
         'payment_mode',
         'finance_name',
         'received_amount',
+        'payment_discount',
         'balance',
         'previous_balance',
         'current_balance',
